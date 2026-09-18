@@ -81,38 +81,30 @@ both describe the two child projects here as belonging to another repository.
 Correcting somebody else's register is their edit and not ours; the ask is
 [`discussion.md`](discussion.md) `D1`.
 
-**The footing is open, and is deliberately not recorded here.** The front page
-says this repository is an *associate* of the Eunoia ecosystem and that it has
-joined nothing. The shared policy would have that recorded as a marker on this
-page, naming what the repository holds itself to — and this page carries no such
-marker, for a reason worth knowing before you add one:
+**The footing was settled by joining, on 2026-09-18.** The three decisions this
+page used to leave open — write an *associate* marker, join outright, or keep a
+note claiming no footing — were resolved by the second: the maintainer directed
+that this repository join, so the front page now carries the
+membership declaration and `.github/workflows/anoieu.yml` runs the shared policy
+check on every push. The dispute that kept the marker unwritten is moot here,
+since *associate* is no longer the word this tree uses about itself; it remains
+open for the repositories still on that footing.
 
-- **The word is in dispute.** koine's `D17`, open with kanon since 2026-09-18,
-  asks the office to say which reading of *associate* binds: the policy's
-  footings table has an associate held to the shared policy by its own choice,
-  and the register's own description has one held to none of it. Those are
-  opposite obligations under one word.
-- **The command that used to write the marker refuses.** koine's `eo_join`
-  dropped `--associate` on 2026-09-18, on its maintainer's instruction, and its
-  remaining soft form says in as many words: do not write `associate` or any
-  other footing into this tree.
-- **And it is a claim about this repository's own standing**, which is the one
-  question an agent here must not answer. Asked whether it should hold a
-  footing, an agent finds the case for holding one, because finding it is what
-  it was asked to do.
-
-**So the state is: the claim is on the front page in prose, and no marker backs
-it.** A policy check run against this tree from outside reports that the front
-page declares no membership, which is true and is not a defect — it is the check
-saying this repository has joined nothing. Resolving it is one of three
-decisions, all yours: write the marker, join outright, or keep the note that
-claims no footing at all.
+**What joining did not settle.** The ecosystem's own
+[`ecosystem.json`](https://github.com/ajreynol/kanon/blob/main/scripts/ecosystem/ecosystem.json)
+records a footing per tool and is kanon's file, not this one; as read on
+2026-09-18 it has no entry for paideia. A member is checked for declaring and
+for the form of its tree, and nothing more — the other half of the footing, that
+a member shares the approach the shared vision argues for, is a judgement no
+check here or anywhere makes.
 
 ## What is deliberately not here
 
-- **No CI.** No `.github/`, no workflow, no ecosystem checker pinned or called. A
-  repository that has joined nothing runs none of the ecosystem's checks, and
-  adding a runner to a tree is outward-facing and yours.
+- **No CI beyond the policy check.** `.github/workflows/anoieu.yml` is the whole
+  of it: it calls anoieu's shared workflow at `main` against policy contract 1,
+  so there is no checker commit pinned here and nothing to bump. Nothing builds,
+  nothing is installed, and no child project runs there. Adding any further
+  runner to this tree is outward-facing and yours.
 - **No `tests/`, `deps/` or `prompts/`.** The one script,
   [`check_guide.py`](../scripts/check_guide.py), checks written-guide links,
   indexing and source paths on request. It generates nothing and does not

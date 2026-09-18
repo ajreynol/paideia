@@ -114,15 +114,21 @@ the register's.
 
 ## Where it sits
 
-paideia is an **associate** of the Eunoia ecosystem, chosen as such because a
-guide to cvc5's source is not specifically about proofs. In that ecosystem's
-terms — read from kanon's glossary on 2026-09-18 — an associate is a repository
-that carries no membership declaration and **owes the ecosystem nothing**; it
-may later record for itself what it holds itself to. It has not joined, and it
-is not set up to: `eo_join` has not been run here, and nothing in this tree
-records a footing.
+paideia is a **member** of the Eunoia ecosystem: it declares membership at the
+top of the maintenance note below, and that ecosystem's policy check runs here
+on every push. Membership is a claim about the form of this tree and nothing
+more — it says nothing about cvc5, which keeps its own documentation, and
+nothing about whether a proof can be trusted. The ecosystem records one footing
+per tool in
+[`ecosystem.json`](https://github.com/ajreynol/kanon/blob/main/scripts/ecosystem/ecosystem.json),
+which is kanon's file to write; as read on 2026-09-18 it carries no entry for
+paideia.
 
 ## How this repository is maintained
+
+This repository is part of the **Eunoia ecosystem** and follows its shared
+repository policy, kept by [kanon](https://github.com/ajreynol/kanon) in
+[`docs/policy.md`](https://github.com/ajreynol/kanon/blob/main/docs/policy.md).
 
 **Written by AI agents, under light human supervision.** A human directs the
 work, reads what is published and decides what is filed; nobody vets the
@@ -135,5 +141,13 @@ this repository is responsible for.
 claim this tree makes about a repository other than this one; each of those is
 read from another tree on the date the claim carries, and is correctable by the
 repository it is about. The supervision is of what is *written*, which is the
-scope of that review, and nothing here has been checked by a program that runs
-on every push — there is none.
+scope of that review, and the program that runs on every push checks the form of
+this tree rather than any claim made in it.
+
+**Which check runs, and what can move under it.**
+[`.github/workflows/anoieu.yml`](.github/workflows/anoieu.yml) calls anoieu's
+shared workflow at `main` and names the **policy contract** it is checked
+against — version 1 — rather than pinning a checker commit. That contract fixes
+the obligations and leaves the implementation free to change, so this build can
+go red with nothing committed here; when it does, a violation already in the
+tree has started being reported, and a new requirement has not arrived.
