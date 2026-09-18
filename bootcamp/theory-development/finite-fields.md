@@ -1,10 +1,14 @@
-# Finite fields
+# Developing the finite-field theory
 
-Source baseline: [2026-09-18](source-baseline.md). Follow
+[Bootcamp](../README.md) / [How to develop a theory](README.md)
+
+Source baseline: [2026-09-18](../source-baseline.md). Follow
 [TheoryFiniteFields][theory] to the field-specific [SubTheory][sub],
 [CocoaEncoder][encoder], [GB procedure][gb] and [root search][roots].
 
-## One algebraic problem per field
+## Representation and invariants
+
+### One algebraic problem per field
 
 The supported fields here have prime order. A field sort fixes a prime `p`,
 and its subtheory reasons over polynomials in `F_p[X]`. Theory leaves become
@@ -40,7 +44,7 @@ encodes those facts. Ring construction therefore belongs to the solver call,
 not a promise that preregistration has already assigned every polynomial
 variable.
 
-## Facts, Gröbner bases and search
+## Fact processing and checking
 
 The normal equality-engine fact path remains active. `notifyFact` appends the
 signed fact to its field subtheory's SAT-context list. `postCheck` asks each
@@ -70,12 +74,14 @@ instead of the default one-basis route. Read the selected algorithm before
 trying to reproduce a trace. Timeout/incomplete results propagate through
 the subtheory instead of becoming a guessed model.
 
-## Equality, combination and models
+## Equality and combination
 
 The standard equality-notification adapter handles generic propagation and
 constant conflicts. There are no custom per-class field polynomial merges
 in `TheoryFiniteFields`: facts are passed to the algebraic subtheory instead.
 Sharing, equality status and care-graph work use the common theory behavior.
+
+## Model construction
 
 When the algebraic solver finds an assignment, the subtheory maps input leaf
 nodes to `FiniteFieldValue` constants of the correct modulus.
@@ -83,6 +89,21 @@ nodes to `FiniteFieldValue` constants of the correct modulus.
 set using model equalities. It does not export the artificial inverse
 witnesses as if they were user terms. Distinct field sorts must never share
 coefficient rings or cached values merely because some numerals coincide.
+
+## Developing and validating a change
+
+Use the [shared development workflow](README.md#development-workflow)
+with these entry points for this theory.
+
+### Where to make a change
+
+| Change | Start here |
+| --- | --- |
+| Polynomial representation | `CocoaEncoder` scanning/encoding and the separation of leaves from auxiliary variables |
+| Conflicts or root search | The selected GB procedure, its core extraction and base-field root construction |
+| Incrementality or model export | The field subtheory's fact state and relevant leaf-value mapping |
+
+### Validation
 
 For a change, test equality and disequality over a small prime where expected
 solutions are easy to enumerate, then a problem with two field sorts and an

@@ -1,10 +1,14 @@
-# Bit-vectors
+# Developing the bit-vector theory
 
-Source baseline: [2026-09-18](source-baseline.md). Read
+[Bootcamp](../README.md) / [How to develop a theory](README.md)
+
+Source baseline: [2026-09-18](../source-baseline.md). Read
 [TheoryBV][theory] with the backend it constructs:
 [BVSolverBitblast][external] or [BVSolverBitblastInternal][internal].
 
-## The backend boundary
+## Representation and invariants
+
+### The backend boundary
 
 Bit-vector operations have fixed-width, modular semantics. Bit blasting
 translates a term into Boolean expressions for its bits and an atom into a
@@ -20,7 +24,7 @@ eager versus lazy bit blasting and from the main CDCL(T) SAT backend.
 Read [bv_options.toml][options] together with effective defaults before
 describing a run.
 
-## Preprocessing and preregistration
+## Preprocessing and registration
 
 `ppAssert` first tries base variable elimination and then specialized
 bit-vector substitution, including supported extract-equals-value cases.
@@ -40,7 +44,9 @@ separate bit-blast backend requires that engine for sharing or when explicitly
 requested. It is not safe to assume every BV configuration has the same
 equality-engine setup.
 
-## How a fact reaches the bits
+## Fact processing and checking
+
+### How a fact reaches the bits
 
 For the separate backend, `preNotifyFact` queues facts. With input assertion
 optimization enabled, fixed facts can be asserted permanently at the
@@ -62,7 +68,7 @@ equality processing depends on the eager mode; it is not always “consume every
 fact and skip the equality engine.” Most of the work consequently occurs at
 lemma introduction rather than a separate `postCheck` SAT call.
 
-## Abstraction before bit blasting
+### Abstraction before bit blasting
 
 The current separate backend has an [abstraction module][abstraction] for
 expensive multiplication, unsigned division and remainder. With
@@ -77,7 +83,7 @@ feature is not supported by `bitblast-internal` at this baseline. It is a
 substantial addition to the bootcamp's two-backend account, but it does not
 change bit-vector semantics or justify using approximate results.
 
-## Equality, sharing and models
+## Equality and combination
 
 The theory delegates shared-term notifications and backend-specific equality
 status. If the backend cannot establish a status, `TheoryBV` compares
@@ -87,12 +93,29 @@ reasoning algorithm; shared congruence still matters in mixed-theory problems.
 The common care-graph behavior applies unless the active backend supplies
 additional behavior through its own interface.
 
+## Model construction
+
 Model values come from bit assignments and are reconstructed as values of the
 correct width. The separate backend's relevant-term handling includes the
 eager encoding's needs, and eager model collection can also recover Boolean
 symbols absorbed into that encoding. `TheoryBV` maintains value-cache
 invalidation around search changes; a stale value can corrupt combination
 even when the clauses are correct.
+
+## Developing and validating a change
+
+Use the [shared development workflow](README.md#development-workflow)
+with these entry points for this theory.
+
+### Where to make a change
+
+| Change | Start here |
+| --- | --- |
+| An operator or equality transformation | The rewriter, static preprocessing and the selected bit-blast translation |
+| Fact assertion, assumptions or conflicts | The active backend, especially the lifetime of permanent facts versus assumptions |
+| Abstraction or model values | The separate backend's refinement path and value-cache invalidation |
+
+### Validation
 
 For a change, cover width one, a larger width, signed/unsigned boundaries and
 the operator's zero/overflow cases. A backend change should exercise its own

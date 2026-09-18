@@ -1,11 +1,15 @@
-# Uninterpreted functions and higher-order reasoning
+# Developing UF and higher-order reasoning
 
-Source baseline: [2026-09-18](source-baseline.md). Main entry:
+[Bootcamp](../README.md) / [How to develop a theory](README.md)
+
+Source baseline: [2026-09-18](../source-baseline.md). Main entry:
 [TheoryUF][theory]. Helpers include [HoExtension][ho],
 [CardinalityExtension][card], [ConversionsSolver][conv] and
 [DistinctExtension][distinct].
 
-## What the solver represents
+## Representation and invariants
+
+### What the solver represents
 
 For ordinary ground UF, the main invariant is congruence: if `a = b`, then
 `f(a) = f(b)`. The equality engine stores this relationship, detects collisions
@@ -43,7 +47,7 @@ between function operators. This is the part to inspect if a new application
 representation fails to propagate equalities even though all arguments are
 registered.
 
-## Facts and checks
+## Fact processing and checking
 
 The normal base fact loop asserts predicates and equalities into the official
 equality engine. `notifyFact` forwards facts to the cardinality extension,
@@ -62,7 +66,7 @@ full effort. `needsCheckLastEffort` reflects which of these extensions needs
 the final candidate stage. A no-op `postCheck` in a minimal UF example says
 little about a problem using finite domains or conversions.
 
-## Equality callbacks and combination
+## Equality and combination
 
 The new-class, merge and disequality notifications maintain the cardinality
 extension when it is active. Congruence and trigger propagation still occur
@@ -83,7 +87,7 @@ with different values for unconstrained classes. It does not establish a new
 logical disequality. `notifySharedTerm` needs no additional UF-specific
 override beyond the base registration.
 
-## Models and a change to trace
+## Model construction
 
 Ordinary UF function interpretations are assembled by the common model
 machinery from applications and their argument/result values. The UF
@@ -91,6 +95,21 @@ machinery from applications and their argument/result values. The UF
 `collectModelInfoHo`. Function disequalities need extensional witnesses in
 that model too; simply assigning the same lambda to unconstrained function
 classes can violate the input.
+
+## Developing and validating a change
+
+Use the [shared development workflow](README.md#development-workflow)
+with these entry points for this theory.
+
+### Where to make a change
+
+| Change | Start here |
+| --- | --- |
+| Application registration or congruence | `preRegisterTerm` and the registered `APPLY_UF`/`HO_APPLY` function kinds |
+| Function disequality or its model witness | `notifyFact`, `HoExtension` and `collectModelInfoHo` |
+| Finite domains, conversions or distinct constraints | The corresponding extension and its effort/context requirements |
+
+### Validation
 
 To trace congruence, use `a = b` together with `f(a) != f(b)` and watch where
 simplification resolves it. To exercise search instead, keep the equality

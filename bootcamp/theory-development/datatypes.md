@@ -1,10 +1,14 @@
-# Datatypes
+# Developing the datatype theory
 
-Source baseline: [2026-09-18](source-baseline.md). The main implementation is
+[Bootcamp](../README.md) / [How to develop a theory](README.md)
+
+Source baseline: [2026-09-18](../source-baseline.md). The main implementation is
 [TheoryDatatypes][theory], with [rewriting][rewriter],
 [inference management][im] and a [SyGuS extension][sygus].
 
-## Constructor structure on equality classes
+## Representation and invariants
+
+### Constructor structure on equality classes
 
 For a datatype such as `List = nil | cons(head,tail)`, equal constructors of
 the same kind imply equal fields, different constructors cannot be equal,
@@ -39,7 +43,7 @@ tuples and synthesis grammars also use datatype infrastructure. Before
 changing a generic constructor rule, find its uses through the datatype
 utilities and the SyGuS extension.
 
-## Facts and the full-effort loop
+## Fact processing and checking
 
 `preCheck` processes pending inferences and resets the manager for the new
 round. The standard equality-engine path handles incoming facts.
@@ -60,7 +64,7 @@ but useful tests also contain cycles exposed only by equality merges. A
 codatatype permits cyclic values, so the inductive cycle rule cannot be
 applied indiscriminately to all datatype sorts.
 
-## Equality callbacks and combination
+## Equality and combination
 
 `eqNotifyNewClass` creates class information for constructors and registers
 selectors with the class of their argument. Constructor applications with
@@ -76,7 +80,7 @@ Shared-term notification inherits the base behavior. `getEqualityStatus`
 returns the engine's known relation, or `EQUALITY_FALSE_IN_MODEL` when separate
 classes may be interpreted differently.
 
-## Model skeletons
+## Model construction
 
 `computeRelevantTerms` makes the recorded constructor consistent with model
 relevance. If a relevant constructor already exists in the class, it can
@@ -90,6 +94,21 @@ equalities and registers constructor skeletons. Fields can belong to other
 theories, so model assembly is intentionally deferred across that boundary.
 Codatatypes follow a separate construction path capable of representing
 cyclic values.
+
+## Developing and validating a change
+
+Use the [shared development workflow](README.md#development-workflow)
+with these entry points for this theory.
+
+### Where to make a change
+
+| Change | Start here |
+| --- | --- |
+| Constructor, tester or selector consequences | Class metadata, `notifyFact` and datatype merge logic |
+| Cycles or constructor splitting | The full-effort `postCheck` loop and pending inference handling |
+| Model structure or synthesis interaction | `computeRelevantTerms`, constructor skeletons and the SyGuS extension |
+
+### Validation
 
 For a change to tester handling, test positive and negative testers, a merge
 with a constructor, and a class with only selectors. For a care-graph or model

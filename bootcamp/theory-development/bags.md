@@ -1,10 +1,14 @@
-# Bags and tables
+# Developing bags and tables
 
-Source baseline: [2026-09-18](source-baseline.md). Start with
+[Bootcamp](../README.md) / [How to develop a theory](README.md)
+
+Source baseline: [2026-09-18](../source-baseline.md). Start with
 [TheoryBags][theory], [BagSolver][solver], [SolverState][state],
 [Strategy][strategy] and [BagReduction][reduction].
 
-## Multiplicity is the central interface
+## Representation and invariants
+
+### Multiplicity is the central interface
 
 A bag maps elements to nonnegative integer counts, with finite support.
 `bag.count(x,A)` is therefore both a bag-theory observation and an arithmetic
@@ -18,7 +22,7 @@ structure and multiplicities; replacing them by set operations loses duplicate
 rows. A bag solver's relevant element/count inventory is consequently as
 important as its inventory of bag terms.
 
-## Preprocessing and supported terms
+## Preprocessing and registration
 
 `ppRewrite` expands choose, cardinality, fold, table aggregate and table
 projection. Cardinality is now explicitly reduced by `BagReduction`, with
@@ -39,7 +43,7 @@ present in the same kind vocabulary; do not copy it as a current API list.
 Use [kinds.toml][kinds], the API and the actual preregistration checks together.
 `ppAssert` and the ordinary fact callbacks inherit the base behavior.
 
-## A full-effort round
+## Fact processing and checking
 
 `postCheck` drains pending facts, initializes the current round's state and
 runs the strategy. `initialize` clears rebuilt indices, collects disequal
@@ -73,7 +77,7 @@ returns control to the outer search. The strategy and pending queues are what
 prevent a later phase from assuming that SAT or arithmetic has already
 processed a freshly emitted count constraint.
 
-## Equality callbacks and combination
+## Equality and combination
 
 The notification class uses the standard equality/inference adapter; it does
 not maintain the same specialized merge metadata as sets. Much of the bag
@@ -87,7 +91,7 @@ type and argument representatives. Two counts can refer to the same semantic
 element even if the input terms are syntactically different; that equality
 must be coordinated with the element theory.
 
-## Models
+## Model construction
 
 `collectModelValues` processes relevant bag leaves once per equality class.
 It gets the collected element/count pairs, filters them by relevance, maps
@@ -99,6 +103,21 @@ The current method does not contain the bootcamp's general “add fresh filler
 elements here for a larger cardinality” step. Cardinality's reduction and
 constraints must already expose the needed structure. Copying the sets model
 algorithm into bags would miss that distinction.
+
+## Developing and validating a change
+
+Use the [shared development workflow](README.md#development-workflow)
+with these entry points for this theory.
+
+### Where to make a change
+
+| Change | Start here |
+| --- | --- |
+| Operator reductions | `BagReduction`, preprocessing and any introduced quantified structure |
+| Count equations, maps or table operations | The selected strategy stage and `BagSolver::check*` inference constructors |
+| Sharing or reconstructed multiplicity | Element/count indices, typed care pairs and `collectModelValues` |
+
+### Validation
 
 For a change, test duplicate elements, zero/negative constructor counts, bag
 disequality and two element terms made equal by another theory. For a map or

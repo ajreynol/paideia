@@ -1,10 +1,14 @@
-# Floating point
+# Developing the floating-point theory
 
-Source baseline: [2026-09-18](source-baseline.md). Start in
+[Bootcamp](../README.md) / [How to develop a theory](README.md)
+
+Source baseline: [2026-09-18](../source-baseline.md). Start in
 [TheoryFp][theory], [FpExpandDefs][expand] and the
 [floating-point implementation directory][directory].
 
-## Concrete evaluation and symbolic word blasting
+## Representation and invariants
+
+### Concrete evaluation and symbolic word blasting
 
 The symbolic solver reduces floating-point constraints to bit-vector
 constraints through word blasting. It must represent signs, exponents,
@@ -20,7 +24,9 @@ backend at build time. Do not describe the MPFR change as replacement of the
 symbolic theory solver. See [floatingpoint_literal_mpfr.cpp][mpfr] and
 the pinned [NEWS][news].
 
-## Preprocessing makes underspecified cases explicit
+## Preprocessing and registration
+
+### Make underspecified cases explicit
 
 `ppRewrite` calls the rewriter's definition expansion and expects several
 surface kinds to be gone afterward. Some are syntactic reductions, such as
@@ -34,7 +40,7 @@ incorrect to say every FP definition expansion introduces a fresh UF:
 ordinary comparison and arithmetic syntax can be reduced without one.
 `ppAssert` otherwise inherits the base implementation.
 
-## Registration and local facts
+### Register terms and abstractions
 
 `preRegisterTerm` checks whether floating point is enabled and whether the
 format is allowed without `fp-exp`. `registerTerm` adds equality triggers or
@@ -55,7 +61,7 @@ specified result; totalized conversion of a NaN or infinity to real must use
 its designated fallback value. The abstraction map retains the original
 operation for later refinement.
 
-## Eager/lazy encoding and refinement
+## Fact processing and checking
 
 With the default `fp-lazy-wb=false`, ordinary registered terms are word-blasted
 during registration. In lazy mode, `preNotifyFact` word-blasts a newly used
@@ -74,7 +80,7 @@ make the required progress, incompleteness must be reported. A recent change
 in this area makes that explicit; a conversion abstraction is not permission
 to accept an arbitrary real/FP pair.
 
-## Equality, combination and models
+## Equality and combination
 
 The standard equality notification adapter supplies propagation and conflicts;
 there is no elaborate FP-specific equivalence-class merge algorithm like
@@ -82,10 +88,27 @@ the datatype or string solvers. Equality status and care-graph behavior mostly
 use the common protocol, while lazy word blasting at sharing is a material
 FP-specific hook.
 
+## Model construction
+
 `collectModelValues` iterates relevant floating-point and rounding-mode leaves,
 asks the word blaster for their reconstructed values, and asserts those values
 to the global model. Debug checks ensure the encoded special-value flags and
 components agree. Model caches are invalidated as checking proceeds.
+
+## Developing and validating a change
+
+Use the [shared development workflow](README.md#development-workflow)
+with these entry points for this theory.
+
+### Where to make a change
+
+| Change | Start here |
+| --- | --- |
+| Constant evaluation or symbolic encoding | The constant-folding backend or word blaster, according to the triggering input |
+| Underspecified cases and totalization | `FpExpandDefs` and the internal forms that registration expects |
+| Real conversions or candidate models | Abstraction registration, last-call `refineAbstraction` and model collection |
+
+### Validation
 
 For a change, separate tests for fully constant evaluation from tests with
 symbolic operands; the former may never reach word blasting. Include NaN,

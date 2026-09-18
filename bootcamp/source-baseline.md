@@ -38,9 +38,11 @@ they are not completeness or correctness proofs.
 
 The small [guide checker](../scripts/check_guide.py) reads the authored
 Markdown. It checks local links and heading fragments, reference definitions,
-the artifact's chapter index, the repository documentation index and use of
-this source pin. Given a source tree, it also checks that each linked cvc5
-path exists. Run these commands from the repository root:
+the artifact's hierarchy of chapter indexes, the six shared theory sub-guide
+sections, the repository documentation index and use of this source pin.
+Each chapter is indexed by its directory's README; a category README is indexed
+by its parent. Given a source tree, the checker also checks that each linked
+cvc5 path exists. Run these commands from the repository root:
 
 ```sh
 python3 scripts/check_guide.py
@@ -82,10 +84,13 @@ been installed.
 6. Run the mechanical checks. Run relevant cvc5 examples/tests when claiming
    observed behavior and record their exact revision, build, options and
    outcome. Keep “read the implementation” separate from “executed the path.”
-7. Update the artifact's [chapter index](README.md#chapters) if chapters moved
-   or were added. Keep repository documentation indexed separately in `docs/`.
-   Leave a concise change description for human review, naming behavioral
-   corrections and any uncertainty that remains.
+7. Update the relevant category index if chapters moved or were added, and
+   the artifact's [chapter index](README.md#chapters) if categories changed.
+   For theory work, preserve the common structure in
+   [How to develop a theory](theory-development/README.md#the-structure-of-every-theory-sub-guide).
+   Keep repository documentation indexed separately in `docs/`. Leave a
+   concise change description for human review, naming behavioral corrections
+   and any uncertainty that remains.
 
 For AI maintenance, the durable handoff is these documents, their source pins,
 and reproducible evidence, rather than a conversation's memory. An agent

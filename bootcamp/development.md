@@ -1,5 +1,9 @@
 # Making and investigating a change
 
+For work inside a theory solver, pair this general workflow with
+[How to develop a theory](theory-development/README.md) and its sub-guide
+for the affected theory.
+
 Source baseline: [2026-09-18](source-baseline.md). This chapter describes the
 engineering interfaces surrounding the bootcamp's architecture. The upstream
 [contribution instructions][contributing] remain the place to check submission

@@ -1,10 +1,14 @@
-# Arrays
+# Developing the array theory
 
-Source baseline: [2026-09-18](source-baseline.md). Begin with
+[Bootcamp](../README.md) / [How to develop a theory](README.md)
+
+Source baseline: [2026-09-18](../source-baseline.md). Begin with
 [TheoryArrays][theory], its [class definition][header],
 [array rewriting][rewriter] and [options][options].
 
-## Reads, writes and several equality relations
+## Representation and invariants
+
+### Reads, writes and several equality relations
 
 The essential constraints are read-over-write and extensionality:
 
@@ -24,7 +28,9 @@ value construction. There is also `d_ppEqualityEngine` for preprocessing.
 Thus the bootcamp's “two equality engines” describes only part of the current
 class. A may-equal relation is not a reason to assert actual array equality.
 
-## Preprocessing
+## Preprocessing and registration
+
+### Preprocessing
 
 `ppRewrite` first handles restrictions and definition expansion, including
 `EQ_RANGE`. Range equality expands to a formula quantifying over indices in
@@ -38,7 +44,7 @@ These steps have stronger contextual assumptions than ordinary syntactic
 rewrites. `ppAssert` records equality/disequality facts in the preprocessing
 engine and also attempts legal variable substitution.
 
-## Registration establishes the local vocabulary
+### Registration establishes the local vocabulary
 
 `preRegisterTerm` delegates to `preRegisterTermInternal` and adds predicate
 triggers for Boolean-valued reads. The internal method registers array terms
@@ -59,7 +65,9 @@ can trigger equality-engine callbacks immediately. Read the registration guard
 and callback definitions in the header before moving an insertion across an
 inference: duplicate or half-finished registration can break the indices.
 
-## Checking and equality callbacks
+## Fact processing and checking
+
+The base `preCheck` behavior is sufficient here.
 
 `preNotifyFact` ensures appropriate non-preregistered equality operands exist
 in the official engine. `notifyFact` handles asserted array disequality by
@@ -67,11 +75,6 @@ obtaining a cached extensionality index, constructing the two reads and
 sending the guarded disequality consequence through the inference manager.
 When the required read terms already exist, a local inference can accompany
 the lemma. Non-array disequalities also feed model constraints.
-
-New-class and merge notifications update array information, consequences and
-the relationships used for stores. Disequality notification itself does not
-implement a second extensionality algorithm; that work is in `notifyFact`.
-The base `preCheck` behavior is sufficient here.
 
 `postCheck` has two distinct algorithmic routes. The ordinary route discharges
 queued read-over-write lemmas at full effort when eager lemma output is off.
@@ -85,7 +88,11 @@ trigger also depends on full effort or eager lemma settings. The bootcamp's
 unqualified weak-equivalence description should not be used as the default
 execution trace. A change in one route needs tests explicitly selecting it.
 
-## Combination and models
+## Equality and combination
+
+New-class and merge notifications update array information, consequences and
+the relationships used for stores. Disequality notification itself does not
+implement a second extensionality algorithm; that work is in `notifyFact`.
 
 `notifySharedTerm` records shared arrays and whether non-array shared terms
 are present. `computeCareGraph` can first request an equality split between
@@ -94,6 +101,8 @@ in sharing, using candidate index values where available to reduce comparisons.
 Unknown index values require a more conservative search. Equality status uses
 the base implementation; an absent override is not an absent service.
 
+## Model construction
+
 `computeRelevantTerms` closes the model's needed reads over stores, including
 the read at each store's own index and existing reads required by the
 read-over-write rules. `collectModelValues` chooses an array representative,
@@ -101,6 +110,21 @@ selects a default value compatible with its may-equal group, creates a constant
 array, and overlays stores for relevant reads. The resulting store chain is
 registered as a model skeleton so other theories can resolve index and element
 values.
+
+## Developing and validating a change
+
+Use the [shared development workflow](README.md#development-workflow)
+with these entry points for this theory.
+
+### Where to make a change
+
+| Change | Start here |
+| --- | --- |
+| Read-over-write consequences | `preRegisterTermInternal`, store/read indices and the selected `postCheck` route |
+| Array disequality | `notifyFact`, the cached extensionality witness and its guarded inference |
+| Default values or missing model reads | `computeRelevantTerms`, the may-equal groups and `collectModelValues` |
+
+### Validation
 
 A minimal regression for read-over-write is a write at `i`, a read at `j`,
 and a separate constraint making `i` and `j` equal or distinct. A model

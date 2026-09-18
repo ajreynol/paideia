@@ -46,11 +46,13 @@ use an SMT solver or to write SMT-LIB.
 
 ## The bootcamp artifact
 
-Start with [Walking through cvc5](bootcamp/README.md). The core chapters cover
-building, term ownership, the path of a query, preprocessing and the theory
-interface. Theory chapters follow the same lifecycle through registration,
-checks, equality, combination and models. The development chapter connects
-changes to options, debugging, tests and proof-producing interfaces.
+Start with [Walking through cvc5](bootcamp/README.md). Architecture foundations
+cover term ownership, the path of a query and preprocessing.
+[How to develop a theory](bootcamp/theory-development/README.md) is a category
+with a shared workflow, the common theory interface and twelve theory
+sub-guides. Each follows the same six development stages, ending with edit
+locations and validation cases. General development chapters cover building,
+options, debugging, tests and proof-producing interfaces.
 
 The developer guide is this repository's artifact and lives in `bootcamp/`.
 It is Markdown; nothing needs to be installed to read it. The

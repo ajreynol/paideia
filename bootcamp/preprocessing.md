@@ -122,7 +122,8 @@ argument, identify introduced symbols and their scopes, check how the model
 reconstructs eliminated terms, and check the proof path. Then test the boundary
 cases where the transformation is disabled, repeated, or used after a pop.
 
-Next: [the theory interface](theory-interface.md).
+Next: [How to develop a theory](theory-development/README.md), starting with
+its [common interface](theory-development/interface.md).
 
 [rewriter]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/rewriter.cpp
 [passes]: https://github.com/cvc5/cvc5/tree/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/preprocessing/passes

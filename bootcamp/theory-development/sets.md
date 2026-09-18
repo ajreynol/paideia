@@ -1,11 +1,15 @@
-# Sets and relations
+# Developing sets and relations
 
-Source baseline: [2026-09-18](source-baseline.md). The public theory wrapper is
+[Bootcamp](../README.md) / [How to develop a theory](README.md)
+
+Source baseline: [2026-09-18](../source-baseline.md). The public theory wrapper is
 [TheorySets][theory]; most work is in [TheorySetsPrivate][private], with a
 separate [Strategy][strategy], [cardinality extension][card] and
 [relational solver][rels].
 
-## Membership connects set structure to elements
+## Representation and invariants
+
+### Membership connects set structure to elements
 
 The solver reasons about set equality and membership, and reduces set
 operations to relationships between memberships. For instance,
@@ -39,7 +43,7 @@ set variables in extended mode. `preRegisterTerm` checks first-class element
 types, registers equality and membership predicates as triggers, and validates
 join-image's constant nonnegative bound. Other terms enter the equality engine.
 
-## Facts and the current strategy
+## Fact processing and checking
 
 The base `preCheck` and `preNotifyFact` behaviors are used. After the equality
 engine receives a fact, `notifyFact` processes positive membership. Membership
@@ -75,7 +79,7 @@ the relevant reason. This is materially different from the bootcamp's
 unconditional rejection description. Support and defaults are in
 [sets_options.toml][options] and the corresponding checks.
 
-## Equality callbacks and combination
+## Equality and combination
 
 `eqNotifyNewClass` records empty-set and singleton structure. Merging singleton
 classes implies equality of their elements; merging a singleton with empty
@@ -89,7 +93,7 @@ notification and equality status inherit the normal base behavior. A set
 solver change involving element equality should therefore be exercised with
 elements constrained in UF, arithmetic or datatypes, not only literal values.
 
-## Models
+## Model construction
 
 Without cardinality, a class's known members give a natural finite skeleton:
 a union of singletons. With cardinality, the extension orders classes and
@@ -98,6 +102,21 @@ fills out or combines values according to the cardinality structure.
 set classes and registers both sets and singleton pieces with the global
 model. For finite element types, exclusion groups keep added slack elements
 from collapsing into already-accounted-for members.
+
+## Developing and validating a change
+
+Use the [shared development workflow](README.md#development-workflow)
+with these entry points for this theory.
+
+### Where to make a change
+
+| Change | Start here |
+| --- | --- |
+| Membership closure or disequality | `TheorySetsPrivate`, strategy steps and witness inference |
+| Element equality or class merges | Singleton/member metadata and the typed care graph |
+| Cardinality or relational support | The cardinality extension, relational solver and explicit incompleteness cases |
+
+### Validation
 
 Test a model with fewer known members than its required cardinality and one
 where two apparent members become equal. Add a disequality between two sets

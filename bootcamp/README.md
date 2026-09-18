@@ -15,13 +15,13 @@ the verification limits and how to update the guide.
 
 ## A route through the code
 
-Start with [building and navigating](build.md), then read
-[terms and ownership](terms.md), [the path of a query](query.md),
-[rewriting and preprocessing](preprocessing.md), and
-[the theory interface](theory-interface.md). These chapters supply the
-vocabulary used by the theory walkthroughs. The
-[development workflow](development.md) connects a code change to options,
-proof plumbing, tests and debugging.
+Start with [building and navigating](build.md), then read the architecture
+foundations: [terms and ownership](terms.md), [the path of a query](query.md)
+and [rewriting and preprocessing](preprocessing.md). Continue to
+[How to develop a theory](theory-development/README.md), which supplies a
+shared workflow, the common theory contract and a sub-guide for each theory.
+Use [Making and investigating a change](development.md) for the repository-wide
+work around options, proof plumbing, tests and debugging.
 
 ```mermaid
 flowchart TD
@@ -41,52 +41,45 @@ This is a control-flow map, not an ownership diagram. For example, theories
 access the solver's `Env`; nodes belong to a `NodeManager` that can be shared
 by several solvers. Neither relationship is shown by a control-flow arrow.
 
-## The theory walkthroughs
-
-Each walkthrough explains preprocessing, term registration, fact processing,
-equality notifications, combination and models. “Inherited” means the base
-implementation is used; it does not mean that stage never runs.
-
-Read [UF](uf.md) first for congruence closure, then
-[arrays](arrays.md) and [datatypes](datatypes.md) for theories with
-substantial equality-class bookkeeping. The numeric theories are
-[arithmetic](arithmetic.md), [bit-vectors](bit-vectors.md),
-[floating point](floating-point.md) and [finite fields](finite-fields.md).
-[Strings and sequences](strings.md), [sets and relations](sets.md),
-[bags and tables](bags.md), and [separation logic](separation-logic.md)
-show several ways of combining local reasoning with other theories. Finish
-with [quantifiers and synthesis](quantifiers.md): they work over the
-ground solver and its candidate models.
-
-For a particular edit, find the theory's `theory_*.h` first. Read its overrides
-alongside the base `Theory` implementation before descending into helpers.
-A method's absence is often meaningful. Its presence can also be only a
-forwarding layer, especially for arithmetic and bit-vectors.
-
 ## Chapters
+
+### Architecture foundations
+
+These chapters explain the objects and query pipeline that theory development
+builds on.
 
 | Chapter | What it covers |
 | --- | --- |
-| [`build.md`](build.md) | build configurations, source layout, generation, theory removal and build-time investigation |
-| [`terms.md`](terms.md) | API/internal representations, term managers, values, attributes and skolems |
-| [`query.md`](query.md) | solver ownership, contexts and the path from assertions through SAT to candidate models |
-| [`preprocessing.md`](preprocessing.md) | rewriting, assertion passes, substitutions, term formulas and proof-aware transformations |
-| [`theory-interface.md`](theory-interface.md) | routing, callbacks, inference, equality, combination and model contracts |
-| [`uf.md`](uf.md) | congruence, higher-order functions, cardinality, conversions and distinct constraints |
-| [`arrays.md`](arrays.md) | read-over-write, extensionality, optional weak equivalence and array models |
-| [`datatypes.md`](datatypes.md) | constructor/tester/selector state, cycles, splitting and model skeletons |
-| [`arithmetic.md`](arithmetic.md) | linear constraints, integer checking, nonlinear refinement and arithmetic models |
-| [`bit-vectors.md`](bit-vectors.md) | separate/internal bit blasting, abstraction, sharing and bit-vector values |
-| [`floating-point.md`](floating-point.md) | totalization, word blasting, constant folding and real-conversion refinement |
-| [`finite-fields.md`](finite-fields.md) | polynomial encoding, Gröbner bases, conflict cores and finite-field root search |
-| [`strings.md`](strings.md) | string/sequence subsolvers, registration, strategies, lengths and model construction |
-| [`sets.md`](sets.md) | membership closure, relations, cardinality, equality callbacks and set models |
-| [`bags.md`](bags.md) | count reasoning, quantified operations, tables and multiplicity-preserving models |
-| [`separation-logic.md`](separation-logic.md) | heap labels, spatial reduction, last-call refinement and heap-model output |
-| [`quantifiers.md`](quantifiers.md) | module scheduling, instantiation, completeness, models and synthesis |
-| [`development.md`](development.md) | implementing an operator/inference, proof plumbing, options, debugging and tests |
-| [`bootcamp-coverage.md`](bootcamp-coverage.md) | every bootcamp topic's destination, material corrections and added topics |
-| [`source-baseline.md`](source-baseline.md) | exact upstream revision, verification limits, mechanical checks and update procedure |
+| [Terms, types and ownership](terms.md) | API/internal representations, term managers, values, attributes and skolems |
+| [The path of a query](query.md) | Solver ownership, contexts and the path from assertions through SAT to candidate models |
+| [Rewriting and preprocessing](preprocessing.md) | Assertion passes, substitutions, term formulas and proof-aware transformations |
+
+### How to develop a theory
+
+[Enter the theory-development category](theory-development/README.md) for the
+shared development workflow and the common interface, then choose one of its
+**twelve theory sub-guides**. Each instantiates the same six stages:
+representation, preprocessing and registration, fact processing, equality and
+combination, model construction, and developing and validating a change.
+
+The category covers UF, arrays, datatypes, arithmetic, bit-vectors, floating
+point, finite fields, strings and sequences, sets and relations, bags and
+tables, separation logic, and quantifiers and synthesis. The detailed chapter
+index lives with those sub-guides, alongside their shared contract.
+
+### General development workflow
+
+| Chapter | What it covers |
+| --- | --- |
+| [Building and navigating](build.md) | Build configurations, source layout, generation, theory removal and build-time investigation |
+| [Making and investigating a change](development.md) | Implementing an operator/inference, proof plumbing, options, debugging and tests |
+
+### Coverage and maintenance
+
+| Reference | What it records |
+| --- | --- |
+| [Bootcamp coverage and corrections](bootcamp-coverage.md) | Every original bootcamp topic's destination, material corrections and added topics |
+| [Source baseline and updates](source-baseline.md) | Exact upstream revision, verification limits, mechanical checks and update procedure |
 
 ## Using the bootcamp
 

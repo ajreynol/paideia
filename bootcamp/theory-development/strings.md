@@ -1,9 +1,13 @@
-# Strings and sequences
+# Developing strings and sequences
 
-Source baseline: [2026-09-18](source-baseline.md). Start at
+[Bootcamp](../README.md) / [How to develop a theory](README.md)
+
+Source baseline: [2026-09-18](../source-baseline.md). Start at
 [TheoryStrings][theory], [TermRegistry][registry] and [Strategy][strategy].
 
-## Several solvers share one state
+## Representation and invariants
+
+### Several solvers share one state
 
 The string theory also handles sequences. Its equality engine supplies
 congruence and classes; `SolverState` records relationships such as lengths
@@ -50,7 +54,7 @@ The `strings-exp` setting, logic and specific operation together determine
 which extended features are accepted; consult [strings_options.toml][options]
 and effective defaults.
 
-## Fact notification and strategy execution
+## Fact processing and checking
 
 The inherited `preCheck` leaves ordinary fact processing to the base loop.
 `preNotifyFact` records string-like disequalities and ensures terms introduced
@@ -73,7 +77,7 @@ array checks, reductions, membership and cardinality. Many steps can stop the
 round by producing a lemma. When debugging a missing late inference, first
 check whether an earlier step legitimately returned control to SAT.
 
-## Equality callbacks and combination
+## Equality and combination
 
 `eqNotifyNewClass` records length and code-term information and informs the
 eager solver. The eager solver tracks information such as constant prefixes
@@ -90,7 +94,7 @@ of their owning string-like type and operator, using equality representatives
 of arguments. This is essential for polymorphic sequences: `Seq Int` and
 `Seq (Seq Int)` must not share an untyped congruence index.
 
-## Constructing words from length and content
+## Model construction
 
 The common relevant-term computation feeds `collectModelValues`, which asks
 the selected model-construction helper for string representatives and needed
@@ -110,6 +114,21 @@ length cannot simply be allocated as a host-language vector; current code
 has special treatment for representability and abstract model pieces. The
 invariant is compatibility of the resulting model constraints, not that every
 candidate word is eagerly materialized in memory.
+
+## Developing and validating a change
+
+Use the [shared development workflow](README.md#development-workflow)
+with these entry points for this theory.
+
+### Where to make a change
+
+| Change | Start here |
+| --- | --- |
+| New or changed operators | `TermRegistry`, preprocessing and the owning specialized solver |
+| A missing inference or stale class information | `Strategy::runInferStep`, pending queues and equality callbacks |
+| Sequence sharing or model values | Typed care-graph indices and model construction by length and element dependency |
+
+### Validation
 
 For a concatenation change, test equalities exposed only after a merge and
 both equal- and unequal-length branches. For sequences, include nested

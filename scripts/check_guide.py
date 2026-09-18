@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Read-only checks for the bootcamp artifact and repository documentation.
 
-Checks local Markdown links/fragments, reference definitions, separate artifact
-and documentation indexes, and cvc5 source-link pins. With --cvc5-source, also
-checks source path existence. Generates and rewrites no files.
+Checks local Markdown links/fragments, reference definitions, hierarchical
+artifact indexes, the theory sub-guide structure, the documentation index and
+cvc5 source-link pins. With --cvc5-source, also checks source path existence.
+Generates and rewrites no files.
 It does not fetch anything, authenticate an archive, or verify prose semantics.
 Only the Markdown forms used by this guide are supported; this is not a renderer.
 """
@@ -17,6 +18,15 @@ from urllib.parse import unquote, urlsplit
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
 BOOTCAMP = ROOT / "bootcamp"
+THEORY_GUIDES = BOOTCAMP / "theory-development"
+THEORY_SECTIONS = [
+    "Representation and invariants",
+    "Preprocessing and registration",
+    "Fact processing and checking",
+    "Equality and combination",
+    "Model construction",
+    "Developing and validating a change",
+]
 FENCES = re.compile(r"^(```|~~~)[^\n]*\n.*?^\1[^\n]*$", re.M | re.S)
 DEFINITIONS = re.compile(r"^\[([^\]]+)\]:\s*(\S+)", re.M)
 INLINE = re.compile(r"\[[^\]]*\]\(([^\s)]+)\)")
@@ -52,7 +62,9 @@ def check(source_root=None):
     errors = []
     local_targets = set()
     source_paths = set()
-    index_targets = {DOCS / "README.md": set(), BOOTCAMP / "README.md": set()}
+    index_targets = {DOCS / "README.md": set()}
+    index_targets.update({p: set() for p in pages
+                          if p.is_relative_to(BOOTCAMP) and p.name == "README.md"})
     for page, body in texts.items():
         label = str(page.relative_to(ROOT))
         definitions = {}
@@ -96,9 +108,18 @@ def check(source_root=None):
             "source-baseline.md" in target for target in targets
         ) and page.name != "source-baseline.md":
             errors.append(f"{label}: no source baseline link")
+        if page.parent == THEORY_GUIDES and page.name not in {"README.md", "interface.md"}:
+            if re.findall(r"^## (.+)$", body, re.M) != THEORY_SECTIONS:
+                errors.append(f"{label}: expected the six shared theory-development sections")
     for page in pages:
-        index = BOOTCAMP / "README.md" if page.is_relative_to(BOOTCAMP) else DOCS / "README.md"
-        if page != index and page not in index_targets[index]:
+        if page == BOOTCAMP / "README.md":
+            continue
+        if page.is_relative_to(BOOTCAMP):
+            parent = page.parent.parent if page.name == "README.md" else page.parent
+            index = parent / "README.md"
+        else:
+            index = DOCS / "README.md"
+        if page != index and page not in index_targets.get(index, set()):
             errors.append(f"{page.relative_to(ROOT)}: missing from {index.relative_to(ROOT)}")
     return errors, len(local_targets), len(source_paths)
 

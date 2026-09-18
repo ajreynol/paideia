@@ -21,27 +21,29 @@ All current-code statements use the [source baseline](source-baseline.md).
 | Assertions/definitions, SmtDriver, preprocessing and finishInit | [Query lifecycle](query.md#assertions-enter-a-pipeline), [preprocessing](preprocessing.md) |
 | ppRewrite/expandDefinitions, term ITEs, Boolean terms, quantified-body caveat and output tags | [Preprocessing](preprocessing.md#remove-term-level-formulas-without-losing-semantics) |
 | PropEngine, CNF, SAT callbacks, decisions, preregistration, TheoryProxy and skolem definitions | [SAT and proxy](query.md#propengine-turns-formulas-into-a-boolean-search) |
-| Theory rewriter/state/inference manager; output reentrancy | [Theory components](theory-interface.md#the-common-pieces-of-a-theory) |
-| Type-/term-based routing and Boolean-term routing | [Ownership](theory-interface.md#which-theory-receives-a-literal) |
-| Distributed/central equality engines and their manager | [Equality](theory-interface.md#equality-engines-and-their-notifications) |
-| STANDARD/FULL/LAST_CALL; preCheck/preNotifyFact/notifyFact/postCheck | [Fact loop](theory-interface.md#the-fact-processing-skeleton) |
-| Equality callbacks, care graphs, sharing and model construction | [Combination and models](theory-interface.md#combination-asks-the-equalities-that-matter) |
-| Finite fields: polynomial encoding, GB conflicts, core extraction and root search | [Finite fields](finite-fields.md) |
-| Bags: reductions, count constraints, operation lemmas, care graph and models | [Bags and tables](bags.md) |
-| Sets: closure, cardinality, relations, singleton merging, disequality and models | [Sets and relations](sets.md) |
-| Arithmetic: variable elimination, extended operators and unfinished check/model outline | [Arithmetic](arithmetic.md) |
-| Bit-vectors: two bit-blasting backends, preprocessing, facts, equality and models | [Bit-vectors](bit-vectors.md) |
-| Datatypes: constructors/testers/selectors, cycles/splitting, SyGuS and skeletons | [Datatypes](datatypes.md) |
-| Floating point: totalization, registration, word blasting, real conversions and models | [Floating point](floating-point.md) |
-| Strings: registration, eager callbacks, strategy, typed care graphs and length-based models | [Strings and sequences](strings.md) |
-| Separation logic: spatial reduction, points-to merges, checking and models | [Separation logic](separation-logic.md) |
-| Arrays: preprocessing, reads/writes, weak equivalence, extensionality and models | [Arrays](arrays.md) |
-| UF: higher-order terms, cardinality, arithmetic/BV conversions and care graph | [UF](uf.md) |
-| Quantifiers: macros, modules, nested efforts, completeness and model truth values | [Quantifiers](quantifiers.md) |
+| Theory rewriter/state/inference manager; output reentrancy | [Theory components](theory-development/interface.md#the-common-pieces-of-a-theory) |
+| Type-/term-based routing and Boolean-term routing | [Ownership](theory-development/interface.md#which-theory-receives-a-literal) |
+| Distributed/central equality engines and their manager | [Equality](theory-development/interface.md#equality-engines-and-their-notifications) |
+| STANDARD/FULL/LAST_CALL; preCheck/preNotifyFact/notifyFact/postCheck | [Fact loop](theory-development/interface.md#the-fact-processing-skeleton) |
+| Equality callbacks, care graphs, sharing and model construction | [Combination and models](theory-development/interface.md#combination-asks-the-equalities-that-matter) |
+| Finite fields: polynomial encoding, GB conflicts, core extraction and root search | [Finite fields](theory-development/finite-fields.md) |
+| Bags: reductions, count constraints, operation lemmas, care graph and models | [Bags and tables](theory-development/bags.md) |
+| Sets: closure, cardinality, relations, singleton merging, disequality and models | [Sets and relations](theory-development/sets.md) |
+| Arithmetic: variable elimination, extended operators and unfinished check/model outline | [Arithmetic](theory-development/arithmetic.md) |
+| Bit-vectors: two bit-blasting backends, preprocessing, facts, equality and models | [Bit-vectors](theory-development/bit-vectors.md) |
+| Datatypes: constructors/testers/selectors, cycles/splitting, SyGuS and skeletons | [Datatypes](theory-development/datatypes.md) |
+| Floating point: totalization, registration, word blasting, real conversions and models | [Floating point](theory-development/floating-point.md) |
+| Strings: registration, eager callbacks, strategy, typed care graphs and length-based models | [Strings and sequences](theory-development/strings.md) |
+| Separation logic: spatial reduction, points-to merges, checking and models | [Separation logic](theory-development/separation-logic.md) |
+| Arrays: preprocessing, reads/writes, weak equivalence, extensionality and models | [Arrays](theory-development/arrays.md) |
+| UF: higher-order terms, cardinality, arithmetic/BV conversions and care graph | [UF](theory-development/uf.md) |
+| Quantifiers: macros, modules, nested efforts, completeness and model truth values | [Quantifiers](theory-development/quantifiers.md) |
 
-Each theory chapter addresses all stages in the bootcamp's common template.
-Where a stage is inherited or delegated, it names the implementation path
-instead of filling the slot with “not implemented.”
+The theory chapters form the [How to develop a theory](theory-development/README.md)
+category. Each instantiates its six development stages and addresses the
+bootcamp's callback topics within those stages. Where a stage is inherited
+or delegated, the sub-guide names the implementation path instead of filling
+the slot with “not implemented.”
 
 ## Material corrections
 
@@ -54,17 +56,17 @@ instead of filling the slot with “not implemented.”
 | SkolemFunId and a single SkolemManager skolemization entry | SkolemId plus quantifier-specific skolemization machinery: [terms](terms.md) |
 | BOOLEAN_TERM_VARIABLE identifies Boolean terms | PURIFY skolems registered in Env: [preprocessing](preprocessing.md) |
 | Initialization-before-construction proposal | finishInit remains: [query](query.md) |
-| Central policy means one shared equality engine without qualification | Arithmetic and arrays are excluded from that central use policy; auxiliary engines remain: [interface](theory-interface.md) |
-| Higher-order UF extensionality on positive equality | Trigger is function disequality: [UF](uf.md) |
-| Arrays always follows weak equivalence and has two engines | Weak equivalence is optional/default off; preprocessing has another engine: [arrays](arrays.md) |
-| All arithmetic equalities become two inequalities | Option-dependent, default off; ordinary equality normalization also changed: [arithmetic](arithmetic.md) |
+| Central policy means one shared equality engine without qualification | Arithmetic and arrays are excluded from that central use policy; auxiliary engines remain: [interface](theory-development/interface.md) |
+| Higher-order UF extensionality on positive equality | Trigger is function disequality: [UF](theory-development/uf.md) |
+| Arrays always follows weak equivalence and has two engines | Weak equivalence is optional/default off; preprocessing has another engine: [arrays](theory-development/arrays.md) |
+| All arithmetic equalities become two inequalities | Option-dependent, default off; ordinary equality normalization also changed: [arithmetic](theory-development/arithmetic.md) |
 | Equality preprocessing grouped into ppRewrite | Separate ppStaticRewrite in arithmetic, BV and strings: corresponding chapters |
-| Field leaves/ring fully established at preregistration | Current GB encoder scans facts at solve time; split backend also exists: [finite fields](finite-fields.md) |
-| sets-ext; blanket rejection of relations plus cardinality | sets-exp; specific incompleteness handling and an explicit strategy: [sets](sets.md) |
-| Bag higher-order separation proposed; cardinality/filler model sketch | Distinct quantified strategy stage, cardinality reduction and current count-based model collector: [bags](bags.md) |
-| Every FP expansion creates a fresh UF | Some are syntax reductions; totalization is operation-specific: [floating point](floating-point.md) |
-| Separation checks at FULL and has no model work | Last-call refinement plus explicit heap-model postprocessing: [separation logic](separation-logic.md) |
-| Quantified formula's model Boolean value demonstrates satisfaction | Completeness is separately established by modules: [quantifiers](quantifiers.md) |
+| Field leaves/ring fully established at preregistration | Current GB encoder scans facts at solve time; split backend also exists: [finite fields](theory-development/finite-fields.md) |
+| sets-ext; blanket rejection of relations plus cardinality | sets-exp; specific incompleteness handling and an explicit strategy: [sets](theory-development/sets.md) |
+| Bag higher-order separation proposed; cardinality/filler model sketch | Distinct quantified strategy stage, cardinality reduction and current count-based model collector: [bags](theory-development/bags.md) |
+| Every FP expansion creates a fresh UF | Some are syntax reductions; totalization is operation-specific: [floating point](theory-development/floating-point.md) |
+| Separation checks at FULL and has no model work | Last-call refinement plus explicit heap-model postprocessing: [separation logic](theory-development/separation-logic.md) |
+| Quantified formula's model Boolean value demonstrates satisfaction | Completeness is separately established by modules: [quantifiers](theory-development/quantifiers.md) |
 
 ## Additions beyond the notes
 

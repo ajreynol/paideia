@@ -1,11 +1,15 @@
-# Quantifiers and synthesis
+# Developing quantifiers and synthesis
 
-Source baseline: [2026-09-18](source-baseline.md). Read
+[Bootcamp](../README.md) / [How to develop a theory](README.md)
+
+Source baseline: [2026-09-18](../source-baseline.md). Read
 [TheoryQuantifiers][theory], [QuantifiersEngine][engine], the
 [module interface][interface] and [module initialization][modules] in that
 order.
 
-## Ground search proposes; quantifiers refine
+## Representation and invariants
+
+### Ground search proposes; quantifiers refine
 
 SAT and the ground theories can assign a Boolean value to a quantified formula
 without establishing that every instance holds. The quantifiers engine supplies
@@ -20,7 +24,7 @@ a set of configurable `QuantifiersModule`s. Each module can request work at
 particular efforts, claim ownership of formulas, and report whether its work
 is complete for a formula.
 
-## Preprocessing, registration and polarity
+## Preprocessing and registration
 
 The quantifier rewriter and assertion-level quantifier passes normalize
 quantified formulas before search. The theory itself has no special
@@ -36,19 +40,15 @@ registration/ownership and term information. Module methods are named
 `registerQuantifier` and `preRegisterQuantifier`; they are not all copies
 of the ground theory's `preRegisterTerm` API.
 
+## Fact processing and checking
+
 `preNotifyFact` sends the quantified atom and its polarity to
 `assertQuantifier` and returns true. This skips the base equality assertion
 and `notifyFact` call. Negative universals require counterexample witnesses,
 handled through the quantifiers' skolemization machinery. Positive universals
 become obligations for the active modules.
 
-The theory does request an equality engine with `d_useMaster = true`.
-Quantifier matching and indexing need ground equalities even though quantified
-facts do not enter that engine through the ordinary base fact loop. “No
-specialized equality callbacks” must not become “quantifiers does not use
-equality information.”
-
-## The main strategies and their shared infrastructure
+### The main strategies and their shared infrastructure
 
 E-matching uses patterns and indexed ground terms modulo equality to propose
 substitutions. For a pattern `f(x)`, a ground application `f(a)` suggests
@@ -79,7 +79,7 @@ cached evaluation remains consistent with the term database. A persistent
 cache keyed only by the quantified formula would miss changes to relevant
 ground terms and equalities.
 
-## Two dimensions of effort
+### Two dimensions of effort
 
 `TheoryQuantifiers::postCheck` delegates to the engine, which has its own
 efforts `CONFLICT`, `STANDARD`, `MODEL` and `LAST_CALL`. These are nested inside
@@ -105,15 +105,26 @@ term substitution route is restricted by safe/stable configurations. Defaults
 and restrictions are defined in [quantifiers_options.toml][options] and
 `SetDefaults`, not by which strategies existed when the bootcamp was written.
 
-## Models, combinations and synthesis
+## Equality and combination
+
+The theory does request an equality engine with `d_useMaster = true`.
+Quantifier matching and indexing need ground equalities even though quantified
+facts do not enter that engine through the ordinary base fact loop. “No
+specialized equality callbacks” must not become “quantifiers does not use
+equality information.”
+
+The theory does not implement a specialized ground care graph or a family of
+per-class equality callbacks; it instead consumes shared/master equality and
+model information through its utilities.
+
+## Model construction
 
 `collectModelValues` records the asserted Boolean polarity of quantified
 formulas in the model. This makes value queries agree with the asserted
 literal; it does **not** independently evaluate a universal formula over all
 values. Satisfaction is the engine's completeness obligation described above.
-The theory does not implement a specialized ground care graph or a family of
-per-class equality callbacks; it instead consumes shared/master equality and
-model information through its utilities.
+
+### Synthesis
 
 Syntax-guided synthesis is an additional consumer of this architecture.
 `SynthEngine` and its helpers under `quantifiers/sygus/` coordinate candidate
@@ -122,6 +133,21 @@ as datatypes, which is why the datatype theory has a SyGuS extension and
 last-call behavior. The top-level API path is in `smt/sygus_solver.cpp`.
 Changing datatype enumeration or rewriting can therefore affect synthesis
 even when ordinary satisfiability tests look unchanged.
+
+## Developing and validating a change
+
+Use the [shared development workflow](README.md#development-workflow)
+with these entry points for this theory.
+
+### Where to make a change
+
+| Change | Start here |
+| --- | --- |
+| A new or changed instantiation strategy | The owning `QuantifiersModule`, term utilities and the common `Instantiate` path |
+| Missing work or an unexpected `unknown` | Registration/ownership, nested efforts and per-formula completeness claims |
+| Candidate programs or synthesis interactions | `SynthEngine`, the SyGuS helpers and the datatype extension |
+
+### Validation
 
 When debugging a missing instance, follow formula registration, ownership,
 active assertion, eligible term indexing, candidate match, `Instantiate`

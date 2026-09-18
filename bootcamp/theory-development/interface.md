@@ -1,6 +1,8 @@
 # The theory interface, equality and models
 
-Source baseline: [2026-09-18](source-baseline.md). Read
+[Bootcamp](../README.md) / [How to develop a theory](README.md) / Common interface
+
+Source baseline: [2026-09-18](../source-baseline.md). Read
 [theory.h][theory-h] together with [theory.cpp][theory-cpp]; the base class
 implements much of the protocol described here.
 
@@ -197,7 +199,8 @@ reject or refine a candidate ground model. Thus neither an inherited
 `collectModelValues` nor the existence of a candidate value proves that the
 whole input is satisfied.
 
-Continue with [UF](uf.md), or choose a theory from [the guide](README.md).
+Continue with [UF](uf.md), or choose a sub-guide from
+[How to develop a theory](README.md#shared-contract-and-theory-sub-guides).
 
 [theory-h]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/theory.h
 [theory-cpp]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/theory.cpp

@@ -20,6 +20,9 @@ to a person and is short on purpose; the depth is in the pages it points at.
    [source baseline and update procedure](../bootcamp/source-baseline.md) and
    [bootcamp coverage](../bootcamp/bootcamp-coverage.md). Check claims against
    the pinned cvc5 source, then update explanations and citations together.
+   Theory sub-guides belong in the
+   [How to develop a theory](../bootcamp/theory-development/README.md) category
+   and use its common six-section structure.
 
 ## What this repository is responsible for
 
