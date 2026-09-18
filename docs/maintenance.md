@@ -16,16 +16,25 @@ to a person and is short on purpose; the depth is in the pages it points at.
    Neither is ours and neither is restated here.
 3. Read [`discussion.md`](discussion.md) for what is currently being said to
    another tool and what it is waiting on.
+4. For work on the bootcamp artifact, read the
+   [source baseline and update procedure](../bootcamp/source-baseline.md) and
+   [bootcamp coverage](../bootcamp/bootcamp-coverage.md). Check claims against
+   the pinned cvc5 source, then update explanations and citations together.
 
 ## What this repository is responsible for
 
-**One thing: a written account of how cvc5's source is put together.** Nothing
-is published yet, and the front page says so rather than pointing at work in
-progress.
+**One thing: a written account of how cvc5's source is put together.** The
+[bootcamp artifact](../bootcamp/README.md) covers the architecture and every theory
+in the supplied bootcamp. It lives in `bootcamp/`, with its own chapter index
+and source baseline. `docs/` contains the repository's maintenance and standing
+documentation. The artifact is authored Markdown with source citations,
+intended to evolve through source-checked edits, initially mostly by AI agents.
 
-**It is responsible for nothing about proofs.** That subject belongs to the
-tools built around the Eunoia language, and a page here that started answering
-*is cvc5 right* would be answering somebody else's question badly.
+**It does not assess the correctness of proofs.** The guide describes proof
+objects and interfaces where they are part of cvc5's implementation. Answering
+*is cvc5 right* belongs to the tools built around the Eunoia language, and a
+page here that started answering it would be answering somebody else's
+question badly.
 
 ## The child projects
 
@@ -98,10 +107,12 @@ claims no footing at all.
 
 ## What is deliberately not here
 
-- **No CI.** No `.github/`, no workflow, no checker pinned or called. A
+- **No CI.** No `.github/`, no workflow, no ecosystem checker pinned or called. A
   repository that has joined nothing runs none of the ecosystem's checks, and
   adding a runner to a tree is outward-facing and yours.
-- **No `scripts/`, `tests/`, `deps/` or `prompts/`.** There is nothing to put in
-  them. Each arrives when there is.
+- **No `tests/`, `deps/` or `prompts/`.** The one script,
+  [`check_guide.py`](../scripts/check_guide.py), checks written-guide links,
+  indexing and source paths on request. It generates nothing and does not
+  validate the semantics of the prose. No runner invokes it automatically.
 - **No second overview.** The front page is the only entry point, and
   [`README.md`](README.md) beside this file is the index and nothing else.

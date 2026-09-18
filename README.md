@@ -9,6 +9,13 @@ is large and old, and most of what a newcomer needs to know about it is
 currently learned by asking someone who already knows. paideia is where those
 answers get written down.
 
+**The [bootcamp artifact](bootcamp/README.md) is ready to read.** It expands
+the cvc5 bootcamp into a walkthrough of the architecture and twelve theory
+solvers, checked against upstream `main` on 2026-09-18. It is a living draft:
+the chapters carry pinned source links, and the
+[baseline record](bootcamp/source-baseline.md) explains how they were checked
+and how to update them.
+
 ## The question it answers
 
 *I have to change cvc5. Where does this live, what will it touch, and what were
@@ -37,17 +44,28 @@ here binds cvc5 or speaks for it, and where this guide and the source disagree,
 the source is right. **And it is not a user manual** — it will not teach you to
 use an SMT solver or to write SMT-LIB.
 
-## What it would take to run it
+## The bootcamp artifact
 
-Nothing runs, because there is no guide yet: no prose to read, no build, no
-tests, nothing to install and nothing to check out and try. What this repository
-publishes is this page. There is no date by which that changes.
+Start with [Walking through cvc5](bootcamp/README.md). The core chapters cover
+building, term ownership, the path of a query, preprocessing and the theory
+interface. Theory chapters follow the same lifecycle through registration,
+checks, equality, combination and models. The development chapter connects
+changes to options, debugging, tests and proof-producing interfaces.
 
-## The documents
+The developer guide is this repository's artifact and lives in `bootcamp/`.
+It is Markdown; nothing needs to be installed to read it. The
+[chapter index](bootcamp/README.md#chapters) lists its contents. Its source
+baseline is
+`3dcc1ef5421ab62cc1ee9af52d70042ce6861af0`, observed on upstream `main` on
+2026-09-18. Claims were checked by reading source, not by running every solver
+path. A small read-only checker validates the guide's links and source paths;
+the baseline record gives its commands and limits.
+
+## Repository documentation
 
 | document | what it is for |
 | --- | --- |
-| [`docs/README.md`](docs/README.md) | the index, and it names every document here |
+| [`docs/README.md`](docs/README.md) | the repository documentation index |
 | [`docs/maintenance.md`](docs/maintenance.md) | **start here to maintain this tree** — where to start, what the person does, and what this repository is responsible for |
 | [`docs/discussion.md`](docs/discussion.md) | what is being said to other tools, staged for a person to carry |
 
@@ -56,7 +74,7 @@ publishes is this page. There is no date by which that changes.
 | question | answer |
 | --- | --- |
 | *Is this cvc5's documentation?* | No. cvc5 keeps its own, and has not asked for this one. Where the two disagree, cvc5's source is right |
-| *Where is the guide?* | Nowhere yet. Nothing is published, and the section above says so rather than pointing at work in progress |
+| *Where is the guide?* | [Start here](bootcamp/README.md); the [coverage table](bootcamp/bootcamp-coverage.md) maps every bootcamp topic to a chapter |
 | *Who decides whether a cvc5 proof can be trusted?* | Not this repository. That is the Eunoia ecosystem's subject, and its tools do it |
 | *Where is the shared repository policy this tree is arranged by?* | [kanon's `docs/policy.md`](https://github.com/ajreynol/kanon/blob/main/docs/policy.md), and the name register beside it is [`docs/glossary.md`](https://github.com/ajreynol/kanon/blob/main/docs/glossary.md) |
 

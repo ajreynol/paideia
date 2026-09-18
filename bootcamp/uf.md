@@ -1,0 +1,106 @@
+# Uninterpreted functions and higher-order reasoning
+
+Source baseline: [2026-09-18](source-baseline.md). Main entry:
+[TheoryUF][theory]. Helpers include [HoExtension][ho],
+[CardinalityExtension][card], [ConversionsSolver][conv] and
+[DistinctExtension][distinct].
+
+## What the solver represents
+
+For ordinary ground UF, the main invariant is congruence: if `a = b`, then
+`f(a) = f(b)`. The equality engine stores this relationship, detects collisions
+between incompatible facts and explains them. UF also participates in shared
+equalities for terms whose primary syntax comes from other theories.
+
+The directory contains more than first-order congruence closure. Finite model
+finding needs bounds on uninterpreted-sort domains; higher-order logic needs
+function-valued terms and extensionality; arithmetic/bit-vector conversions
+need a bridge between two value theories. Current UF also has dedicated
+reasoning for `DISTINCT` terms that survive preprocessing.
+
+## Preprocessing and registration
+
+`ppRewrite` checks the use of higher-order terms against the logic. `HO_APPLY`
+and first-class function terms require a higher-order logic, as do ordinary
+applications whose operator has a higher-order type. Higher-order preprocessing
+delegates to `HoExtension`, which cooperates with lambda lifting. Fully applied
+higher-order applications can be related to ordinary `APPLY_UF`; partially
+applied functions cannot simply be treated as first-order applications.
+
+With eager arithmetic/BV conversion enabled, the `BITVECTOR_UBV_TO_INT` and
+`INT_TO_BITVECTOR` operators are eliminated here. Otherwise they are retained
+for the conversion solver. `ppAssert` uses the base behavior.
+
+`preRegisterTerm` registers with the cardinality extension when enabled, sets
+equality triggers, records function applications, and lazily constructs the
+conversion solver when a conversion first appears. A lifted lambda in
+higher-order mode is added as a shared term. Some internal kinds, including
+uninterpreted-sort model values, are not legal input facts to this solver.
+
+During initialization, `APPLY_UF` is registered as a congruence function kind;
+higher-order mode additionally registers `HO_APPLY` and accounts for equality
+between function operators. This is the part to inspect if a new application
+representation fails to propagate equalities even though all arguments are
+registered.
+
+## Facts and checks
+
+The normal base fact loop asserts predicates and equalities into the official
+equality engine. `notifyFact` forwards facts to the cardinality extension,
+including whether the SAT literal was a decision. It dispatches `DISTINCT`
+facts and handles higher-order function disequalities.
+
+For **negative** equality `f != g`, extensionality requires an argument at
+which the functions differ. The higher-order extension introduces and manages
+that witness. The bootcamp's description of this trigger as a positive
+function equality is incorrect at this baseline. Positive function equality
+instead participates in congruence.
+
+`postCheck` runs the cardinality extension where enabled, runs conversions at
+last call, checks the distinct extension, and invokes higher-order checking at
+full effort. `needsCheckLastEffort` reflects which of these extensions needs
+the final candidate stage. A no-op `postCheck` in a minimal UF example says
+little about a problem using finite domains or conversions.
+
+## Equality callbacks and combination
+
+The new-class, merge and disequality notifications maintain the cardinality
+extension when it is active. Congruence and trigger propagation still occur
+even when no specialized cardinality callback work is needed. The cardinality
+extension must keep domain-size constraints compatible with the equalities
+and disequalities currently held by the engine.
+
+`computeCareGraph` indexes applications by operator and, where required, type.
+It uses representatives of their arguments and checks pairs relevant to shared
+terms. Higher-order applications need indices accounting for function types;
+unsigned BV-to-integer conversions need the input bit-vector type. Mixing
+different widths or different instantiated function types in one index would
+create invalid comparisons.
+
+`getEqualityStatus` returns proven equality or disequality when the engine has
+it, and otherwise `EQUALITY_FALSE_IN_MODEL`. This supports constructing a model
+with different values for unconstrained classes. It does not establish a new
+logical disequality. `notifySharedTerm` needs no additional UF-specific
+override beyond the base registration.
+
+## Models and a change to trace
+
+Ordinary UF function interpretations are assembled by the common model
+machinery from applications and their argument/result values. The UF
+`collectModelValues` override adds higher-order model information through
+`collectModelInfoHo`. Function disequalities need extensional witnesses in
+that model too; simply assigning the same lambda to unconstrained function
+classes can violate the input.
+
+To trace congruence, use `a = b` together with `f(a) != f(b)` and watch where
+simplification resolves it. To exercise search instead, keep the equality
+conditional so it survives preprocessing. For an extension change, add a
+separate case involving that extension, such as function disequality or a
+conversion at a nontrivial width. Test a push/pop around the relevant fact so
+equality-class and extension state must recover together.
+
+[theory]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/uf/theory_uf.cpp
+[ho]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/uf/ho_extension.cpp
+[card]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/uf/cardinality_extension.cpp
+[conv]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/uf/conversions_solver.cpp
+[distinct]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/uf/distinct_extension.cpp
