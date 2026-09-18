@@ -1,0 +1,321 @@
+#!/usr/bin/env bash
+# run_empeiria -- work a cvc5 issue, from inside a cvc5 checkout.
+#
+#   cd ~/cvc5 && run_empeiria 12905
+#
+# Fixing the bug is the job. Learning from it is a by-product, and it never
+# gets in the way: the ledger is written after the work, by a separate command,
+# and nothing about it gates the fix. That ordering is the whole vision of this
+# project -- be useful fast, then be smarter next time.
+#
+#   run_empeiria --triage               refresh the open-issue index
+#   run_empeiria --issue 12905          work it: reproduce, locate, fix, test
+#   run_empeiria 12905                  the same thing; a bare N means --issue N
+#   run_empeiria 12905 --show-prompt    print the prompt, run nothing
+#   run_empeiria --record 12905         afterwards: what the maintainer did
+#   run_empeiria --list                 what has been worked, and what came back
+#
+# It makes no network calls. It builds a prompt and hands it to an assistant in
+# a session a person is driving; whatever the assistant then reads is its own
+# business. Nothing is pushed, no tracker is touched, and no pull request is
+# opened -- ever. See ../../docs/pr-policy.md, which governs here unchanged.
+
+set -euo pipefail
+
+HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+LEDGER="$HERE/ledger"
+TRIAGE="$HERE/triage.md"
+
+# A response lives on the lines *after* the HUMAN RESPONSE: marker, not on it.
+# Checking the marker line itself was a bug: it made --list never report a
+# response and let --record overwrite one that was already there.
+has_response() {
+  awk '/^HUMAN RESPONSE:/ { seen = 1; next }
+       seen && NF { found = 1 }
+       END { exit(found ? 0 : 1) }' "$1"
+}
+
+AGENT=claude
+ISSUE=""
+MODE=work
+PRINT=0
+SHOW=0
+FORCE=0
+BRANCH=""
+
+usage() {
+  cat >&2 <<'USAGE'
+usage: run_empeiria [--issue] N [--codex] [--branch NAME] [--print]
+                          [--show-prompt] [--force]
+       run_empeiria --triage [--codex] [--print] [--show-prompt]
+       run_empeiria --record N
+       run_empeiria --list
+
+  --issue N       the cvc5 issue to work; a bare N is shorthand for it
+  --triage        refresh the open-issue index in triage.md
+  --record N      record what the maintainer did, after the fact
+  --list          what has been worked, and what came back
+  --codex         run codex instead of claude
+  --branch NAME   branch to work on (default: empeiria/issue-N)
+  --print         run non-interactively and print the result
+  --show-prompt   print the prompt and exit, running nothing
+  --force         proceed even though the working tree is dirty
+
+Run it in the root of a cvc5 checkout.
+USAGE
+  exit 2
+}
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --triage) MODE=triage; shift ;;
+    --issue) [ -z "$ISSUE" ] || { echo "run_empeiria: one issue at a time" >&2; usage; }
+             ISSUE="${2:-}"; [ -n "$ISSUE" ] || usage; shift 2 ;;
+    --record) MODE=record; ISSUE="${2:-}"; [ -n "$ISSUE" ] || usage; shift 2 ;;
+    --list) MODE=list; shift ;;
+    --codex) AGENT=codex; shift ;;
+    --claude) AGENT=claude; shift ;;
+    --branch) BRANCH="${2:-}"; [ -n "$BRANCH" ] || usage; shift 2 ;;
+    --print) PRINT=1; shift ;;
+    --show-prompt) SHOW=1; shift ;;
+    --force) FORCE=1; shift ;;
+    -h|--help) usage ;;
+    -*) echo "run_empeiria: unexpected option $1" >&2; usage ;;
+    # A bare number is shorthand for --issue N, because that is the common case
+    # and the whole interface should be the issue number.
+    *) [ -z "$ISSUE" ] || { echo "run_empeiria: one issue at a time" >&2; usage; }
+       ISSUE="$1"; shift ;;
+  esac
+done
+
+# --- list needs nothing else -------------------------------------------------
+if [ "$MODE" = list ]; then
+  found=0
+  for f in "$LEDGER"/*.md; do
+    [ -e "$f" ] || continue
+    n=$(basename "$f" .md)
+    case "$n" in ''|*[!0-9]*) continue ;; esac   # ledger/README.md is not an issue
+    if [ "$found" = 0 ]; then
+      printf '%-10s %-12s %s\n' "issue" "state" "worked"
+      found=1
+    fi
+    state=$(sed -n 's/^TRIAGE:[[:space:]]*\([a-z ]*\).*/\1/p' "$f" | head -1)
+    when=$(sed -n 's/^worked: *//p' "$f" | head -1)
+    if has_response "$f"; then state="${state:-?} +response"; fi
+    printf '%-10s %-12s %s\n' "#$n" "${state:-?}" "${when:-?}"
+  done
+  [ "$found" = 1 ] || echo "no issues worked yet; the ledger at $LEDGER is empty"
+  exit 0
+fi
+
+if [ "$MODE" = triage ]; then
+  read -r -d '' TPROMPT <<TRIAGE_END || true
+Refresh the open-issue index at:
+
+  $TRIAGE
+
+Read that file first: its header states what the file is for and, more
+importantly, what it may not be used for. Do not change the header, the
+"What this is" section, or the class table. You are updating one table.
+
+1. **Read every open issue** at https://github.com/cvc5/cvc5/issues — all of
+   them, not a sample. If there are too many to read properly, say how many you
+   read and stop; a partial index that says it is partial is useful, and one
+   that pretends to be complete is not.
+2. **One row per issue**, in the table under "## Open issues", newest first:
+
+   | # | title | one line | class | worked |
+
+   - **one line**: what is actually wrong, in your own words, from the report.
+     Not the title again. If the report does not say, write "report does not
+     say" -- that is the most useful row in the table.
+   - **class**: one of proof / bug / perf / design / unclear, per the class
+     table already in the file. When torn between a class and \`unclear\`, pick
+     \`unclear\`: a wrong route costs somebody an afternoon and a hedge costs a
+     question.
+   - **worked**: "not yet", or the ledger state if $LEDGER/<n>.md exists.
+3. **Update the snapshot line** under the title with today's date, how many
+   issues you read, and how many were open.
+4. **Do not drop a row for an issue that has closed** since the last refresh --
+   move it to a "## Recently closed" section with a word on how it closed. What
+   got fixed is the cheapest signal here about what this project should expect.
+
+You are writing an index. Every row is a guess from an issue's text by
+something that has reproduced nothing, and the file says so about itself. Do
+not write a row that reads more confident than that.
+
+**Do not open, comment on, label or close anything.** Do not touch any
+repository other than this file. Nothing here is delivered.
+TRIAGE_END
+  if [ "$SHOW" = 1 ]; then printf '%s\n' "$TPROMPT"; exit 0; fi
+  command -v "$AGENT" >/dev/null 2>&1 || {
+    echo "run_empeiria: $AGENT is not on PATH" >&2; exit 127; }
+  echo "-- run_empeiria: refreshing $TRIAGE" >&2
+  echo "   the index is the first place to look and the last place to trust" >&2
+  if [ "$AGENT" = codex ]; then
+    if [ "$PRINT" = 1 ]; then exec codex exec "$TPROMPT"; else exec codex "$TPROMPT"; fi
+  else
+    if [ "$PRINT" = 1 ]; then exec claude -p "$TPROMPT"; else exec claude "$TPROMPT"; fi
+  fi
+fi
+
+case "$ISSUE" in ''|*[!0-9]*)
+  echo "run_empeiria: give an issue number, e.g. run_empeiria --issue 12905" >&2
+  usage ;;
+esac
+: "${BRANCH:=empeiria/issue-$ISSUE}"
+
+# --- must be cvc5 ------------------------------------------------------------
+if ! ROOT=$(git rev-parse --show-toplevel 2>/dev/null); then
+  echo "run_empeiria: not in a git repository." >&2
+  echo "              Run this in the root of a cvc5 checkout." >&2
+  exit 2
+fi
+is_cvc5=0
+case "$(git -C "$ROOT" remote get-url origin 2>/dev/null || true)" in
+  *cvc5/cvc5*|*cvc5.git*|*/cvc5) is_cvc5=1 ;;
+esac
+if [ "$is_cvc5" = 0 ] && [ -f "$ROOT/configure.sh" ] && [ -d "$ROOT/src/theory" ]; then
+  is_cvc5=1
+fi
+if [ "$is_cvc5" = 0 ]; then
+  echo "run_empeiria: $ROOT does not look like a cvc5 checkout." >&2
+  echo "              Expected a cvc5 origin remote, or configure.sh and src/theory/." >&2
+  exit 2
+fi
+
+# --- record: after the fact --------------------------------------------------
+if [ "$MODE" = record ]; then
+  mkdir -p "$LEDGER"
+  f="$LEDGER/$ISSUE.md"
+  if [ ! -f "$f" ]; then
+    echo "run_empeiria: no ledger entry for #$ISSUE; work it first" >&2
+    exit 2
+  fi
+  if has_response "$f"; then
+    echo "run_empeiria: #$ISSUE already has a response recorded." >&2
+    echo "              Edit $f by hand if it needs correcting." >&2
+    exit 2
+  fi
+  echo "-- run_empeiria: recording the maintainer's response to #$ISSUE" >&2
+  echo "   Paste what they actually did, then Ctrl-D." >&2
+  echo "   Their words, not a summary: the delta is the asset." >&2
+  resp=$(cat)
+  [ -n "$resp" ] || { echo "run_empeiria: nothing read; leaving $f alone" >&2; exit 2; }
+  tmp=$(mktemp)
+  awk -v r="$resp" '
+    /^HUMAN RESPONSE:/ { print; print ""; print r; next } { print }' "$f" > "$tmp"
+  mv "$tmp" "$f"
+  echo "   recorded in $f" >&2
+  echo "   The delta between TRIAGE and HUMAN RESPONSE is what this project is for." >&2
+  exit 0
+fi
+
+read -r -d '' PROMPT <<PROMPT_END || true
+You are working in a checkout of cvc5, the SMT solver, at $ROOT, on branch
+$BRANCH.
+
+Fix cvc5 issue #$ISSUE:
+
+  https://github.com/cvc5/cvc5/issues/$ISSUE
+
+**Fixing it is the job.** Everything else here serves that. If you run out of
+road, a reproduced bug with a named location is already worth having -- stop
+there and say so, rather than guessing at a fix.
+
+Work in this order, and do not skip ahead:
+
+1. **Reproduce it before believing it.** An issue is a report, not a diagnosis.
+   Build what you need and run it yourself. Record the exact command and the
+   exact output. If it does not reproduce, that is the result: say what you ran,
+   on what commit, and stop.
+2. **Locate it.** Name the file and line, and say what is actually wrong there
+   in one sentence. If you cannot get to a location, say where you got to.
+3. **Fix it, smallest change first.** Prefer the change that addresses the cause
+   over the one that silences the symptom, and say which you did if they differ.
+   If the fix turns on a design decision that is not yours to make, do not
+   guess: describe the options and stop.
+4. **Prove it.** Rebuild, run the reproducer again, and quote the before and
+   after. A patch whose reproducer has not been run against it is a hypothesis
+   wearing a diff, and does not count as a fix here.
+5. **Add a regression test** where cvc5's suite has a natural place for one.
+   Run it and say that you did.
+
+Constraints, none of them negotiable:
+
+- **Do not push, do not open a pull request, do not comment on the tracker, do
+  not touch any issue.** Nothing here is delivered. A person reviews this and
+  decides what, if anything, goes anywhere. Approval to make a change is not
+  approval to send it.
+- Do not fix anything else you notice. Note it in one line if it matters.
+- Change nothing outside this cvc5 checkout.
+
+When you have finished, write your report to:
+
+  $LEDGER/$ISSUE.md
+
+Create the directory if it does not exist. Use exactly this shape, and leave
+HUMAN RESPONSE empty -- it is the maintainer's, and keeping the two apart is
+what makes the pair worth anything later:
+
+  # #$ISSUE -- <title>
+
+  worked: <date>
+  branch: $BRANCH
+  commit: <the cvc5 commit you started from>
+
+  TRIAGE: fixed | reproduced, not fixed | not reproducible | needs a decision | cannot tell
+
+  WHAT I DID:
+  <what you ran, what you changed, and what a user would see differently.
+   Include the reproducer command and its before/after output verbatim.>
+
+  UNSURE ABOUT:
+  <what you would want a maintainer to check, and what would change your mind>
+
+  HUMAN RESPONSE:
+
+**Finish by asking what to do next.** Say what you found, what you are unsure
+about, and what you would do with another instruction. The second turn is
+usually where the work gets done.
+PROMPT_END
+
+# --show-prompt runs nothing, so it is answerable anywhere and on any tree:
+# that is what makes the prompt auditable without a clean checkout to hand.
+if [ "$SHOW" = 1 ]; then printf '%s\n' "$PROMPT"; exit 0; fi
+
+# --- past here there are side effects, so the tree must be clean -------------
+if [ "$FORCE" = 0 ] && [ -n "$(git -C "$ROOT" status --porcelain)" ]; then
+  echo "run_empeiria: $ROOT has uncommitted changes." >&2
+  echo "              Working an issue creates a branch and edits the tree, so" >&2
+  echo "              stash or commit first. --force proceeds anyway." >&2
+  echo "              (--show-prompt works regardless; it runs nothing.)" >&2
+  exit 2
+fi
+
+command -v "$AGENT" >/dev/null 2>&1 || {
+  echo "run_empeiria: $AGENT is not on PATH" >&2; exit 127; }
+
+# --- branch ------------------------------------------------------------------
+# Made here rather than asked of the assistant: a branch it forgot to create is
+# a diff on somebody's main, which is the one mistake that is annoying to undo.
+cd "$ROOT"
+if git rev-parse --verify --quiet "$BRANCH" >/dev/null; then
+  echo "-- run_empeiria: branch $BRANCH exists; continuing on it" >&2
+  git checkout --quiet "$BRANCH"
+else
+  git checkout --quiet -b "$BRANCH"
+fi
+
+mkdir -p "$LEDGER"
+echo "-- run_empeiria: cvc5 issue #$ISSUE" >&2
+echo "   tree    $ROOT" >&2
+echo "   branch  $BRANCH  (from $(git rev-parse --short HEAD))" >&2
+echo "   ledger  $LEDGER/$ISSUE.md" >&2
+echo "   agent   $AGENT -- nothing is pushed, nothing is posted" >&2
+
+if [ "$AGENT" = codex ]; then
+  if [ "$PRINT" = 1 ]; then exec codex exec "$PROMPT"; else exec codex "$PROMPT"; fi
+else
+  if [ "$PRINT" = 1 ]; then exec claude -p "$PROMPT"; else exec claude "$PROMPT"; fi
+fi

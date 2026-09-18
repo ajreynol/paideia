@@ -1,0 +1,457 @@
+#!/usr/bin/env bash
+# run_anakrisis -- review a cvc5 pull request, from inside a cvc5 checkout.
+#
+#   cd ~/cvc5 && gh pr checkout 12893 && run_anakrisis 12893
+#
+# The job is one question: what does this change do to the inventory of ways
+# cvc5 can produce no proof? That half is computed rather than judged -- the
+# parent's analyses are run at the merge base and at the head and subtracted --
+# and an assistant reads a delta it did not produce. See review.md.
+#
+#   run_anakrisis 12893 --delta         the inventory delta alone; no assistant
+#   run_anakrisis 12893                 the delta, then a review by an assistant
+#   run_anakrisis 12893 --baseline      the same review with no delta -- the control
+#   run_anakrisis 12893 --show-prompt   print the prompt, run nothing
+#   run_anakrisis --record 12893        afterwards: what the maintainers did
+#   run_anakrisis --list                what has been reviewed, and what came back
+#
+# The baseline for this task already exists. ../../prompts/check_cvc5_issue
+# hands an assistant a prompt and a checkout and gets useful work out of it with
+# no instrument at all, and that is what this has to beat -- not "no review".
+# So --baseline runs the same review with the delta withheld: the two prompts
+# differ by the delta and by nothing else, which is what makes the comparison a
+# measurement rather than an impression.
+#
+# It makes no network calls: it reviews whatever is checked out, and prints the
+# fetch command rather than running it. Nothing is pushed, nothing is posted, no
+# review is submitted and no pull request is approved -- ever. The governing
+# document is ../../docs/pr-policy.md, which applies here unchanged.
+
+set -euo pipefail
+
+HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+DOKI=$(CDPATH= cd -- "$HERE/../.." && pwd)
+LEDGER="$HERE/ledger"
+
+# A response lives on the lines *after* the marker, not on it -- the same bug
+# the sibling project here hit, and the same fix.
+has_response() {
+  awk '/^HUMAN RESPONSE:/ { seen = 1; next }
+       seen && NF { found = 1 }
+       END { exit(found ? 0 : 1) }' "$1"
+}
+
+AGENT=claude
+PR=""
+MODE=review
+PRINT=0
+SHOW=0
+FORCE=0
+BASELINE=0
+BASEREF=""
+
+usage() {
+  cat >&2 <<'USAGE'
+usage: run_anakrisis [--pr] N [--delta] [--baseline] [--codex] [--base REF]
+                            [--print] [--show-prompt] [--force]
+       run_anakrisis --record N
+       run_anakrisis --list
+
+  --pr N          the cvc5 pull request checked out here; a bare N is shorthand
+  --delta         print the inventory delta and stop; runs no assistant
+  --baseline      review with the delta withheld -- the control arm, and what
+                  the prompt-based tooling here already gives you
+  --base REF      what to take the merge base against (default: origin/main)
+  --record N      record what the maintainers did, after the fact
+  --list          what has been reviewed, and what came back
+  --codex         run codex instead of claude
+  --print         run non-interactively and print the result
+  --show-prompt   print the prompt and exit, running nothing
+  --force         proceed even though the working tree is dirty
+
+Run it in the root of a cvc5 checkout, with the pull request already checked
+out. Fetching it is a network call and is yours: `gh pr checkout N`.
+USAGE
+  exit 2
+}
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --pr) [ -z "$PR" ] || { echo "run_anakrisis: one pull request at a time" >&2; usage; }
+          PR="${2:-}"; [ -n "$PR" ] || usage; shift 2 ;;
+    --delta) MODE=delta; shift ;;
+    --baseline) BASELINE=1; shift ;;
+    --record) MODE=record; PR="${2:-}"; [ -n "$PR" ] || usage; shift 2 ;;
+    --list) MODE=list; shift ;;
+    --base) BASEREF="${2:-}"; [ -n "$BASEREF" ] || usage; shift 2 ;;
+    --codex) AGENT=codex; shift ;;
+    --claude) AGENT=claude; shift ;;
+    --print) PRINT=1; shift ;;
+    --show-prompt) SHOW=1; shift ;;
+    --force) FORCE=1; shift ;;
+    -h|--help) usage ;;
+    -*) echo "run_anakrisis: unexpected option $1" >&2; usage ;;
+    *) [ -z "$PR" ] || { echo "run_anakrisis: one pull request at a time" >&2; usage; }
+       PR="$1"; shift ;;
+  esac
+done
+
+# --- list needs nothing else -------------------------------------------------
+if [ "$MODE" = list ]; then
+  found=0
+  for f in "$LEDGER"/*.md; do
+    [ -e "$f" ] || continue
+    n=$(basename "$f" .md)
+    # ledger/README.md is not a PR; <N>-baseline.md is the control arm
+    case "$n" in ''|*[!0-9]*) case "$n" in *-baseline) ;; *) continue ;; esac ;; esac
+    if [ "$found" = 0 ]; then
+      printf '%-10s %-24s %s\n' "pr" "triage" "reviewed"
+      found=1
+    fi
+    state=$(sed -n 's/^TRIAGE:[[:space:]]*\([a-z ]*\).*/\1/p' "$f" | head -1)
+    when=$(sed -n 's/^reviewed: *//p' "$f" | head -1)
+    if has_response "$f"; then state="${state:-?} +response"; fi
+    printf '%-10s %-24s %s\n' "#$n" "${state:-?}" "${when:-?}"
+  done
+  [ "$found" = 1 ] || echo "nothing reviewed yet; the ledger at $LEDGER is empty"
+  exit 0
+fi
+
+case "$PR" in ''|*[!0-9]*)
+  echo "run_anakrisis: give a pull request number, e.g. run_anakrisis 12893" >&2
+  usage ;;
+esac
+
+# --- must be cvc5 ------------------------------------------------------------
+if ! ROOT=$(git rev-parse --show-toplevel 2>/dev/null); then
+  echo "run_anakrisis: not in a git repository." >&2
+  echo "               Run this in the root of a cvc5 checkout." >&2
+  exit 2
+fi
+is_cvc5=0
+case "$(git -C "$ROOT" remote get-url origin 2>/dev/null || true)" in
+  *cvc5/cvc5*|*cvc5.git*|*/cvc5) is_cvc5=1 ;;
+esac
+if [ "$is_cvc5" = 0 ] && [ -f "$ROOT/configure.sh" ] && [ -d "$ROOT/src/theory" ]; then
+  is_cvc5=1
+fi
+if [ "$is_cvc5" = 0 ]; then
+  echo "run_anakrisis: $ROOT does not look like a cvc5 checkout." >&2
+  echo "               Expected a cvc5 origin remote, or configure.sh and src/theory/." >&2
+  exit 2
+fi
+
+# --- record: after the fact --------------------------------------------------
+ARM=delta; ENTRY="$PR"
+if [ "$BASELINE" = 1 ]; then ARM=baseline; ENTRY="$PR-baseline"; fi
+
+if [ "$MODE" = record ]; then
+  f="$LEDGER/$ENTRY.md"
+  if [ ! -f "$f" ]; then
+    echo "run_anakrisis: no ledger entry for #$PR; review it first" >&2
+    exit 2
+  fi
+  if has_response "$f"; then
+    echo "run_anakrisis: #$PR already has a response recorded." >&2
+    echo "               Edit $f by hand if it needs correcting." >&2
+    exit 2
+  fi
+  echo "-- run_anakrisis: recording what the maintainers did with #$PR" >&2
+  echo "   Paste what they actually did, then Ctrl-D." >&2
+  echo "   Their words, not a summary: the delta between our review and the" >&2
+  echo "   outcome is the only thing in the ledger that is an asset." >&2
+  resp=$(cat)
+  [ -n "$resp" ] || { echo "run_anakrisis: nothing read; leaving $f alone" >&2; exit 2; }
+  tmp=$(mktemp)
+  awk -v r="$resp" '
+    /^HUMAN RESPONSE:/ { print; print ""; print r; next } { print }' "$f" > "$tmp"
+  mv "$tmp" "$f"
+  echo "   recorded in $f" >&2
+  exit 0
+fi
+
+# --- what are we comparing against? -----------------------------------------
+if [ -z "$BASEREF" ]; then
+  if git -C "$ROOT" rev-parse --verify --quiet origin/main >/dev/null; then
+    BASEREF=origin/main
+  elif git -C "$ROOT" rev-parse --verify --quiet main >/dev/null; then
+    BASEREF=main
+  else
+    echo "run_anakrisis: no origin/main or main here; pass --base REF" >&2
+    exit 2
+  fi
+fi
+if ! BASE=$(git -C "$ROOT" merge-base HEAD "$BASEREF" 2>/dev/null); then
+  echo "run_anakrisis: no merge base between HEAD and $BASEREF" >&2
+  exit 2
+fi
+HEADSHA=$(git -C "$ROOT" rev-parse HEAD)
+if [ "$BASE" = "$HEADSHA" ]; then
+  echo "run_anakrisis: HEAD is $BASEREF, so there is no change to examine." >&2
+  echo "               Check the pull request out first -- that is a network" >&2
+  echo "               call and it is yours to make:" >&2
+  echo >&2
+  echo "                   gh pr checkout $PR" >&2
+  exit 2
+fi
+if [ "$FORCE" = 0 ] && [ -n "$(git -C "$ROOT" status --porcelain)" ]; then
+  echo "run_anakrisis: $ROOT has uncommitted changes." >&2
+  echo "               The block records a head sha, so the tree it names has" >&2
+  echo "               to be the tree that was read. --force proceeds anyway." >&2
+  exit 2
+fi
+
+# --- the delta ---------------------------------------------------------------
+BASESUB=$(git -C "$ROOT" log -1 --format='%h %s' "$BASE")
+HEADSUB=$(git -C "$ROOT" log -1 --format='%h %s' "$HEADSHA")
+
+if [ "$BASELINE" = 1 ]; then
+  if [ "$MODE" = delta ]; then
+    echo "run_anakrisis: --baseline withholds the delta and --delta asks for" >&2
+    echo "               nothing else, so the two together ask for nothing." >&2
+    exit 2
+  fi
+  # The control arm computes nothing, on purpose.
+  DELTA="withheld -- this is the control arm."
+else
+
+# One extra worktree, at the merge base. The tree you are on is read where it
+# is: nothing is checked out over your work, and the worktree goes away on any
+# exit, including a failure.
+WT=$(mktemp -d)
+cleanup() {
+  git -C "$ROOT" worktree remove --force "$WT" >/dev/null 2>&1 || rm -rf "$WT"
+  git -C "$ROOT" worktree prune >/dev/null 2>&1 || true
+}
+trap cleanup EXIT
+
+rmdir "$WT"                       # git wants to create it itself
+git -C "$ROOT" worktree add --detach --quiet "$WT" "$BASE"
+
+BASEOUT=$(mktemp); HEADOUT=$(mktemp)
+trap 'cleanup; rm -f "$BASEOUT" "$HEADOUT"' EXIT
+( cd "$DOKI" && python3 -m dokimasia report "$WT" ) > "$BASEOUT"
+( cd "$DOKI" && python3 -m dokimasia report "$ROOT" ) > "$HEADOUT"
+
+DELTA=$(python3 - "$BASEOUT" "$HEADOUT" <<'PY'
+"""The subtraction, as a multiset difference over normalised lines.
+
+A positional diff of the two reports is mostly noise: a site whose line number
+moved reads as a change, and a list the parent prints in an order that is not
+stable reads as several. Both were the first version of this, and both are the
+reason it is a set difference over lines with `:NNN` normalised away.
+
+What survives is what the parent printed at one commit and not the other, which
+is the claim this can actually make.
+"""
+import collections
+import re
+import sys
+
+
+def load(path):
+    """(section, normalised line) -> [original lines], in the order printed."""
+    section, order, seen = "(top)", [], collections.defaultdict(list)
+    for raw in open(path, encoding="utf-8", errors="ignore"):
+        line = raw.rstrip("\n")
+        if line.startswith("== "):
+            section = line[3:].strip()
+            continue
+        if not line.strip() or set(line.strip()) <= {"=", "-"}:
+            continue
+        key = (section, re.sub(r":\d+\b", ":L", line.strip()))
+        if not seen[key]:
+            order.append(key)
+        seen[key].append(line)
+    return seen, order
+
+
+base, _ = load(sys.argv[1])
+head, order = load(sys.argv[2])
+counts = collections.Counter({k: len(v) for k, v in head.items()})
+counts.subtract({k: len(v) for k, v in base.items()})
+
+added = [k for k in order if counts[k] > 0]
+removed = [k for k in base if counts[k] < 0]
+if not added and not removed:
+    sys.exit(0)
+
+# Grouped by analysis, removals before additions, so a count that moved reads as
+# the pair it is.
+sections = []
+for k in removed + added:
+    if k[0] not in sections:
+        sections.append(k[0])
+for sec in sections:
+    print(f"== {sec}")
+    for k in removed:
+        if k[0] == sec:
+            print("  - " + base[k][0].strip())
+    for k in added:
+        if k[0] == sec:
+            print("  + " + head[k][0].strip())
+    print()
+print(f"{len(removed)} line(s) gone, {len(added)} new, "
+      f"across {len(sections)} analysis/analyses.")
+PY
+) || {
+  # Never `|| true` here. A crash in the subtraction exits with no output, and
+  # empty output is how this script spells "nothing changed" -- so swallowing
+  # the failure would report a broken run as a clean one, which is the exact
+  # mistake this repository exists to object to.
+  echo "run_anakrisis: the subtraction failed; no delta was computed." >&2
+  exit 3
+}
+
+if [ -z "$DELTA" ]; then
+  DELTA="none -- the analyses printed the same thing at both commits."
+fi
+
+fi
+
+print_delta() {
+  echo "-- anakrisis: what #$PR does to the inventory  [arm: $ARM]"
+  echo "   base   $BASESUB"
+  echo "   head   $HEADSUB"
+  if [ "$BASELINE" = 1 ]; then
+    echo
+    printf '%s\n' "$DELTA"
+    echo
+    return
+  fi
+  echo "   how    dokimasia report, run at both; line numbers normalised, order ignored"
+  echo
+  printf '%s\n' "$DELTA"
+  echo
+  echo "   An empty or small delta is not a clean bill of health. This is a diff"
+  echo "   of what dokimasia report printed, and that report is prose written for"
+  echo "   a reader: it summarises and it truncates. It is also static -- no"
+  echo "   build, no run. See $HERE/README.md, 'The two limits'."
+}
+
+if [ "$MODE" = delta ]; then
+  print_delta
+  exit 0
+fi
+
+if [ "$BASELINE" = 1 ]; then
+  PREAMBLE="**No inventory delta was computed for this run, and that is deliberate.** This
+is the control arm. It exists so that a review made *with* a delta can be
+compared against one made without, on the same change -- so review on the
+merits, and do not try to reconstruct what a delta would have said."
+  STEP1="1. **Read the diff.** \`git diff $BASE...$HEADSHA\` is the change."
+else
+  PREAMBLE="**Half of the review is already done and you did not do it.** The inventory
+delta below was computed by running dokimasia's analyses at the merge base and
+at the head of this branch and subtracting. Do not recompute it, do not
+second-guess the numbers, and quote it into the block verbatim."
+  STEP1="1. **Attribute each delta line to the diff.** \`git diff $BASE...$HEADSHA\` is
+   the change. For each line above, find the hunk that produced it and say so.
+   A delta line has three possible readings and they are not equally likely: the
+   change caused it, something unrelated in the range caused it, or dokimasia is
+   wrong. If you cannot attribute a line, say that -- an unattributed line stays
+   in the review as unattributed, and guessing is worse than either."
+fi
+
+read -r -d '' PROMPT <<PROMPT_END || true
+You are reviewing a pull request to cvc5, in a cvc5 checkout at $ROOT. You are
+running out of a research project in the dokimasia repository, whose subject is
+one question and not code review in general: can a path through the solver
+produce no proof at all?
+
+The pull request:
+
+  https://github.com/cvc5/cvc5/pull/$PR
+
+**Read $HERE/review.md before you start.** It says what a review may claim, what
+it may not be about, the shape you write it in, and what the four triage labels
+mean. It governs; this prompt only sets up the work.
+
+$PREAMBLE
+
+$(print_delta)
+
+Your half, in this order:
+
+$STEP1
+2. **Read the diff for what this repository has evidence about**, and nothing
+   else. The list is the ten hygiene rules in $DOKI/docs/hygiene.md and the
+   promises in $DOKI/docs/contract.md. Style, naming, performance and
+   architecture are out of scope and stay out even when you can see something.
+   cvc5's own reviewers do that better and this project has no standing to.
+3. **Decide the label.** "nothing to say" is the commonest correct answer and a
+   complete one: most pull requests to this project do not touch proof
+   production. Choose it when the delta is empty and the diff touches nothing on
+   the list. Do not manufacture a point in order to have written a review.
+4. **Hold anything about behaviour to having been run.** This repository has
+   been confidently wrong three times in one sitting with static arguments that
+   read correctly -- $DOKI/docs/pr-policy.md records all three. If you claim
+   this change makes something happen, say what you ran. If you ran nothing, say
+   that instead; it is a weaker claim honestly labelled rather than a stronger
+   one you cannot support.
+
+Constraints, none of them negotiable:
+
+- **Post nothing.** No review, no comment, no approval, no request for changes,
+  no reaction, no push, no tracker call of any kind. This is not a review that
+  gets submitted -- it is a file a person reads and decides about. Approval to
+  write one is not approval to send one.
+- **Change no file in this cvc5 checkout.** You are reading it. If you build or
+  run something, clean up after yourself.
+- **Do not write anything addressed to the contributor.** Not a draft, not a
+  suggested wording. A file that reads as a message is a file somebody will
+  paste.
+- Write only inside $LEDGER.
+
+Write the review to:
+
+  $LEDGER/$ENTRY.md
+
+Use the shape review.md sets out, starting from the header that is already in
+that file, and leave HUMAN RESPONSE empty -- it is the maintainer's, and keeping
+the two apart is what makes the pair worth anything later.
+
+**Finish by asking what to do next.** Say what you found, what you could not
+attribute, and what you would want to run. The second turn is usually where the
+work gets done.
+PROMPT_END
+
+if [ "$SHOW" = 1 ]; then printf '%s\n' "$PROMPT"; exit 0; fi
+
+command -v "$AGENT" >/dev/null 2>&1 || {
+  echo "run_anakrisis: $AGENT is not on PATH" >&2; exit 127; }
+
+mkdir -p "$LEDGER"
+if [ ! -f "$LEDGER/$ENTRY.md" ]; then
+  cat > "$LEDGER/$ENTRY.md" <<HEADER
+# PR #$PR -- <title>
+
+reviewed: $(date +%Y-%m-%d)
+arm:      $ARM
+base:     $BASE
+head:     $HEADSHA
+
+DELTA:
+$(printf '%s\n' "$DELTA" | sed 's/^/  /')
+
+TRIAGE:
+
+HUMAN RESPONSE:
+HEADER
+fi
+
+echo "-- run_anakrisis: cvc5 pull request #$PR" >&2
+echo "   tree    $ROOT" >&2
+echo "   base    $BASESUB" >&2
+echo "   head    $HEADSUB" >&2
+echo "   ledger  $LEDGER/$ENTRY.md   (arm: $ARM)" >&2
+echo "   agent   $AGENT -- nothing is posted, nothing is pushed, no review is submitted" >&2
+echo >&2
+echo "   Reviewing whatever is checked out here. That it is #$PR is your word:" >&2
+echo "   this makes no network call and cannot check it." >&2
+
+if [ "$AGENT" = codex ]; then
+  if [ "$PRINT" = 1 ]; then exec codex exec "$PROMPT"; else exec codex "$PROMPT"; fi
+else
+  if [ "$PRINT" = 1 ]; then exec claude -p "$PROMPT"; else exec claude "$PROMPT"; fi
+fi
