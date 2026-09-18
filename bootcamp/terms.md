@@ -66,6 +66,48 @@ ordinary operator, parameterized operator, and so on. It answers storage and
 construction questions. Ordinary theory algorithms should usually dispatch on
 `Kind`, not duplicate low-level metakind logic.
 
+### Walk one application at both interfaces
+
+Consider a function `f : Int -> Int` and the expression `f(x + 1)`. The
+mathematical argument list has one entry, but the traversal interfaces expose
+it differently:
+
+| Observation | Public `Term` for `f(x + 1)` | Internal `Node` for `f(x + 1)` |
+| --- | --- | --- |
+| Kind | `cvc5::Kind::APPLY_UF` | Internal `Kind::APPLY_UF` |
+| Number of children | 2 | 1 |
+| Child zero | Function symbol `f` | Sum `x + 1` |
+| Child one | Sum `x + 1` | No such child |
+| Function symbol | `term[0]` | `node.getOperator()` |
+
+Verify the public behavior in [Term::getNumChildren and operator[]][term-children]
+and the internal representation in [NodeTemplate][node]. An API `Op` for
+`APPLY_UF` is not the function symbol `f`; the symbol remains a term in the
+public child sequence. For an indexed operator such as `((_ extract 7 4) b)`,
+the indices instead belong to the `Op`/internal operator payload.
+
+Repeated occurrences of `x + 1` can share a single DAG vertex. A recursive
+visitor that needs to process every *occurrence* should not silently switch
+to a visited-node set; a structural property that is independent of position
+can often be memoized by node. A property depending on enclosing binders or
+formula-versus-term position needs that context in its cache key. The
+[term-formula removal example](preprocessing.md#remove-term-level-formulas-without-losing-semantics)
+shows why this distinction changes semantics.
+
+Three different questions often get called “equality”:
+
+| Question | Appropriate mechanism |
+| --- | --- |
+| Did I reconstruct the same interned syntax? | Compare `Node` handles within one manager |
+| Does unconditional normalization identify these expressions? | Rewrite them, then compare the results |
+| Do the currently asserted facts imply equality? | Ask the relevant theory/equality state and retain an explanation when deriving an inference |
+
+For example, `x + 0` and `x` can start as different nodes but normalize to
+the same one. Two variables `x,y` can remain different nodes even after the
+solver learns `x = y`. Rebuilding `x` with `mkConst(integer, "x")` produces
+another symbol with the same printed name, not a lookup of the old symbol.
+The API's [mkConst implementation][mkconst] makes that freshness explicit.
+
 ## Symbols, values and nullary operations
 
 These distinctions matter when adding a rewrite or model rule:
@@ -182,3 +224,5 @@ Next: [the path of a query](query.md).
 [rw-attributes]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/rewriter_attributes.h
 [skolems]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/expr/skolem_manager.h
 [skolemize]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/quantifiers/skolemize.cpp
+[term-children]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/api/cpp/cvc5.cpp#L2566
+[mkconst]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/api/cpp/cvc5.cpp#L6640

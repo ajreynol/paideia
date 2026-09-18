@@ -44,6 +44,30 @@ protocol delegates to a larger module architecture.
 
 ## Development workflow
 
+### Choose a concrete starting problem
+
+Each linked example includes its command, semantic explanation and source
+stops. The expected results assume the necessary features are built and
+enabled; the [validation record](../source-baseline.md#validation-of-the-expanded-examples)
+states which runs were actually performed.
+
+| Theory | Worked problem | Expected result |
+| --- | --- | --- |
+| UF | [Two equality branches, each blocked by congruence](uf.md#worked-example-explaining-a-congruence-conflict) | `unsat` |
+| Arrays | [Reading past a write at a distinct index](arrays.md#worked-example-a-read-at-a-different-index) | `unsat` |
+| Datatypes | [A constructor cycle through two list variables](datatypes.md#worked-example-a-cycle-through-two-classes) | `unsat` |
+| Arithmetic | [Lower bounds contradict a sum's upper bound](arithmetic.md#worked-example-a-linear-conflict-with-a-reason) | `unsat` |
+| Bit-vectors | [Unsigned increment wraps at four bits](bit-vectors.md#worked-example-overflow-makes-an-inequality-true) | `sat`, `x = #b1111` |
+| Floating point | [IEEE equality with SMT disequality](floating-point.md#worked-example-two-meanings-of-equality) | `sat`, opposite signed zeros |
+| Finite fields | [A square with no root in the declared field](finite-fields.md#worked-example-a-polynomial-without-a-base-field-root) | `unsat`; needs CoCoA |
+| Strings | [A word equation with fixed component lengths](strings.md#worked-example-cancellation-lengths-and-a-candidate-word) | `unsat` |
+| Sets | [Two distinct members in a set of size one](sets.md#worked-example-cardinality-counts-values) | `unsat` |
+| Bags | [Disjoint union adds counts](bags.md#worked-example-disjoint-union-adds-multiplicities) | `unsat` |
+| Separation logic | [Equal addresses in disjoint singleton heaps](separation-logic.md#worked-example-equal-locations-cannot-be-separated) | `unsat` |
+| Quantifiers | [A ground application supplies a useful instance](quantifiers.md#worked-example-one-useful-ground-instance) | `unsat` |
+
+### Follow the changed invariant
+
 1. **State the invariant and locate its owner.** Write a small input and the
    expected change in behavior. Identify the theory wrapper, its state and
    inference manager, and any backend or extension that actually owns the

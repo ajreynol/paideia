@@ -124,7 +124,51 @@ with these entry points for this theory.
 | Array disequality | `notifyFact`, the cached extensionality witness and its guarded inference |
 | Default values or missing model reads | `computeRelevantTerms`, the may-equal groups and `collectModelValues` |
 
-### Validation
+### Worked example: a read at a different index
+
+Save as `arrays.smt2`; run `build-dev/bin/cvc5 arrays.smt2`. The expected
+result is `unsat`.
+
+```smt2
+(set-logic QF_AX)
+(declare-sort I 0)
+(declare-sort E 0)
+(declare-const a (Array I E))
+(declare-const i I)
+(declare-const j I)
+(declare-const v E)
+(assert (distinct i j))
+(assert (distinct (select (store a i v) j) (select a j)))
+(check-sat)
+```
+
+The write changes only index `i`. Since `j` is different, both reads at `j`
+must agree. In a lemma-based explanation, the relevant read-over-write
+constraint has the shape:
+
+```text
+i = j  or  select(store(a,i,v),j) = select(a,j)
+```
+
+Both disjuncts contradict the input. Inspect [queueRowLemma][queue] and
+[dischargeLemmas][discharge] for the search route. Array preprocessing can
+already use `i != j` to remove the store; inspect `-o post-asserts` to see
+whether this particular run needs a search lemma. A semantic example is not
+by itself evidence that a particular lemma counter increased.
+
+Remove `i != j` and the problem becomes satisfiable: take `i = j` and choose
+`v` different from the old value of `a` there. This checks the guard on the
+rule. A rewrite that discarded every store would incorrectly reject this
+variant.
+
+For a separate extensionality exercise, declare two arrays `a,b` and assert
+only `a != b`. Read [notifyFact][extensionality] and identify the new index
+`k` and the lemma `a = b or select(a,k) != select(b,k)`. Even though the
+input contains no reads, the model must distinguish these two generated
+reads. The upstream [arrays and bit-vectors example][example] shows a
+larger problem with concrete index and element sorts.
+
+### Further validation
 
 A minimal regression for read-over-write is a write at `i`, a read at `j`,
 and a separate constraint making `i` and `j` equal or distinct. A model
@@ -137,3 +181,7 @@ set of observed reads but an invalid array model.
 [header]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/arrays/theory_arrays.h
 [rewriter]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/arrays/theory_arrays_rewriter.cpp
 [options]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/options/arrays_options.toml
+[queue]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/arrays/theory_arrays.cpp#L2043
+[discharge]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/arrays/theory_arrays.cpp#L2198
+[extensionality]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/arrays/theory_arrays.cpp#L1473
+[example]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/examples/api/smtlib/bitvectors_and_arrays.smt2

@@ -141,7 +141,49 @@ with these entry points for this theory.
 | Surface operators and substitutions | `ppAssert`, `OperatorElim` and the split between rewriting and preprocessing |
 | Nonlinear refinement or candidate values | `NonlinearExtension`, the full-effort model cache and model collection |
 
-### Validation
+### Worked example: a linear conflict with a reason
+
+Save as `arithmetic.smt2`; run `build-dev/bin/cvc5 arithmetic.smt2`. The
+expected result is `unsat`.
+
+```smt2
+(set-logic QF_LRA)
+(declare-const x Real)
+(declare-const y Real)
+(assert (>= x 3))
+(assert (>= y 2))
+(assert (<= (+ x y) 4))
+(check-sat)
+```
+
+A useful mathematical view introduces a tableau variable `s = x + y`.
+The lower bounds imply `s >= 5`, while the last assertion requires `s <= 4`.
+The conjunction of the three input bounds explains the contradiction.
+The implementation can normalize these expressions or find the conflict
+before simplex; this is not a promise of a particular pivot sequence.
+
+Use the [constraint representation][constraints] to find where a bound keeps
+its justification, the [tableau][tableau] for row relationships, and the
+[partial model][partial-model] for candidate assignments and bounds. Follow
+these objects back into [TheoryArithPrivate][linear]. Changing a numeric
+bound without maintaining its reason can preserve a local calculation while
+breaking conflict explanation or proof reconstruction.
+
+Two variations isolate different obligations. Change `4` to `5`: the
+problem is satisfiable, and the bounds force `x = 3, y = 2`. Change the
+problem to one integer `z` with `0 < z` and `z < 1`, using `QF_LIA`: it is
+unsatisfiable, although its real relaxation admits `z = 1/2`. Integer bound
+tightening may solve that tiny case without branching. The distinction is
+the absence of an integer model, not a prescribed internal algorithm.
+
+For nonlinear refinement, contrast this with a candidate assigning `x = 2`
+but `x*x = 3`: the linear abstraction can treat the product as an independent
+quantity, while multiplication semantics cannot. Inspect the model values
+used by [NonlinearExtension][nonlinear] before choosing a refinement rule.
+The upstream [linear arithmetic example][example] adds incremental checks
+and value queries.
+
+### Further validation
 
 To debug a bound conflict, trace the atom's conversion to `Constraint`, its
 assertion case and the reason for the bound that contradicts it. To debug an
@@ -157,3 +199,7 @@ reconstruction.
 [nonlinear]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/arith/nl/nonlinear_extension.cpp
 [elim]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/arith/operator_elim.cpp
 [options]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/options/arith_options.toml
+[constraints]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/arith/linear/constraint.h
+[tableau]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/arith/linear/tableau.h
+[partial-model]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/arith/linear/partial_model.h
+[example]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/examples/api/smtlib/linear_arith.smt2

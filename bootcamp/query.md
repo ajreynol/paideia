@@ -132,17 +132,74 @@ from the absence of a theory conflict.
 
 ## A small query to trace
 
-Use a formula that survives preprocessing; a trivial equality can disappear
-before the layer you are investigating. For example, a mixed UF/arithmetic
-problem can have arithmetic establish `x = y` while UF must reconcile
-`f(x) != f(y)`. The useful path is: input assertion, preprocessed formula,
-SAT atom, theory owner, shared equality, congruence conflict, explanation,
-SAT conflict clause. Depending on simplification, some of that work may occur
-earlier than expected.
+Save this as `query.smt2` and run `build-dev/bin/cvc5 query.smt2`:
+
+```smt2
+(set-logic QF_UFLIA)
+(set-option :incremental true)
+(declare-const x Int)
+(declare-const y Int)
+(declare-fun f (Int) Int)
+(assert (<= x y))
+(assert (distinct (f x) (f y)))
+(check-sat)
+(push 1)
+(assert (<= y x))
+(check-sat)
+(pop 1)
+(check-sat)
+```
+
+The expected results are `sat`, `unsat`, `sat`. For the first check, choose
+`x = 0, y = 1` and different function results. Inside the pushed scope, the
+two inequalities imply `x = y`; UF congruence then forces equal function
+results, contradicting the disequality. After the pop, only `x <= y` remains,
+so the first model is possible again. A cached conflict or branch equality
+that incorrectly survives the pop would break the last result.
+
+### Follow the input through the interfaces
+
+| Stop | What to inspect on this problem |
+| --- | --- |
+| [SolverEngine][se] and [SmtDriverSingleCall][single-call] | Which assertions and scope belong to this check? |
+| [ProcessAssertions][process] | Did a substitution, simplification or learned fact already settle it? |
+| [CnfStream][cnf] | Which surviving theory atoms have SAT literals? How is a negative atom represented? |
+| [TheoryProxy::theoryCheck][proxy-check] | Which assigned literals are delivered before checking theories? |
+| [TheoryEngine::check][engine-check] | What effort is requested, and does combination or a lemma require another round? |
+| [TheoryUF][uf] and the arithmetic solver | How is equality of the arguments reflected in the applications and their explanation? |
+
+The logical conflict uses the two inequalities and the function disequality.
+Its negation is a valid conflict clause. Actual clauses may use normalized
+atoms, auxiliary terms and explanations split across theory boundaries.
+The route can also end during preprocessing. Treat the table as places to
+inspect, rather than an assertion that this tiny input hits every row.
 
 Start with `-o post-asserts -o subs` and then choose traces at the first stage
 where the observed formula diverges from the expected one. A breakpoint in
 the theory checker is too late if preprocessing already removed the term.
+
+For a debug build, one useful session is:
+
+```sh
+gdb --args build-dev/bin/cvc5 query.smt2
+```
+
+At the GDB prompt, `break cvc5::internal::TheoryEngine::check` and `run`
+locate the central check loop; `bt` identifies the current caller. Inspect
+`effort` and step into the active theory's call instead of assuming all
+theories run on each visit. If this breakpoint is never reached, inspect the
+preprocessed assertions first. See [theory efforts](theory-development/interface.md#effort-levels-are-a-scheduling-contract)
+for what full effort promises.
+
+### What a model query adds
+
+Enable `:produce-models` before the first check and put
+`(get-value (x y (f x) (f y)))` immediately after a `sat` result. The numeric
+choices can vary; check `x <= y` and distinct function results, which also
+force `x != y`. Do not request model values after the middle `unsat` result.
+This separates a result's logical obligations from a particular printed model.
+The upstream [combination example][combination-example] is a next exercise
+for observing several theories in one model.
 
 Next: [rewriting and preprocessing](preprocessing.md).
 
@@ -158,3 +215,10 @@ Next: [rewriting and preprocessing](preprocessing.md).
 [proxy]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/prop/theory_proxy.cpp
 [skdef]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/prop/skolem_def_manager.h
 [te]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/theory_engine.cpp
+[single-call]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/smt/smt_driver.cpp#L158
+[process]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/smt/process_assertions.cpp
+[cnf]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/prop/cnf_stream.cpp
+[proxy-check]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/prop/theory_proxy.cpp#L205
+[engine-check]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/theory_engine.cpp#L386
+[uf]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/uf/theory_uf.cpp
+[combination-example]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/examples/api/smtlib/combination.smt2

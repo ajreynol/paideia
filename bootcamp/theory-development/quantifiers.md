@@ -147,7 +147,60 @@ with these entry points for this theory.
 | Missing work or an unexpected `unknown` | Registration/ownership, nested efforts and per-formula completeness claims |
 | Candidate programs or synthesis interactions | `SynthEngine`, the SyGuS helpers and the datatype extension |
 
-### Validation
+### Worked example: one useful ground instance
+
+Save as `quantifiers.smt2` and run
+`build-dev/bin/cvc5 -o inst quantifiers.smt2`. The expected satisfiability
+result is `unsat`; diagnostic output can vary with the selected strategy.
+
+```smt2
+(set-logic UFLIA)
+(declare-fun f (Int) Int)
+(declare-const a Int)
+(assert (forall ((x Int)) (! (> (f x) x) :pattern ((f x)))))
+(assert (<= (f a) a))
+(check-sat)
+```
+
+Let `q` name the universal assertion. The ground term `f(a)` matches the
+pattern `f(x)`, proposing `x := a`. An instance has the logical shape
+`q => f(a) > a`. With `q` asserted, arithmetic receives a strict lower
+comparison that conflicts with `f(a) <= a`. The instance is a lemma linking
+the universal obligation to ground reasoning; matching does not itself
+perform the arithmetic refutation.
+
+Read [TermDb][termdb] for indexed applications, the
+[instantiation engine][ematching] for trigger handling, and
+[Instantiate][instantiate] for the shared submission path. Other enabled
+modules or preprocessing may discover the contradiction first. A user pattern
+makes the intended match explicit, but does not guarantee that E-matching
+will be the module credited for the final answer.
+
+For an equality-aware matching exercise, change the ground comparison to
+`f(b) <= a` and assert `a = b`. The instance at `b`, together with that
+equality, still refutes the input. When studying a failed match, inspect both
+the stored ground term and its equality representative, then check whether
+the proposed instance was discarded as already entailed or duplicated.
+
+Removing the ground comparison leaves a satisfiable formula, for example
+with `f(x) = x + 1`. That mathematical witness does not guarantee a particular
+incomplete strategy returns `sat`. Read the engine's completeness checks when
+the result is `unknown`; producing no new instance is insufficient evidence
+that all integers were covered.
+
+### A concrete synthesis entry point
+
+The upstream [SyGuS function example][sygus-example] declares functions to
+synthesize, their grammars and constraints, then calls `check-synth`.
+Start there to distinguish grammar terms from the values a candidate program
+computes. Follow [SygusSolver][sygus-solver] into
+[SynthEngine][synth-engine], and return to the
+[datatype sub-guide](datatypes.md#model-construction) for grammar constructor
+enumeration. A candidate program satisfying the current examples still needs
+the verification step against the synthesis conjecture; a counterexample
+extends the next round's obligations.
+
+### Further validation
 
 When debugging a missing instance, follow formula registration, ownership,
 active assertion, eligible term indexing, candidate match, `Instantiate`
@@ -166,3 +219,6 @@ fragment the selected procedure claims to complete.
 [instantiate]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/quantifiers/instantiate.cpp
 [ieval]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/quantifiers/ieval/inst_evaluator_manager.h
 [options]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/options/quantifiers_options.toml
+[sygus-example]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/examples/api/smtlib/sygus-fun.sy
+[sygus-solver]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/smt/sygus_solver.cpp
+[synth-engine]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/quantifiers/sygus/synth_engine.cpp

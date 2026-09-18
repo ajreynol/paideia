@@ -117,7 +117,45 @@ with these entry points for this theory.
 | Count equations, maps or table operations | The selected strategy stage and `BagSolver::check*` inference constructors |
 | Sharing or reconstructed multiplicity | Element/count indices, typed care pairs and `collectModelValues` |
 
-### Validation
+### Worked example: disjoint union adds multiplicities
+
+Save as `bags.smt2`; use a build with bags enabled and run
+`build-dev/bin/cvc5 bags.smt2`. The expected result is `unsat`.
+
+```smt2
+(set-logic ALL)
+(declare-const A (Bag Int))
+(declare-const B (Bag Int))
+(declare-const x Int)
+(assert (= (bag.count x A) 2))
+(assert (= (bag.count x B) 3))
+(assert (distinct (bag.count x (bag.union_disjoint A B)) 5))
+(check-sat)
+```
+
+The required equation is `count(x, A union_disjoint B) = count(x,A) +
+count(x,B)`, so the result count must be 5. Here “disjoint union” means
+addition of multiplicities; it does not assert that `A` and `B` have
+disjoint supports. Both bags deliberately contain `x`.
+
+Follow `BagSolver::checkUnionDisjoint` in [BagSolver][solver] to
+[InferenceGenerator::unionDisjoint][union-inference]. The latter obtains
+multiplicity terms, purifies the compound bag and emits the count equation.
+This makes the division of work concrete: bags establishes the equation,
+arithmetic reasons about the integers, and subsequent rounds consume the
+result. A generated count term is not necessarily the original surface term
+printed in the input; use the purification equalities when comparing them.
+
+Replace `bag.union_disjoint` with `bag.union_max`. The count becomes 3 and
+the disequality with 5 is satisfiable. This is a small regression pair that
+distinguishes two easily confused operators. For element sharing, introduce
+`y = x` and query counts using `y`; equal elements must have equal counts.
+The upstream [bag example][example] extends these ideas to several concrete
+elements and model queries. For tables, remember that tuple identity and
+multiplicity are separate: a join that finds the correct rows can still
+compute the wrong number of copies.
+
+### Further validation
 
 For a change, test duplicate elements, zero/negative constructor counts, bag
 disequality and two element terms made equal by another theory. For a map or
@@ -130,3 +168,5 @@ only support, rather than multiplicity, cannot pass by accident.
 [strategy]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/bags/strategy.cpp
 [reduction]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/bags/bag_reduction.cpp
 [kinds]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/bags/kinds.toml
+[union-inference]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/bags/inference_generator.cpp#L177
+[example]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/examples/api/smtlib/bags.smt2

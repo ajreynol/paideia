@@ -108,7 +108,42 @@ with these entry points for this theory.
 | Underspecified cases and totalization | `FpExpandDefs` and the internal forms that registration expects |
 | Real conversions or candidate models | Abstraction registration, last-call `refineAbstraction` and model collection |
 
-### Validation
+### Worked example: two meanings of equality
+
+Save as `floating-point.smt2`; run `build-dev/bin/cvc5 floating-point.smt2`.
+The expected result is `sat`. The two `fp.isZero` queries are true; SMT
+equality is false, while `fp.eq` is true.
+
+```smt2
+(set-logic QF_FP)
+(set-option :produce-models true)
+(declare-const x (_ FloatingPoint 8 24))
+(declare-const y (_ FloatingPoint 8 24))
+(assert (fp.eq x y))
+(assert (distinct x y))
+(check-sat)
+(get-value ((fp.isZero x) (fp.isZero y) (= x y) (fp.eq x y)))
+```
+
+The format has 8 exponent bits and 24 significand bits, including the implicit
+leading bit. The two values must be opposite signed zeros. SMT equality
+distinguishes positive zero from negative zero, whereas `fp.eq` equates them.
+NaN cannot satisfy the first assertion, because `fp.eq` is false whenever
+either operand is NaN. Conversely, SMT equality is reflexive even for NaN.
+
+Read the [FP rewriter][rewriter] for the expansion of `fp.eq`, then follow
+registration and word blasting in [TheoryFp][theory]. The encoding must retain
+the zero/sign information needed by both relations. Replacing `fp.eq` by SMT
+equality changes this example to `unsat`; using one relation's simplification
+rule for the other can therefore change the answer.
+
+As a second exercise, assert `(not (fp.eq x x))` and ask `(fp.isNaN x)`.
+The answer is `sat` with the predicate true. These tests exercise special-value
+semantics; they do not cover rounding or real-conversion refinement. For those,
+continue with the upstream [floating-point arithmetic example][example],
+keeping symbolic operands if the purpose is to reach the word blaster.
+
+### Further validation
 
 For a change, separate tests for fully constant evaluation from tests with
 symbolic operands; the former may never reach word blasting. Include NaN,
@@ -121,3 +156,5 @@ finish path, not only an exactly representable rational.
 [directory]: https://github.com/cvc5/cvc5/tree/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/fp
 [mpfr]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/util/floatingpoint_literal_mpfr.cpp
 [news]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/NEWS.md
+[rewriter]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/fp/theory_fp_rewriter.cpp
+[example]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/examples/api/smtlib/floating_point_arith.smt2

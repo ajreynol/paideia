@@ -108,7 +108,43 @@ with these entry points for this theory.
 | Cycles or constructor splitting | The full-effort `postCheck` loop and pending inference handling |
 | Model structure or synthesis interaction | `computeRelevantTerms`, constructor skeletons and the SyGuS extension |
 
-### Validation
+### Worked example: a cycle through two classes
+
+Save as `datatypes.smt2`; run `build-dev/bin/cvc5 datatypes.smt2`. The
+expected result is `unsat`.
+
+```smt2
+(set-logic QF_UFDTLIA)
+(declare-datatype List ((nil) (cons (head Int) (tail List))))
+(declare-const x List)
+(declare-const y List)
+(assert (= x (cons 0 y)))
+(assert (= y (cons 1 x)))
+(check-sat)
+```
+
+An inductive list must be finite. Here `x` contains `y` as a tail, and `y`
+contains `x`, so neither can be a finite constructor value. Think of the
+constructor metadata as edges between equality classes: `[x] -> [y]` and
+`[y] -> [x]`. The cycle test follows constructor fields through class
+representatives, rather than looking only for a syntactic term containing
+itself. Preprocessing can shorten this example before that test runs.
+
+Read [merge][merge] to see how a class acquires constructor information,
+then [checkCycles][cycles] to see the inductive conflict route and the
+different treatment of codatatypes. Keep two explanations separate:
+constructor injectivity gives equal fields from equal constructors;
+well-foundedness rules out this cycle. Congruence alone gives neither the
+reverse constructor implication nor the well-foundedness argument.
+
+Replace the second assertion with `y = nil`, enable `:produce-models`, and
+request `(get-value (x y (head x) (tail x)))` after the check. The expected
+values are `x = cons(0,nil)`, `y = nil`, head `0`, and tail `nil`, modulo
+printing. Next try `(head nil)`: this is a wrong-constructor selector, so
+the previous head equation no longer determines its value. The upstream
+[datatype example][example] includes constructor, selector and tester syntax.
+
+### Further validation
 
 For a change to tester handling, test positive and negative testers, a merge
 with a constructor, and a class with only selectors. For a care-graph or model
@@ -120,3 +156,6 @@ test alone will not exercise these paths.
 [rewriter]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/datatypes/datatypes_rewriter.cpp
 [im]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/datatypes/inference_manager.cpp
 [sygus]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/datatypes/sygus_extension.cpp
+[merge]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/datatypes/theory_datatypes.cpp#L491
+[cycles]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/datatypes/theory_datatypes.cpp#L1446
+[example]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/examples/api/smtlib/datatypes.smt2

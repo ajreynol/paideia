@@ -16,13 +16,13 @@ specialized solvers then operate on that common state:
 
 | Component | Main concern |
 | --- | --- |
-| `BaseSolver` | Initial class information, constants and cardinality |
-| `CoreSolver` | Concatenation, cycles, flat forms, normal forms and lengths |
-| `ExtfSolver` | Evaluation and reduction of extended string operations |
-| `RegExpSolver` | Regular-expression membership reasoning |
-| `CodePointSolver` | Connections between strings and character codes |
-| `ArraySolver` | Sequence indexing/update and related array-style reasoning |
-| `EagerSolver` | Cheap consequences and conflicts on newly asserted/merged facts |
+| [BaseSolver](https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/strings/base_solver.cpp) | Initial class information, constants and cardinality |
+| [CoreSolver](https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/strings/core_solver.cpp) | Concatenation, cycles, flat forms, normal forms and lengths |
+| [ExtfSolver](https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/strings/extf_solver.cpp) | Evaluation and reduction of extended string operations |
+| [RegExpSolver](https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/strings/regexp_solver.cpp) | Regular-expression membership reasoning |
+| [CodePointSolver](https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/strings/code_point_solver.cpp) | Connections between strings and character codes |
+| [ArraySolver](https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/strings/array_solver.cpp) | Sequence indexing/update and related array-style reasoning |
+| [EagerSolver](https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/strings/eager_solver.cpp) | Cheap consequences and conflicts on newly asserted/merged facts |
 
 A *normal form* here decomposes a string into concatenated components modulo
 known equalities. It is more informative than ordinary syntactic rewriting.
@@ -125,10 +125,49 @@ with these entry points for this theory.
 | Change | Start here |
 | --- | --- |
 | New or changed operators | `TermRegistry`, preprocessing and the owning specialized solver |
-| A missing inference or stale class information | `Strategy::runInferStep`, pending queues and equality callbacks |
+| A missing inference or stale class information | `TheoryStrings::runInferStep`, pending queues and equality callbacks |
 | Sequence sharing or model values | Typed care-graph indices and model construction by length and element dependency |
 
-### Validation
+### Worked example: cancellation, lengths and a candidate word
+
+Save as `strings.smt2`; run `build-dev/bin/cvc5 strings.smt2`. The expected
+result is `unsat`.
+
+```smt2
+(set-logic QF_SLIA)
+(declare-const x String)
+(declare-const y String)
+(assert (= (str.++ x "a") (str.++ "b" y)))
+(assert (= (str.len x) 1))
+(assert (= (str.len y) 1))
+(assert (distinct x "b"))
+(check-sat)
+```
+
+The two concatenations have length two. Their first characters must agree,
+forcing `x = "b"`; their second characters must agree, forcing `y = "a"`.
+The disequality conflicts. Equality of total lengths alone would only give
+`len(x) = len(y)` and would miss the content constraint.
+
+Follow [Strategy][strategy] to the dispatch in [TheoryStrings][theory], then
+read [CoreSolver][core] for normal-form comparisons and length reasoning.
+The length constraints are arithmetic facts; the word equation is string
+structure. A relevant inference must explain the equalities and length
+conditions it used, or introduce a split when the needed length relationship
+is not known. Do not assume that a plausible alignment of components in one
+candidate model is an unconditional word equality.
+
+Delete the final disequality, enable model production and ask for `x,y`:
+the only values are `"b"` and `"a"`. This exercises reconstruction as well
+as refutation. Then remove the two length assertions: many solutions become
+possible, and a normal-form procedure may need to split on component lengths.
+Use [RegExpSolver][regexp] for a further exercise adding a membership
+constraint; regex reasoning is a separate strategy participant, so success
+on word equations does not validate it. The upstream [strings example][example]
+combines operations, lengths and membership; the [sequence example][seq-example]
+shows the corresponding syntax when elements are integers instead of characters.
+
+### Further validation
 
 For a concatenation change, test equalities exposed only after a merge and
 both equal- and unequal-length branches. For sequences, include nested
@@ -140,3 +179,7 @@ the test crosses the interfaces that standalone regexp simplification misses.
 [registry]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/strings/term_registry.cpp
 [strategy]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/strings/strategy.cpp
 [options]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/options/strings_options.toml
+[core]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/strings/core_solver.cpp
+[regexp]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/strings/regexp_solver.cpp
+[example]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/examples/api/smtlib/strings.smt2
+[seq-example]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/examples/api/smtlib/sequences.smt2

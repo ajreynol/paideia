@@ -3,6 +3,29 @@
 Source baseline: [2026-09-18](source-baseline.md). Start in the root of a cvc5
 checkout, rather than this repository, for the commands below.
 
+## Start from the source used by this guide
+
+For a fresh checkout that reproduces the source links:
+
+```sh
+git clone https://github.com/cvc5/cvc5.git
+cd cvc5
+git switch --detach 3dcc1ef5421ab62cc1ee9af52d70042ce6861af0
+git rev-parse HEAD
+```
+
+The detached checkout is useful for following the tutorial. Create a working
+branch with `git switch -c my-change` when ready to edit. If you already have
+a checkout with work in progress, use a separate checkout for this exercise.
+To investigate newer `main`, record its commit and compare the affected code
+with the [baseline](source-baseline.md) before applying the guide's line links.
+
+The path `build-dev/bin/cvc5` below always means the executable produced by
+this checkout. A bare `cvc5` can resolve to an older system installation.
+After building, run `build-dev/bin/cvc5 --version` and retain its output with
+your experiment. Archive builds may have no Git identifier in that output;
+the independently recorded source revision still matters.
+
 ## Build a version you can investigate
 
 `configure.sh` is a front end to CMake. Build types now include `unrestricted`,
@@ -37,26 +60,77 @@ changing a SAT backend, or omitting an optional algebra package can change the
 observed path. The configuration vocabulary is in [configure.sh][configure]
 and the dependency/build logic is in [CMakeLists.txt][cmake].
 
+For the finite-field exercise, enable CoCoA explicitly with `--cocoa` when
+configuring, for example:
+
+```sh
+./configure.sh debug --name=build-ff --auto-download --cocoa
+cmake --build build-ff -j 4
+build-ff/bin/cvc5 --version
+```
+
+Use `build-ff/bin/cvc5` for that exercise. CoCoA's dependency and licensing
+configuration is described in the upstream [installation instructions][install].
+The availability of syntax at the parser does not establish that the build
+contains the corresponding solver backend.
+
 ## Find the implementation layer
 
 | Path in cvc5 | What to look for |
 | --- | --- |
-| `include/cvc5/`, `src/api/` | Public types, API checks and conversion to internal objects; bindings |
-| `src/main/`, `src/parser/` | Executable entry, input parsing, commands and symbol management |
-| `src/expr/` | Nodes, types, attributes, skolems, datatype declarations and kind generation |
-| `src/context/` | Backtracking storage and memory management |
-| `src/smt/` | Solver lifecycle, assertions, environments, preprocessing orchestration and results |
-| `src/preprocessing/` | Assertion pipeline and named preprocessing passes |
-| `src/prop/`, `src/decision/` | CNF, SAT integrations, SAT/theory callbacks and decision strategies |
-| `src/theory/` | Common theory protocol and individual theories |
-| `src/rewriter/`, `src/proof/` | Rewrite-rule infrastructure, proof objects, reconstruction and output |
-| `src/options/`, `src/util/`, `src/base/` | Options, numeric/string utilities, statistics, tracing and assertions |
-| `proofs/`, `test/`, `examples/` | Proof-format definitions, regression/unit/API coverage and public examples |
+| [include/cvc5/](https://github.com/cvc5/cvc5/tree/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/include/cvc5), [src/api/](https://github.com/cvc5/cvc5/tree/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/api) | Public types, API checks and conversion to internal objects; bindings |
+| [src/main/](https://github.com/cvc5/cvc5/tree/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/main), [src/parser/](https://github.com/cvc5/cvc5/tree/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/parser) | Executable entry, input parsing, commands and symbol management |
+| [src/expr/](https://github.com/cvc5/cvc5/tree/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/expr) | Nodes, types, attributes, skolems, datatype declarations and kind generation |
+| [src/context/](https://github.com/cvc5/cvc5/tree/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/context) | Backtracking storage and memory management |
+| [src/smt/](https://github.com/cvc5/cvc5/tree/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/smt) | Solver lifecycle, assertions, environments, preprocessing orchestration and results |
+| [src/preprocessing/](https://github.com/cvc5/cvc5/tree/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/preprocessing) | Assertion pipeline and named preprocessing passes |
+| [src/prop/](https://github.com/cvc5/cvc5/tree/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/prop), [src/decision/](https://github.com/cvc5/cvc5/tree/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/decision) | CNF, SAT integrations, SAT/theory callbacks and decision strategies |
+| [src/theory/](https://github.com/cvc5/cvc5/tree/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory) | Common theory protocol and individual theories |
+| [src/rewriter/](https://github.com/cvc5/cvc5/tree/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/rewriter), [src/proof/](https://github.com/cvc5/cvc5/tree/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/proof) | Rewrite-rule infrastructure, proof objects, reconstruction and output |
+| [src/options/](https://github.com/cvc5/cvc5/tree/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/options), [src/util/](https://github.com/cvc5/cvc5/tree/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/util), [src/base/](https://github.com/cvc5/cvc5/tree/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/base) | Options, numeric/string utilities, statistics, tracing and assertions |
+| [proofs/](https://github.com/cvc5/cvc5/tree/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/proofs), [test/](https://github.com/cvc5/cvc5/tree/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/test), [examples/](https://github.com/cvc5/cvc5/tree/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/examples) | Proof-format definitions, regression/unit/API coverage and public examples |
 
 The [library source list][sources] is useful when a class seems to be missing:
 some headers and translation units are generated. For example,
 `expr/node_manager.h` comes from `node_manager_template.h`. A source-only search
 for the generated filename will not find its definition.
+
+### Navigate from a symbol to the implementation
+
+These searches run from the cvc5 source root:
+
+```sh
+rg -n 'TheoryArrays::notifyFact' src/theory/arrays
+rg -n 'ARRAYS_EXT' src/theory src/proof include proofs
+rg -n 'arraysWeakEquivalence|arrays-weak-equiv' src/options src/theory/arrays
+rg --files test/regress/cli | rg 'arrays|array'
+```
+
+The first search locates an override. The second follows the inference and
+proof identifiers it uses. The third connects a C++ option accessor to its
+command-line spelling. The fourth finds candidate regressions; read their
+`COMMAND-LINE` and `REQUIRES` metadata before treating them as comparable runs.
+Start from [TheoryArrays::notifyFact][arrays-notify] to try this sequence.
+
+When a method is absent from a theory's `.cpp`, inspect its header, the
+[base Theory implementation][base-theory] and delegated helpers. When a header
+is absent from `src/`, inspect the [generated source list][sources] and search
+the build tree. These are different reasons for a search returning no match.
+
+### Upstream reading companions
+
+| Need | Source to keep beside this guide |
+| --- | --- |
+| Compiler, dependency and platform setup | [INSTALL.rst][install] |
+| API construction and complete client programs | [C++ quickstart][cpp-quickstart] and [API examples][api-examples] |
+| Executable invocation and SMT-LIB input | [Binary quickstart][binary-quickstart] |
+| Changes to supported features | [NEWS.md][news] |
+| Contribution and review conventions | [CONTRIBUTING.md][contributing] |
+
+These links use the same source revision as the tutorial, including the
+documentation sources. The [published cvc5 documentation](https://cvc5.github.io/docs/)
+is easier to browse, but select its version deliberately when comparing an
+API or option with this prerelease source.
 
 ## Kinds connect a theory to the rest of the solver
 
@@ -119,3 +193,10 @@ has not benchmarked build times and makes no ranking of expensive files.
 [sources]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/CMakeLists.txt
 [expr-cmake]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/expr/CMakeLists.txt
 [theory-cmake]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/CMakeLists.txt
+[arrays-notify]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/arrays/theory_arrays.cpp#L1473
+[base-theory]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/theory.cpp
+[cpp-quickstart]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/docs/api/cpp/quickstart.rst
+[api-examples]: https://github.com/cvc5/cvc5/tree/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/examples/api
+[binary-quickstart]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/docs/binary/quickstart.rst
+[news]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/NEWS.md
+[contributing]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/CONTRIBUTING.md

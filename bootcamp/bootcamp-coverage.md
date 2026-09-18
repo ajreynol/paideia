@@ -70,6 +70,16 @@ the slot with “not implemented.”
 
 ## Additions beyond the notes
 
+The expanded tutorials retain the chapter order and six theory-development
+stages. They add [complete theory examples](theory-development/README.md#choose-a-concrete-starting-problem),
+an [incremental query](query.md#a-small-query-to-trace), a
+[term traversal comparison](terms.md#walk-one-application-at-both-interfaces),
+an [ITE purification walkthrough](preprocessing.md#worked-example-a-conditional-inside-a-function-application),
+and a [rewrite-to-regression exercise](development.md#worked-change-investigation-membership-in-a-singleton).
+Each connects a semantic obligation with code to inspect and variations to
+try. The [runtime evidence](source-baseline.md#validation-of-the-expanded-examples)
+identifies the executable actually used and the finite-field limitation.
+
 The draft adds the current SAT default and incremental exception, MPFR constant
 evaluation, bit-vector abstraction/refinement, instantiation evaluation and
 current CEGQI defaults, a synthesis route, source-generation boundaries,

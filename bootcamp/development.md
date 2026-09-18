@@ -58,6 +58,64 @@ different places depending on which assumptions and introduced symbols it
 needs. Check termination, idempotence of the normalized result, type
 preservation and compatibility with node-attribute caches.
 
+### Worked change investigation: membership in a singleton
+
+Use an existing rule to practice following an implementation before adding
+one. The equation `member(x, singleton(y)) = (x = y)` is unconditional:
+it depends only on set semantics, so it can be an ordinary rewrite. A claim
+`member(x,A) = true` because the current branch asserts `x in A` has a
+different lifetime and belongs in contextual reasoning.
+
+Read these files in order:
+
+| Stage | Concrete source and question |
+| --- | --- |
+| Operator declaration | [Set kinds][set-kinds]: what are `SET_MEMBER`'s argument and result types? |
+| Runtime normalization | [TheorySetsRewriter::postRewrite][set-rewrite]: where is membership over `SET_SINGLETON` replaced by equality? |
+| Further rewriting | The response is `REWRITE_AGAIN_FULL`; what happens if that new equality itself simplifies? |
+| Named proof rule | [Set rewrite rules][set-rules]: locate `sets-member-singleton` and compare both sides with the C++ result |
+| Unit-test fixture | [Set rewriter tests][set-tests]: see how `TestSmt`, the node manager and rewriter are obtained |
+| End-to-end input | Run the small SMT-LIB regression below, then a satisfiable variant |
+
+Save the following as `singleton-member.smt2`:
+
+```smt2
+; EXPECT: unsat
+(set-logic ALL)
+(declare-const x Int)
+(declare-const y Int)
+(assert (set.member x (set.singleton y)))
+(assert (distinct x y))
+(check-sat)
+```
+
+Run it through the ordinary executable and, separately, the upstream runner:
+
+```sh
+build-dev/bin/cvc5 singleton-member.smt2
+python3 test/regress/cli/run_regression.py --tester base build-dev/bin/cvc5 singleton-member.smt2
+build-dev/bin/cvc5 --produce-proofs --check-proofs --proof-check=eager singleton-member.smt2
+```
+
+The expected result is `unsat`; removing the disequality makes it `sat`.
+The ordinary rewrite may settle the whole example, so it exercises
+normalization without necessarily exercising set-theory search. Use the
+[sets chapter's cardinality example](theory-development/sets.md#worked-example-cardinality-counts-values)
+when the changed behavior instead concerns search or model construction.
+
+If changing this rewrite, cover equal and unequal elements, symbolic elements,
+and an element type other than integers. Check the normalized term, not just
+that the rewrite callback was called. Then compare proof reconstruction with
+the named rule. The existence of a similar DSL rule alone does not establish
+that every new C++ result is reconstructible.
+
+To contribute a regression, place it alongside the relevant inputs under
+`test/regress/cli/`, follow their option/feature metadata, and inspect the
+[regression CMake registration][regress-cmake]. `--tester base` above selects
+the output/exit-status check for this one input; it does not run every proof,
+model and alternate-mode tester. The direct proof command illustrates a
+separate check. Record which checks actually ran in the change description.
+
 ## Proof objects are part of the implementation
 
 The guide's scope includes how proof-producing code is connected. This section
@@ -163,9 +221,10 @@ and model checking where supported; a proof change needs its proof route.
 Run the required upstream checks for the change's scope after the focused
 checks pass.
 
-These are source-checked command recipes, not a report that this draft built
-cvc5 or ran its solver suite. [The baseline record](source-baseline.md) states
-exactly what was validated while preparing the guide.
+The main-branch build and suite commands are source-checked recipes.
+[The baseline record](source-baseline.md#validation-of-the-expanded-examples)
+separately records the example and runner checks performed with an older
+local executable; those runs do not validate current `main`'s solver suite.
 
 [contributing]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/CONTRIBUTING.md
 [proof-node]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/proof/proof_node.h
@@ -176,3 +235,8 @@ exactly what was validated while preparing the guide.
 [proof-options]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/options/proof_options.toml
 [mkoptions]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/options/mkoptions.py
 [regress]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/test/regress/cli/run_regression.py
+[set-kinds]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/sets/kinds.toml
+[set-rewrite]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/sets/theory_sets_rewriter.cpp#L141
+[set-rules]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/sets/rewrites#L8
+[set-tests]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/test/unit/theory/theory_sets_rewriter_white.cpp
+[regress-cmake]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/test/regress/cli/CMakeLists.txt

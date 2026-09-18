@@ -51,8 +51,11 @@ cover term ownership, the path of a query and preprocessing.
 [How to develop a theory](bootcamp/theory-development/README.md) is a category
 with a shared workflow, the common theory interface and twelve theory
 sub-guides. Each follows the same six development stages, ending with edit
-locations and validation cases. General development chapters cover building,
-options, debugging, tests and proof-producing interfaces.
+locations and validation cases. Each now includes a worked SMT-LIB problem,
+expected results and direct links to the implementation. The architecture
+chapters add query and preprocessing walkthroughs; general development
+chapters cover building, options, debugging, tests and proof-producing
+interfaces, including a concrete rewrite-to-regression exercise.
 
 The developer guide is this repository's artifact and lives in `bootcamp/`.
 It is Markdown; nothing needs to be installed to read it. The

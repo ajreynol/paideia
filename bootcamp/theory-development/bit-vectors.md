@@ -115,7 +115,43 @@ with these entry points for this theory.
 | Fact assertion, assumptions or conflicts | The active backend, especially the lifetime of permanent facts versus assumptions |
 | Abstraction or model values | The separate backend's refinement path and value-cache invalidation |
 
-### Validation
+### Worked example: overflow makes an inequality true
+
+Save as `bit-vectors.smt2`; run `build-dev/bin/cvc5 bit-vectors.smt2`.
+The expected result is `sat`, with `x = #b1111` (the printer may use hex).
+
+```smt2
+(set-logic QF_BV)
+(set-option :produce-models true)
+(declare-const x (_ BitVec 4))
+(assert (bvult (bvadd x #b0001) x))
+(check-sat)
+(get-value (x (bvadd x #b0001)))
+```
+
+The addition is modulo 16. For unsigned values 0 through 14, adding one
+increases the value; for 15 it produces 0. A conceptual adder uses carry
+`c0 = 1`, bits `si = xi xor ci`, and `c(i+1) = xi and ci`. The final carry
+is discarded. The unsigned comparison then relates the four result bits
+to the four input bits. The implementation may rewrite this pattern before
+building a circuit; inspect `ppRewrite`'s `UltAddOne` path as well as the
+[bit-blasting strategies][circuits].
+
+To investigate backend routing, run the same file with `--bv-solver=bitblast`
+and with `--bv-solver=bitblast-internal`. In the first route, follow the
+[separate backend][external] from the theory atom to its bit-level assumption;
+in the second, inspect the [internal backend][internal] lemma connecting the
+atom with its encoding. Compare satisfiability and returned values before
+comparing traces: the two routes need not send identical lemmas.
+
+Replace `bvult` with `bvslt`. Now the satisfying value is `#b0111`: signed
+7 wraps to signed -8. This is a useful check that a change preserves both
+width and signedness. For an incremental exercise, temporarily assert
+`x != #b1111` in the original unsigned problem: it becomes `unsat` and must
+be `sat` again after a pop. See the upstream [bit-vector example][example]
+for more construction and query syntax.
+
+### Further validation
 
 For a change, cover width one, a larger width, signed/unsigned boundaries and
 the operator's zero/overflow cases. A backend change should exercise its own
@@ -128,3 +164,5 @@ fact.
 [internal]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/bv/bv_solver_bitblast_internal.cpp
 [options]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/options/bv_options.toml
 [abstraction]: https://github.com/cvc5/cvc5/tree/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/bv
+[circuits]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/bv/bitblast/bitblast_strategies_template.h
+[example]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/examples/api/smtlib/bitvectors.smt2

@@ -116,7 +116,46 @@ with these entry points for this theory.
 | Element equality or class merges | Singleton/member metadata and the typed care graph |
 | Cardinality or relational support | The cardinality extension, relational solver and explicit incompleteness cases |
 
-### Validation
+### Worked example: cardinality counts values
+
+Save as `sets.smt2`; run `build-dev/bin/cvc5 sets.smt2`. The expected result
+is `unsat`. `ALL` enables the combination of sets and arithmetic used here.
+
+```smt2
+(set-logic ALL)
+(declare-const A (Set Int))
+(declare-const x Int)
+(declare-const y Int)
+(assert (set.member x A))
+(assert (set.member y A))
+(assert (distinct x y))
+(assert (= (set.card A) 1))
+(check-sat)
+```
+
+Membership gives two required elements, and the disequality makes their
+values distinct. Hence `card(A) >= 2`, contradicting the asserted size. If
+the disequality is removed, a model may equate `x` and `y`, leaving a
+singleton set. Counting two syntax nodes as two elements would reject that
+satisfiable variant.
+
+Read the membership collection in [TheorySetsPrivate][private], then the
+[cardinality extension][card] for how membership classes, size constraints
+and model construction interact. Arithmetic owns the size values; the set
+solver supplies the constraints that make those integers actual cardinalities.
+For a model exercise, require `card(A) = 3` while keeping the two distinct
+members. The model must supply a third element even though the input never
+names it. Query membership and cardinality rather than expecting one specific
+choice of that extra integer.
+
+For disequality, the needed witness has a different shape: `A != B` requires
+some `k` with different truth values for `k in A` and `k in B`. It does not
+require `k` to belong specifically to `A`. This symmetric-difference condition
+explains why an inference that always chooses one direction would be too
+strong. Continue with the upstream [set example][example] and
+[relation example][rel-example] to see finite-set and tuple syntax.
+
+### Further validation
 
 Test a model with fewer known members than its required cardinality and one
 where two apparent members become equal. Add a disequality between two sets
@@ -132,3 +171,5 @@ incompleteness result under the chosen configuration.
 [rels]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/sets/theory_sets_rels.cpp
 [rewriter]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/sets/theory_sets_rewriter.cpp
 [options]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/options/sets_options.toml
+[example]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/examples/api/smtlib/sets.smt2
+[rel-example]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/examples/api/smtlib/relations.smt2

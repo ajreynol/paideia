@@ -1,6 +1,6 @@
 # Walking through cvc5
 
-This is the first draft of paideia's developer guide, an artifact maintained
+This is paideia's developer guide, an artifact maintained
 in `bootcamp/`. It follows a term from construction through preprocessing,
 Boolean search, theory reasoning and model construction, then visits each
 theory covered by the original bootcamp. The intended reader knows C++ and
@@ -40,6 +40,53 @@ flowchart TD
 This is a control-flow map, not an ownership diagram. For example, theories
 access the solver's `Env`; nodes belong to a `NodeManager` that can be shared
 by several solvers. Neither relationship is shown by a control-flow arrow.
+
+## Reading and running the examples
+
+For a practical first session, build the pinned checkout, run the
+[three-check query](query.md#a-small-query-to-trace), inspect the
+[conditional-term example](preprocessing.md#worked-example-a-conditional-inside-a-function-application),
+then follow the [singleton rewrite](development.md#worked-change-investigation-membership-in-a-singleton)
+from source to regression. These exercises connect the architecture before
+you choose a specialized theory. Each theory chapter also has a complete
+SMT-LIB input, an explanation of its expected result, source-reading stops,
+and variations that test a different obligation.
+
+Commands assume a cvc5 source checkout with the executable at
+`build-dev/bin/cvc5`, created by the [build recipe](build.md#build-a-version-you-can-investigate).
+Save a chapter's complete `smt2` block under the filename it gives, then
+run its command from that checkout. These are tutorial inputs to copy;
+they are not files already installed in a cvc5 clone. `cpp` fragments are
+explicitly labeled where they omit a complete program.
+
+An **expected result** follows from the formula's semantics. A **source-reading
+path** identifies the implementation to inspect. Neither promises an exact
+trace: preprocessing, logic, options and backend selection determine which
+callbacks an actual run reaches. Inspect `-o post-asserts -o subs` before
+concluding that a breakpoint or inference is missing. Returned model values
+can vary when the input does not determine them uniquely.
+
+The [validation record](source-baseline.md#validation-of-the-expanded-examples)
+distinguishes source checks against current `main` from smoke runs with the
+older executable available during this revision. The finite-field example
+requires a CoCoA-enabled build. Feature-restricted builds can reject examples
+using experimental theories; the debug build recipe is the starting point.
+
+### Vocabulary used along the way
+
+| Term | Meaning in this guide |
+| --- | --- |
+| Term / node | An expression, or its internal DAG representation; a Boolean formula is also a term |
+| Atom / literal | A Boolean variable or indivisible Boolean constraint, such as `x < y`; a literal is an atom or its negation |
+| Fact | A literal delivered as holding in the current context; registration alone does not make a term a fact |
+| Rewrite | A transformation of a term; its phase determines which assumptions and auxiliary definitions are allowed |
+| Lemma / explanation | A constraint returned to search / the reasons a conditional deduction follows |
+| Equality class | Terms known equal in an equality engine; its representative is one chosen member |
+| Candidate model | A proposed interpretation still subject to theory checks, combination and refinement |
+| Context | State with a backtracking boundary; SAT branches and user push/pop scopes are different boundaries |
+
+The [common theory interface](theory-development/interface.md) expands these
+distinctions where they affect implementation.
 
 ## Chapters
 

@@ -112,7 +112,46 @@ with these entry points for this theory.
 | Consequences of label equality | `eqNotifyMerge` and backtracking of positive/negative points-to lists |
 | Spatial refinement or returned heaps | Last-call checking and `postProcessModel` |
 
-### Validation
+### Worked example: equal locations cannot be separated
+
+Save as `separation-logic.smt2`; use a build with separation logic enabled
+and run `build-dev/bin/cvc5 separation-logic.smt2`. The expected result is
+`unsat`.
+
+```smt2
+(set-logic ALL)
+(declare-heap (Int Int))
+(declare-const x Int)
+(declare-const y Int)
+(assert (sep (pto x 7) (pto y 7)))
+(assert (= x y))
+(check-sat)
+```
+
+Each points-to assertion describes a singleton heap. Separating conjunction
+requires their domains to be disjoint. Since `x = y`, both singleton domains
+contain the same location; agreement on stored data does not remove the
+overlap. Ordinary conjunction of these same points-to assertions can describe
+one shared singleton heap and is satisfiable for a non-nil location.
+
+To follow the encoding, look for the spatial reduction in
+[TheorySep][theory]. Conceptually the two child labels have domains `{x}`
+and `{y}`, their intersection is empty, and their union is the parent label.
+Sets and arithmetic can expose the contradiction in those generated
+constraints. The example need not reach negative-spatial last-call refinement;
+that is a distinct procedure with distinct test needs. The upstream
+[sep-01 regression][example] exercises this same disjointness obligation.
+
+Replace `x = y` by `x != y`, enable model production and inspect the model:
+it must describe two cells with data 7 at distinct non-nil locations. A
+model with an appropriate set of addresses but no associated points-to data
+is incomplete as a heap representation. Follow `postProcessModel` when
+debugging that difference. For negative spatial assertions, continue with
+the upstream [negative spatial simplification regression][negative-example]
+and inspect which labeled obligations are active before interpreting a
+candidate heap.
+
+### Further validation
 
 For debugging, inspect both the candidate label sets
 used at last call and the final heap object. Tests should include conflicting
@@ -121,3 +160,5 @@ spatial formulas and a satisfiable case whose returned heap must be built.
 
 [theory]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/sep/theory_sep.cpp
 [header]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/sep/theory_sep.h
+[example]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/test/regress/cli/regress0/sep/sep-01.smt2
+[negative-example]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/test/regress/cli/regress0/sep/nspatial-simp.smt2

@@ -107,8 +107,54 @@ part of the change.
 
 ## Inspect the boundary before debugging search
 
+### Worked example: a conditional inside a function application
+
+Save as `preprocessing.smt2` and use the command below. The expected
+satisfiability result is `unsat`.
+
+```smt2
+(set-logic QF_UFLIA)
+(declare-const c Bool)
+(declare-const x Int)
+(declare-const y Int)
+(declare-fun f (Int) Int)
+(assert (distinct (f (ite c x y)) (ite c (f x) (f y))))
+(check-sat)
+```
+
+Whichever branch `c` selects, both sides are the same function application.
+To understand term-formula removal, name the two non-Boolean ITE results
+`k` and `h`. A possible intermediate representation is:
+
+```text
+f(k) != h
+ite(c, k = x, k = y)
+ite(c, h = f(x), h = f(y))
+```
+
+For `c = true`, the definitions give `k = x` and `h = f(x)`; congruence
+contradicts `f(k) != h`. The false branch is analogous. As Boolean clauses,
+the first definition can be written `(not c or k = x)` and
+`(c or k = y)`. Both directions of the branch choice are accounted for.
+Adding only `k = x` would strengthen the input incorrectly.
+
+The original formula and the conjunction with definitions do not have the
+same free-symbol vocabulary. The preservation argument is that a model of
+the original can be extended with appropriate values for `k,h`, and a model
+satisfying the transformed formula and definitions restricts to a model of
+the original. This is the concrete meaning of *equisatisfiability* when
+preprocessing introduces fresh symbols. Dropping the definitions loses
+that argument.
+
+This is a possible intermediate form, not expected literal diagnostic output:
+earlier rewriting or ITE simplification may choose another representation
+or solve the problem. Follow [RemoveTermFormulas][rtf] and the
+[theory preprocessor][theory-preprocessor] when identifying the actual phase.
+The [query chapter](query.md#definitions-must-participate-in-decisions)
+explains why the defining assertions also participate in decision relevance.
+
 ```sh
-build-dev/bin/cvc5 -o post-asserts -o subs example.smt2
+build-dev/bin/cvc5 -o post-asserts -o subs preprocessing.smt2
 ```
 
 The [output tags][output] are defined in `base_options.toml`. `post-asserts`
@@ -126,6 +172,7 @@ Next: [How to develop a theory](theory-development/README.md), starting with
 its [common interface](theory-development/interface.md).
 
 [rewriter]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/rewriter.cpp
+[theory-preprocessor]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/theory_preprocessor.cpp
 [passes]: https://github.com/cvc5/cvc5/tree/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/preprocessing/passes
 [process]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/smt/process_assertions.cpp
 [pipeline]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/preprocessing/assertion_pipeline.h

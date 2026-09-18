@@ -70,6 +70,30 @@ through updating an index must consider such reentrancy. Pending-inference
 queues let a solver finish a local phase before exposing its output; they are
 part of the algorithm, not incidental buffering.
 
+### One deduction, several output contracts
+
+Suppose an array theory knows `i != j`. Let `r` abbreviate the consequence
+`select(store(a,i,v),j) = select(a,j)`. Here `r` names the entire equality,
+not a new SMT symbol.
+
+| Output | Information it must preserve |
+| --- | --- |
+| Internal fact `r` | Its reason `i != j`, so local equality reasoning can explain it later |
+| Propagation of `r` | A SAT-visible literal and an explanation in terms of the current asserted facts |
+| Conflict after learning `not r` | The conjunction `i != j and not r` that cannot hold |
+| Lemma | The guarded formula `i = j or r`, valid independently of this branch |
+
+Read [assertInternalFact][internal-fact], [lemmaExp][lemma-exp] and
+[conflict][conflict] to see how the inference manager carries these
+contracts. Specialized managers may queue the operation or use a proof-aware
+wrapper. Do not copy a call signature from another theory without checking
+the meaning of its explanation arguments and the receiving manager's policy.
+
+The inference identifier says which reasoning step produced the output;
+the explanation says why it follows here. Neither replaces the other.
+Likewise, an equality engine's representative is a convenient class member,
+not an explanation of why every term in that class equals it.
+
 ## The fact-processing skeleton
 
 `Theory::check(effort)` has an early-exit optimization for an empty queue below
@@ -151,6 +175,24 @@ describes. For example, merging two singleton-set classes yields equality of
 their elements; retaining that merge's metadata after SAT backtracking would
 corrupt later reasoning.
 
+### What must roll back with a merge
+
+Imagine two set classes with metadata `A = {a}` and `B = {b}`. On a branch
+where `A = B`, the merge can imply `a = b`. The class metadata, that local
+consequence and the reasons supporting it must remain consistent as the SAT
+context changes. If the branch is abandoned, a later branch can again have
+`A != B` and `a != b`.
+
+Restoring only the equality engine is insufficient if a separate ordinary
+map still says that `A` has `B`'s singleton information. Use the
+[context-dependent object][cdo] or an appropriate context container for such
+state, or rebuild it from valid facts as the [bag solver](bags.md#equality-and-combination)
+does for much of its indexing. A SAT backtrack can happen without a user
+`pop`; a regression that only makes one satisfiability check can still
+exercise multiple branch contexts. The
+[incremental query](../query.md#a-small-query-to-trace) adds a separate user
+scope boundary to test.
+
 [EqEngineManager][eem] handles setup and lifetime of engines. The default
 policy is distributed. A central policy exists, but it is not literally one
 engine replacing every theory's internal data structure: current
@@ -177,6 +219,16 @@ that the current model separates terms, not that the input entails their
 inequality. Reusing a model-status answer as a proof-producing propagation
 would confuse a choice of interpretation with a consequence.
 
+For example, UF observes `f(x)` and `f(y)` where `x,y` are arithmetic terms.
+If arithmetic identifies them, UF must identify the applications too.
+A care pair records that the relation between `x,y` matters to this use;
+it is not a request to enumerate every pair of integers in the problem.
+Follow [TheoryUF::computeCareGraph][uf-care] to see application indexing,
+then [CombinationCareGraph][combination] to see how care pairs are used.
+The equality split `x = y or x != y` is logically exhaustive. The work it
+creates is to make the participating theories agree on a case and its
+consequences, not to add a new arithmetic axiom.
+
 ## Models combine constraints from several owners
 
 [Model management][model-manager] gathers relevant terms and theory
@@ -199,6 +251,14 @@ reject or refine a candidate ground model. Thus neither an inherited
 `collectModelValues` nor the existence of a candidate value proves that the
 whole input is satisfied.
 
+A concrete array skeleton might be `store(const(default), i, v)`. Arithmetic
+or another element theory must supply the values of `i,v`; the array solver
+supplies their structural relationship. If `i` and another recorded index
+later receive the same value, their read constraints must agree. This is why
+“pick any value for each unassigned term” is not a model-construction
+algorithm. Trace a model failure back to the relevant terms and equalities
+before adding a new default value.
+
 Continue with [UF](uf.md), or choose a sub-guide from
 [How to develop a theory](README.md#shared-contract-and-theory-sub-guides).
 
@@ -212,3 +272,9 @@ Continue with [UF](uf.md), or choose a sub-guide from
 [eem]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/ee_manager.h
 [model-manager]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/model_manager.cpp
 [model]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/theory_model.h
+[internal-fact]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/theory_inference_manager.cpp#L354
+[lemma-exp]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/theory_inference_manager.cpp#L277
+[conflict]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/theory_inference_manager.cpp#L123
+[cdo]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/context/cdo.h
+[uf-care]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/uf/theory_uf.cpp#L582
+[combination]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/combination_care_graph.cpp

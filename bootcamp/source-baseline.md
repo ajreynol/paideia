@@ -4,8 +4,9 @@ Upstream commit: `3dcc1ef5421ab62cc1ee9af52d70042ce6861af0`
 
 Observed branch: upstream `cvc5/cvc5` `main`, read on **2026-09-18** with
 `git ls-remote`. The [pinned source tree][source] calls itself **1.4.0 prerelease**
-in NEWS. This is the first draft's baseline, not a promise that the live branch
-will remain at that revision or that the draft has received upstream review.
+in NEWS. The expansion pass rechecked `main` on the same date and found the
+same revision. This pin is not a promise that the live branch will remain
+there or that the guide has received upstream review.
 
 ## Inputs and evidence
 
@@ -28,11 +29,60 @@ effective defaults, and model/proof interfaces. Current behavior is described
 from code; historical questions and suggestions were not treated as evidence
 that a feature exists.
 
-This draft has **source inspection**, not runtime validation of all described
-paths. cvc5 was not built and its test suite was not run to prepare the draft.
-The snippets and commands are source-checked recipes or explicitly marked
-illustrations. Algorithm explanations summarize the inspected implementation;
-they are not completeness or correctness proofs.
+The implementation account has **source inspection**, not runtime validation
+of all described paths. The pinned cvc5 revision was not built and its test
+suite was not run to prepare this guide. The expanded examples also received
+the limited runtime checks recorded below, using a different revision.
+Algorithm explanations summarize the inspected implementation; they are not
+completeness or correctness proofs.
+
+## Validation of the expanded examples
+
+On 2026-09-18, `git ls-remote https://github.com/cvc5/cvc5.git refs/heads/main`
+again returned the baseline above. A fresh download of its GitHub archive
+had the same SHA-256 recorded above, and all **7,222 regular files** compared
+byte-for-byte with the local source used for this pass. New links were checked
+against that source, including the API child traversal, inference explanations,
+array lemmas, datatype cycles, bag count equation and set rewrite used in the
+worked explanations.
+
+The locally available executable reported
+`cvc5 1.3.5.dev+main@97b00835f [git 97b00835f on branch main]`, compiled with
+GCC 15.2.0 on 2026-05-23. Its SHA-256 was
+`50bfb9538278b353c5b448051ba145530e98f8a6970f6f61edf2251823157a6c`.
+`--show-config` reported tracing enabled, debug code and assertions disabled,
+safe/stable modes disabled, and no CoCoA. **This is an older build, not a
+runtime check of the pinned `main`.**
+
+All 15 complete `smt2` blocks were copied unchanged from the chapters into
+temporary files and invoked as `cvc5 --tlimit=10000 FILE`. Fourteen completed
+with the expected results:
+
+| Chapter examples | Observed result |
+| --- | --- |
+| [Query](query.md#a-small-query-to-trace) | `sat`, `unsat`, `sat` across push/pop |
+| [Preprocessing](preprocessing.md#worked-example-a-conditional-inside-a-function-application), [development](development.md#worked-change-investigation-membership-in-a-singleton) | `unsat` each |
+| UF, arrays, datatypes, arithmetic, strings, sets, bags, separation logic, quantifiers | `unsat` each; inputs indexed in the [theory exercise table](theory-development/README.md#choose-a-concrete-starting-problem) |
+| [Bit-vectors](theory-development/bit-vectors.md#worked-example-overflow-makes-an-inequality-true) | `sat`, `x = #b1111`, increment result `#b0000` |
+| [Floating point](theory-development/floating-point.md#worked-example-two-meanings-of-equality) | `sat`; both zero predicates true, SMT equality false, `fp.eq` true |
+| [Finite fields](theory-development/finite-fields.md#worked-example-a-polynomial-without-a-base-field-root) | Rejected because the executable lacks CoCoA; **not runtime-validated** |
+
+On that same older executable, both `--bv-solver=bitblast` and
+`--bv-solver=bitblast-internal` produced the documented bit-vector values.
+The singleton-membership input returned `unsat` with
+`--produce-proofs --check-proofs --proof-check=eager`, and the pinned
+regression runner's `--tester base` accepted it. The quantifier example with
+`-o inst` reported one instantiation and `unsat`. The preprocessing example
+with `-o post-asserts -o subs` displayed two purification definitions and
+returned `unsat`.
+
+These checks validate parsing and observed outputs on that build. They do
+not establish the exact callbacks reached on current `main`, proof completeness,
+or runtime behavior of the additional prose exercises. The C++ fragments,
+build commands and GDB session remain source-checked recipes. To repeat the
+main-branch experiments, build the [pinned checkout](build.md#start-from-the-source-used-by-this-guide),
+use its executable for each chapter's command, and enable CoCoA for the field
+example. Record that build's version, options and outputs separately.
 
 ## Mechanical checks
 
@@ -54,6 +104,11 @@ For the initial draft on 2026-09-18, the checker passed against the extracted
 baseline source: **27 local targets and 119 distinct cvc5 paths**. The tracked
 diff and all newly authored files also passed whitespace checks. Both embedded
 bootcamp figures were reviewed alongside the extracted paragraph text.
+
+After the expansion pass, the checker passed with **28 local targets and
+178 distinct pinned cvc5 paths**. All 20 distinct source line targets added
+by the tutorials were checked against the pinned files, and `git diff --check`
+passed. The six-section structure of every theory sub-guide is unchanged.
 
 It does not fetch dependencies, generate prose, authenticate a checkout or
 confirm that a method still behaves as described. Supply an independently
@@ -101,12 +156,12 @@ updating this guide.
 
 ## Where to deepen the next edition
 
-All bootcamp sections have an initial walkthrough. Further depth would be
-useful in concrete end-to-end traces, individual simplex/nonlinear algorithms,
-regexp procedures, specialized quantifier strategies and proof reconstruction
-examples. Those are expansions of the current account, not topics silently
-omitted from the bootcamp coverage. Future runtime evidence should be attached
-to a specific example and configuration rather than advertised as verification
-of the entire guide.
+All bootcamp sections have a walkthrough, and each theory now includes a
+concrete starting input with source-reading stops. Further depth would be
+useful in recorded traces from a build of this exact revision, individual
+simplex/nonlinear algorithms, regexp procedures, specialized quantifier
+strategies and complete proof reconstruction examples. Attach future runtime
+evidence to the specific example and configuration, as above, rather than
+advertising it as verification of the entire guide.
 
 [source]: https://github.com/cvc5/cvc5/tree/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0

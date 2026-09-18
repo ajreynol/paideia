@@ -109,6 +109,45 @@ with these entry points for this theory.
 | Function disequality or its model witness | `notifyFact`, `HoExtension` and `collectModelInfoHo` |
 | Finite domains, conversions or distinct constraints | The corresponding extension and its effort/context requirements |
 
+### Worked example: explaining a congruence conflict
+
+Save this as `uf.smt2` and run `build-dev/bin/cvc5 uf.smt2` from your cvc5
+checkout. The expected result is `unsat`.
+
+```smt2
+(set-logic QF_UF)
+(declare-sort U 0)
+(declare-const a U)
+(declare-const b U)
+(declare-const c U)
+(declare-fun f (U) U)
+(assert (or (= a b) (= a c)))
+(assert (distinct (f a) (f b)))
+(assert (distinct (f a) (f c)))
+(check-sat)
+```
+
+There are two possible equality branches. If SAT chooses `a = b`, congruence
+forces `f(a) = f(b)`, contradicting the first disequality. If it chooses
+`a = c`, the other disequality conflicts. The disjunction prevents simply
+substituting one unconditional input equality for `a`.
+
+Read [function-kind registration][register-functions], then
+[term preregistration][register-terms], then the equality engine's
+[explanation interface][explanations]. For the first branch, the relevant
+conflicting assumptions are `a = b` and `f(a) != f(b)`. The corresponding
+clause is `a != b or f(a) = f(b)`. The second branch has the analogous
+clause with `c`. This is a logical explanation of the conflict; the exact
+internal representatives and clause presentation can differ.
+
+Notice the direction of the rule. Ordinary UF does **not** make `f` injective:
+`f(a) = f(b)` does not imply `a = b`. As an exercise, replace the assertions
+by `a != b` and `f(a) = f(b)`. The result should be `sat`, with a function
+interpretation that maps two domain elements to the same result. Compare the
+larger upstream [UF example][example] for function/model queries. Use
+`-o post-asserts` before choosing a breakpoint; even a conditional example
+can be simplified before a particular search callback runs.
+
 ### Validation
 
 To trace congruence, use `a = b` together with `f(a) != f(b)` and watch where
@@ -123,3 +162,7 @@ equality-class and extension state must recover together.
 [card]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/uf/cardinality_extension.cpp
 [conv]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/uf/conversions_solver.cpp
 [distinct]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/uf/distinct_extension.cpp
+[register-functions]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/uf/theory_uf.cpp#L88
+[register-terms]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/uf/theory_uf.cpp#L299
+[explanations]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/uf/equality_engine.h#L207
+[example]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/examples/api/smtlib/uf.smt2
