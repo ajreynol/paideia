@@ -22,8 +22,9 @@ what the sealed jar in `review.md` is for.
 
 **A review recorded here has been sent to nobody**, and nothing in this
 directory is addressed to a contributor or to a maintainer of cvc5. A person
-decides whether any of it goes anywhere; see
-[`../../../docs/pr-policy.md`](../../../docs/pr-policy.md), which governs here
-unchanged.
+decides whether any of it goes anywhere; the rule is [dokimasia's
+`pr-policy.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/pr-policy.md),
+kept here by this project's own choice now that dokimasia is not its parent,
+and unchanged.
 
 *Empty. No pull request has been reviewed yet.*

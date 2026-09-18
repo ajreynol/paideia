@@ -11,4 +11,7 @@ Each holds what this project produced (`TRIAGE:`, `WHAT I DID:`,
 rest is bookkeeping that makes the delta legible.
 
 Nothing in this directory is sent anywhere. It is a record for a person to read
-and decide about — see [`../../../docs/pr-policy.md`](../../../docs/pr-policy.md).
+and decide about — the rule is [dokimasia's
+`pr-policy.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/pr-policy.md),
+kept here by this project's own choice now that dokimasia is not its parent,
+and unchanged.
