@@ -2,6 +2,20 @@
 
 [Bootcamp](README.md) / Research references
 
+Use this page when a tutorial has introduced an algorithm and you want to
+understand why it works. Read the relevant tutorial's small example first,
+then choose a paper from the reading map and follow its code connection.
+The bibliography is a reference to consult by topic; understanding all of it
+is not a prerequisite for working through the guide.
+
+Research papers often describe a **calculus**, a collection of inference rules
+stating what follows from which premises. A **decision procedure** organizes
+reasoning into an algorithm that settles inputs in a specified fragment.
+An implementation adds representations, scheduling and optimizations around
+those ideas. Each entry separates the paper from the current code so you can
+follow that translation. CVC4 is cvc5's predecessor, so older CVC4 papers can
+explain ideas still used by current components.
+
 This bibliography connects **92 publications** to components in the
 pinned cvc5 `main` source. Start with [CVC5-2022](#cvc5-2022) for the system,
 [SMT-TUTORIAL-2024](#smt-tutorial-2024) for SMT foundations, and the topic you
@@ -36,6 +50,12 @@ algorithms. Paper experiments, option defaults and completeness assumptions
 must not be transferred to the current implementation without checking them.
 
 ## Reading map
+
+The capitalized keys, such as `CVC5-2022`, are stable labels used by links
+throughout the chapters. Each entry gives publication information, a **Main
+connection** pointing to source files, and a reading note explaining what to
+look for there. Start with the note to decide whether the paper addresses the
+question you are investigating.
 
 | Literature topic | Tutorial |
 | --- | --- |

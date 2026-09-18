@@ -2,6 +2,21 @@
 
 [Bootcamp](../README.md) / [How to develop a theory](README.md)
 
+**UF** stands for *uninterpreted functions*. Such a function has argument and
+result types, but no fixed definition: the solver may choose its interpretation
+as part of a model. It must still behave as a function. Equal inputs have equal
+outputs, so `a = b` together with `f(a) != f(b)` is impossible. This rule is
+called **congruence**. Different inputs may have equal outputs.
+
+An **uninterpreted sort** similarly supplies a nonempty domain without fixing
+what its elements are. Ordinary ground UF problems constrain named values and
+function applications without quantifiers. Their core solving task is to
+maintain equalities, congruence and disequalities consistently. **Higher-order**
+reasoning extends this picture by treating functions themselves as values that
+can be compared or passed as arguments; a lambda expression describes such a
+function. This chapter starts with congruence, then explains where the richer
+features enter the same theory implementation.
+
 Source baseline: [2026-09-18](../source-baseline.md). Main entry:
 [TheoryUF][theory]. Helpers include [HoExtension][ho],
 [CardinalityExtension][card], [ConversionsSolver][conv] and
@@ -54,7 +69,8 @@ equality engine. `notifyFact` forwards facts to the cardinality extension,
 including whether the SAT literal was a decision. It dispatches `DISTINCT`
 facts and handles higher-order function disequalities.
 
-For **negative** equality `f != g`, extensionality requires an argument at
+**Extensionality** means that functions with the same result at every argument
+are equal. For **negative** equality `f != g`, it requires an argument at
 which the functions differ. The higher-order extension introduces and manages
 that witness. The bootcamp's description of this trigger as a positive
 function equality is incorrect at this baseline. Positive function equality

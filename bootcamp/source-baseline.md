@@ -1,5 +1,17 @@
 # Source baseline and updating the guide
 
+A **source baseline** is the exact version of the code used to write the
+implementation account. cvc5 changes over time, so this guide pins its source
+links to one Git commit: a recorded snapshot that can be inspected again.
+Use this page when your checkout differs from an explanation or when updating
+the guide. The chapters themselves are the starting point for learning.
+
+The record also separates different kinds of evidence. Reading source can
+establish what a method contains; running an example establishes what a
+particular build did on that input. A link check establishes that a cited location exists.
+These checks answer different questions, and the sections below state which
+were performed.
+
 Upstream commit: `3dcc1ef5421ab62cc1ee9af52d70042ce6861af0`
 
 Observed branch: upstream `cvc5/cvc5` `main`, read on **2026-09-18** with
@@ -85,6 +97,21 @@ use its executable for each chapter's command, and enable CoCoA for the field
 example. Record that build's version, options and outputs separately.
 
 ## Mechanical checks
+
+### Introductory reading pass
+
+On **2026-09-18**, all 24 tutorial and reference pages were read for accessibility
+to a programmer new to SMT implementation. The pass added introductions,
+small conceptual examples and definitions at the point where new terminology
+appears. It retained the source pin, existing runnable examples, bibliography
+entries and six-section theory structure. Rewriting is introduced through
+term equivalence, and preprocessing through satisfiability preservation and
+its place before search, including incremental and lemma-processing caveats.
+This is an explanatory revision, with no new solver-runtime measurements.
+The guide checker passed against the local baseline source with **31 local
+targets and 250 distinct pinned cvc5 paths**. Whitespace checks passed, and a
+comparison with the previous revision confirmed that all fenced examples and
+diagrams were unchanged.
 
 ### Literature pass
 
@@ -172,6 +199,8 @@ been installed.
    disappears. A symbol rename alone cannot justify retaining the old prose.
 4. Update the explanation and the bootcamp correction table where relevant.
    Preserve reasoning and examples that explain why an invariant matters.
+   Introduce the concept and a small example before naming implementation
+   classes; define new technical vocabulary when it first becomes necessary.
    Add new source links for new claims. Label proposed designs, measured
    results and unverified hypotheses distinctly.
    Update affected [literature connections](references.md) alongside the code

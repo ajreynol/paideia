@@ -1,5 +1,36 @@
 # Rewriting and preprocessing
 
+Before studying the code, separate two kinds of transformation.
+**Ordinary rewriting** replaces a term with another having the same value in
+every interpretation allowed by its theory. For a Boolean formula, this means
+preserving its truth value. Thus `x + 0` can become `x` regardless of the input
+assertions. The equality between the old and new terms is valid. Rewriting is
+**context-independent**: it does not rely on assertions or temporary search
+choices. The rewriter is used throughout solving, including during
+preprocessing and when theories construct new terms.
+
+Rewriting both simplifies expressions and puts them into consistent forms.
+A **normal form** is the result on which the selected rewrite rules have no
+further work to do. This helps later algorithms recognize shared structure;
+it does not mean that every pair of mathematically equivalent expressions
+will have the same normal form.
+
+**Preprocessing** prepares the asserted problem for search. Its usual contract
+is **equisatisfiability**: the transformed problem has a model exactly when the
+original does. It may use relationships between assertions, eliminate variables
+or introduce fresh symbols with defining constraints. For example, from
+`x = 3` and `x + y > 5`, it can eliminate `x` and solve `3 + y > 5`, remembering
+`x = 3` for model reconstruction. Replacing `x` by `3` is justified by this
+problem's assertion, so it is not an unconditional rewrite of the term `x`.
+
+The useful scheduling picture is a preprocessing stage before search, with
+rewriting available throughout. In an ordinary non-incremental run, the input
+goes through that preparation stage before the main search. In incremental
+use, new assertions need preparation for later checks; a preprocessing pipeline
+can itself repeat passes. Theory-generated lemmas also undergo theory
+preprocessing. Consequently, “once” describes the initial preparation stage,
+not a promise that every preprocessing routine runs only once per solver.
+
 Source baseline: [2026-09-18](source-baseline.md).
 
 ## Three places that can change a term
@@ -26,6 +57,12 @@ selection of passes live in [ProcessAssertions][process]. A transformation
 that is safe only after a particular pass must not silently move into the
 ordinary rewriter.
 
+Special solving modes can change the usual preservation contract. For example,
+restricting unbounded integers to a bounded search space can lose solutions.
+Such modes must account for that loss of completeness when reporting results.
+They have additional obligations beyond the ordinary preprocessing contract
+described here.
+
 There is also a `ppStaticRewrite` hook. Several transformations described as
 `ppRewrite` in the bootcamp now live in this separate hook, including some
 arithmetic and bit-vector equality transformations. Check the current override
@@ -39,6 +76,13 @@ context-dependent deduction a globally valid cached rewrite. For string-specific
 examples, see [STRINGS-ABSTRACTION-2019](references.md#strings-abstraction-2019).
 
 ## Assertion substitution is a scoped operation
+
+A **substitution** replaces occurrences of a symbol or term with another
+expression. Eliminating `x` using `x = t` requires that the replacement be
+well-typed and not depend circularly on `x`. It also requires a scope: a
+replacement learned from an assertion that a user later removes cannot remain
+an unconditional fact. The example `x = 3` above illustrates both why the
+substitution helps search and why its definition still matters to the model.
 
 `Theory::ppAssert` can solve an assertion for a variable and record a
 substitution through `TrustSubstitutionMap`. The base implementation handles
@@ -59,6 +103,13 @@ and model checking. That is why preprocessing, top-level substitutions and
 does not mean “the public solver can forget what it meant.”
 
 ## Remove term-level formulas without losing semantics
+
+An **if-then-else** expression, written `ite(c,y,z)`, denotes `y` when the
+Boolean condition `c` is true and `z` otherwise. Inside `f(ite(c,y,z))`, it
+puts a Boolean choice in the middle of a non-Boolean term. **Purification**
+names that inner expression with an auxiliary symbol and supplies constraints
+that preserve its meaning. This lets Boolean search handle the choice while
+the function solver sees an ordinary argument.
 
 SAT handles Boolean structure, while theory terms may contain conditionals or
 Boolean-valued arguments. [RemoveTermFormulas][rtf] bridges that boundary.

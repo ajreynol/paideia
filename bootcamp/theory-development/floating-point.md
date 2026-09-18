@@ -2,6 +2,21 @@
 
 [Bootcamp](../README.md) / [How to develop a theory](README.md)
 
+**Floating-point** values model finite-precision machine arithmetic. A format
+fixes how many bits describe the sign, exponent and significand; a rounding
+mode determines what happens when an exact result is not representable.
+Special values include infinities, positive and negative zero, and **NaN**
+(not a number). Familiar real-arithmetic identities can fail under rounding,
+so the solver must preserve the semantics of the chosen operation and format.
+
+Two tasks appear in this implementation. **Constant evaluation** computes an
+operation whose operands are already known values. **Symbolic solving** finds
+values for unknown operands that satisfy constraints. cvc5 handles the latter
+largely by **word blasting**: translating floating-point operations into
+bit-vector expressions that encode their components, rounding and special
+cases. Those expressions then go to bit-vector reasoning. This chapter follows
+both paths and their connections to real arithmetic and model construction.
+
 Source baseline: [2026-09-18](../source-baseline.md). Start in
 [TheoryFp][theory], [FpExpandDefs][expand] and the
 [floating-point implementation directory][directory].
@@ -34,6 +49,13 @@ must be checked separately in the MPFR implementation.
 ## Preprocessing and registration
 
 ### Make underspecified cases explicit
+
+SMT operations must have a result even in exceptional cases. Some operations
+leave particular results unspecified, such as conversion of an infinity to a
+real value. **Totalization** gives the internal representation an explicit way
+to supply those results while preserving every constraint the public semantics
+does impose. An unspecified result is still subject to function consistency;
+it cannot vary arbitrarily between identical applications in one model.
 
 `ppRewrite` calls the rewriter's definition expansion and expects several
 surface kinds to be gone afterward. Some are syntactic reductions, such as

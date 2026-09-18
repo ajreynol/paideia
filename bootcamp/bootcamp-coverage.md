@@ -1,5 +1,12 @@
 # Bootcamp coverage and corrections
 
+This page is a map from the original bootcamp notes to the expanded tutorial.
+It helps returning readers find a familiar topic and helps maintainers keep
+track of corrections. To learn the solver concepts for the first time, start
+with [Walking through cvc5](README.md) and use the linked chapters below as
+needed. The tutorial explains its own terminology and examples; the original
+notes are not required reading.
+
 The supplied `cvc5-Bootcamp.docx` is the initial subject map. It contains roughly
 4,590 words of paragraph text, plus embedded figures. It mixes explanations,
 questions, TODOs and suggested changes. The following table accounts for its
@@ -69,6 +76,15 @@ the slot with “not implemented.”
 | Quantified formula's model Boolean value demonstrates satisfaction | Completeness is separately established by modules: [quantifiers](theory-development/quantifiers.md) |
 
 ## Additions beyond the notes
+
+The introductory reading pass adds basic explanations before implementation
+details throughout the architecture and theory chapters. These cover what each
+theory's objects mean, why its solving problem needs the described machinery,
+and shared concepts such as terms, contexts, congruence, models and refinement.
+The [rewriting and preprocessing introduction](preprocessing.md) distinguishes
+term equivalence from preservation of satisfiability and explains when each
+transformation is used. The guide index supplies an SMT-LIB reading primer;
+the reference pages explain how to use their records.
 
 The expanded tutorials retain the chapter order and six theory-development
 stages. They add [complete theory examples](theory-development/README.md#choose-a-concrete-starting-problem),

@@ -2,6 +2,20 @@
 
 [Bootcamp](../README.md) / [How to develop a theory](README.md)
 
+A **bit-vector** is a fixed-length sequence of bits, used to describe machine
+words and circuits. A four-bit vector has 16 possible values. Addition wraps
+modulo 16, so `1111 + 0001` gives `0000`. The same bits can be interpreted as
+unsigned or signed numbers: `1111` means unsigned 15 or signed -1. The
+operation, such as unsigned or signed comparison, determines that interpretation.
+
+Solving asks which bit patterns make a collection of constraints true.
+**Bit blasting** expresses the word operations as Boolean circuits, allowing
+a SAT solver to search for their bits. For example, a word addition becomes
+per-bit sum and carry constraints. An **eager** strategy translates upfront;
+a **lazy** strategy delays translation until terms or facts are needed.
+The chapter follows this encoding through the available backends and back
+to word values in the model.
+
 Source baseline: [2026-09-18](../source-baseline.md). Read
 [TheoryBV][theory] with the backend it constructs:
 [BVSolverBitblast][external] or [BVSolverBitblastInternal][internal].
@@ -74,6 +88,13 @@ fact and skip the equality engine.” Most of the work consequently occurs at
 lemma introduction rather than a separate `postCheck` SAT call.
 
 ### Abstraction before bit blasting
+
+An **abstraction** initially leaves out some of an operation's constraints to
+make the problem easier. For instance, a multiplication result can temporarily
+be treated as an independent word. If the proposed factors and product do not
+agree, **refinement** adds a valid constraint to rule out that mismatch. The
+purpose is to avoid constructing the full circuit when simpler constraints
+already settle the problem.
 
 The current separate backend has an [abstraction module][abstraction] for
 expensive multiplication, unsigned division and remainder. With

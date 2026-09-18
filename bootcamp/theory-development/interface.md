@@ -2,11 +2,31 @@
 
 [Bootcamp](../README.md) / [How to develop a theory](README.md) / Common interface
 
+This chapter explains how specialized solvers cooperate on one problem.
+Boolean search proposes which constraints hold. Each theory checks the
+constraints it understands and communicates consequences, contradictions or
+additional choices through a common interface. The **theory engine** coordinates
+that exchange; a **callback** is an entry point it or another component invokes
+when an event, such as a new fact or an equality merge, occurs.
+
+Consider integer terms `x,y` and a function `f`. Arithmetic can infer `x = y`
+from `x <= y` and `y <= x`. Function reasoning then knows `f(x) = f(y)` and
+can reject an asserted disequality between them. The components must share
+the relevant equality, explain why it holds, and withdraw branch-dependent
+information on backtracking. The interface exists to make those obligations
+explicit across different algorithms.
+
 Source baseline: [2026-09-18](../source-baseline.md). Read
 [theory.h][theory-h] together with [theory.cpp][theory-cpp]; the base class
 implements much of the protocol described here.
 
 ## Which theory receives a literal?
+
+A **literal** is an atomic Boolean constraint or its negation. A theory's
+**ownership** of a literal means responsibility for reasoning about it; it is
+separate from C++ memory ownership. For example, `x < y` calls for arithmetic,
+while equality between arrays calls for array reasoning. Routing must also
+handle expressions whose subterms come from several theories.
 
 For ordinary theory atoms, routing selects a primary owner. In type-based
 mode, a variable belongs to the theory of its type, an equality belongs to the
@@ -66,9 +86,10 @@ the current branch.
 
 Sending output can cause preprocessing, SAT-atom creation and preregistration
 of new terms. It can also trigger equality callbacks. Code that is midway
-through updating an index must consider such reentrancy. Pending-inference
-queues let a solver finish a local phase before exposing its output; they are
-part of the algorithm, not incidental buffering.
+through updating an index must consider **reentrancy**: an outgoing call can
+cause a callback into the theory before the original method has finished.
+Pending-inference queues let a solver finish a local phase before exposing its
+output; they are part of the algorithm, not incidental buffering.
 
 ### One deduction, several output contracts
 
@@ -95,6 +116,17 @@ Likewise, an equality engine's representative is a convenient class member,
 not an explanation of why every term in that class equals it.
 
 ## The fact-processing skeleton
+
+**Preregistration** tells a theory that a term exists so it can prepare its
+indices and notifications. **Fact processing** tells it that a particular
+literal holds on the current branch. Registering `x = y` does not yet assert
+that equality. The callbacks below let a theory perform work around the
+common loop that consumes newly asserted facts.
+
+The **polarity** of a literal records whether an atom is asserted positively
+or negatively: `x = y` has positive polarity and `not (x = y)` has negative
+polarity. The fact loop passes the atom and this Boolean flag separately,
+so both forms can use the same theory callback.
 
 `Theory::check(effort)` has an early-exit optimization for an empty queue below
 full effort. Otherwise its central sequence is:
@@ -145,6 +177,11 @@ corresponding proof-production obligation.
 
 ## Effort levels are a scheduling contract
 
+Search need not run every available reasoning procedure after every new fact.
+Cheap deductions can prune a partial branch; more expensive work is needed
+before accepting a candidate answer. **Effort** names these stages of work,
+rather than a timeout or a numerical measure of how difficult an input is.
+
 `EFFORT_STANDARD` is the ordinary propagation/checking stage during Boolean
 search. `EFFORT_FULL` asks theories to resolve a candidate assignment or add
 the constraints needed to continue. `EFFORT_LAST_CALL` supports work after a
@@ -157,6 +194,15 @@ and no incompleteness signal can let an unjustified candidate escape. The
 `needsCheckLastEffort` explain its local obligations.
 
 ## Equality engines and their notifications
+
+An equality engine groups terms known to denote the same value into
+**equivalence classes**. If `a = b` and `b = c`, all three join one class.
+It also maintains **congruence**: equal arguments to the same function give
+equal results, so `a = b` implies `f(a) = f(b)`. **Congruence closure** is the
+process of maintaining all such consequences for the registered terms.
+A class **representative** is a chosen member used for bookkeeping; it need
+not be a concrete value. Notifications let a theory update its own information
+when these classes change.
 
 [EqualityEngine][ee] provides congruence closure, predicate/equality assertions,
 disequalities, triggers and explanations. For registered function kinds,
@@ -209,6 +255,12 @@ assuming two theories' engine pointers or representatives are interchangeable.
 
 ## Combination asks the equalities that matter
 
+Two theories can each accept their local constraints while disagreeing about
+the same values. **Theory combination** coordinates them through shared terms
+and their equalities. In the `f(x), f(y)` example, whether `x = y` matters to
+both arithmetic and function reasoning. A **care graph** records pairs whose
+equality needs attention so combination can focus on relevant choices.
+
 Theories share terms through the shared-solver and combination infrastructure.
 A care pair is a pair of shared terms whose equality relationship matters to
 a theory's congruence or model construction. Care graphs avoid splitting on
@@ -237,6 +289,13 @@ creates is to make the participating theories agree on a case and its
 consequences, not to add a new arithmetic axiom.
 
 ## Models combine constraints from several owners
+
+A model needs values for the original problem, not just an absence of local
+conflicts. Each theory contributes the part it understands. A **model skeleton**
+is a partially specified value, such as a list constructor whose integer field
+still needs an arithmetic value. **Relevant terms** are the terms the model
+construction must account for, including needed auxiliaries. The common
+machinery turns compatible theory contributions into one interpretation.
 
 The care-graph account is [SHARING-2011](../references.md#sharing-2011),
 expanded in [CAREFUL-2013](../references.md#careful-2013). Use the `f(x), f(y)`

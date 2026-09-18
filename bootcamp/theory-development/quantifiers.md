@@ -2,6 +2,26 @@
 
 [Bootcamp](../README.md) / [How to develop a theory](README.md)
 
+A **quantifier** states how widely a formula must hold. `forall x. P(x)`
+requires `P` for every value of `x`'s type; `exists x. P(x)` requires at least
+one suitable value, called a **witness**. The `x` is bound by the quantifier.
+A **ground** term contains no bound variables: `f(a)` is ground when `a`
+is a declared constant, even if its value is unknown. Ground theory solving
+handles constraints on such terms, while quantifiers introduce obligations
+that can range over an infinite domain.
+
+**Instantiation** replaces bound variables with chosen terms. From
+`forall x. f(x) > x`, the instance at `a` is `f(a) > a`; arithmetic can then
+combine that with other ground constraints. The challenge is choosing enough
+useful instances. Trying several integers does not establish a claim about
+all integers, and general quantified problems have no complete decision
+procedure. cvc5 combines strategies that work well on different fragments
+and must report `unknown` when they cannot justify an answer.
+
+This chapter follows the instance-generation and model-checking loop, then
+introduces **synthesis**, which searches for an expression or function
+implementation satisfying a specification.
+
 Source baseline: [2026-09-18](../source-baseline.md). Read
 [TheoryQuantifiers][theory], [QuantifiersEngine][engine], the
 [module interface][interface] and [module initialization][modules] in that
@@ -56,6 +76,11 @@ substitutions. For a pattern `f(x)`, a ground application `f(a)` suggests
 [InstantiationEngine][ematching] coordinates user patterns and generated
 triggers. The [TermDb][termdb] and term registry determine which terms and
 representatives are currently available.
+
+The **E** in E-matching refers to equality: matching can use terms known equal
+even if their syntax differs. A **trigger** is the pattern, or group of
+patterns, used to guide this search. It suggests when an instance may be
+useful; it does not change what the quantified formula means.
 
 Conflict-based instantiation tries to find instances immediately useful to
 the current ground assignment. Counterexample-guided instantiation uses
@@ -152,6 +177,15 @@ adds function-valued terms. These features share infrastructure but introduce
 different obligations.
 
 ### Synthesis
+
+In **syntax-guided synthesis (SyGuS)**, the user supplies a specification and
+a grammar describing permitted expressions. For example, the goal could be
+an integer function `f` satisfying `f(x) > x` for every `x`, with a grammar
+allowing `x`, integer constants and addition. The expression `x + 1` is one
+solution. A **candidate** is a proposed expression; a **counterexample** is
+an input showing that candidate violates the specification. A typical loop
+generates a candidate, checks it, and uses any counterexample to guide the
+next attempt.
 
 Syntax-guided synthesis is an additional consumer of this architecture.
 `SynthEngine` and its helpers under `quantifiers/sygus/` coordinate candidate

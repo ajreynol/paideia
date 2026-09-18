@@ -2,6 +2,20 @@
 
 [Bootcamp](../README.md) / [How to develop a theory](README.md)
 
+This theory reasons about **finite sets**: unordered collections of distinct
+values. Membership says whether a value belongs to a set; union, intersection
+and difference construct sets from other sets. **Cardinality** is the number
+of distinct elements, so `{1,1,2}` denotes the same set as `{1,2}` and has
+cardinality 2. With unknown elements, their equality matters: `{x,y}` can
+have cardinality 1 if a model makes `x = y`.
+
+A **relation** is represented as a set of tuples. A binary relation, for
+example, contains pairs `(a,b)`; relational operations reason about how such
+pairs can be combined. The set solver connects membership structure to the
+theories of its elements and to arithmetic for sizes. This chapter follows
+those connections from simple membership consequences to witnesses that
+distinguish sets and values that satisfy their required cardinalities.
+
 Source baseline: [2026-09-18](../source-baseline.md). The public theory wrapper is
 [TheorySets][theory]; most work is in [TheorySetsPrivate][private], with a
 separate [Strategy][strategy], [cardinality extension][card] and
@@ -105,6 +119,12 @@ solver change involving element equality should therefore be exercised with
 elements constrained in UF, arithmetic or datatypes, not only literal values.
 
 ## Model construction
+
+Membership facts usually describe only part of a set. If the input says
+`x in A` and `card(A) = 3`, a model must choose two additional distinct values
+for `A`. Those choices must obey negative memberships and the element type's
+available values. Constructing a set model therefore includes completing its
+contents consistently with its size.
 
 Without cardinality, a class's known members give a natural finite skeleton:
 a union of singletons. With cardinality, the extension orders classes and

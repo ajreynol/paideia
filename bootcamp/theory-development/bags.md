@@ -2,6 +2,21 @@
 
 [Bootcamp](../README.md) / [How to develop a theory](README.md)
 
+A **bag**, also called a multiset, is a collection in which values can occur
+more than once. Its essential observation is an element's **multiplicity**,
+or number of copies. For distinct values `a,b`, a bag containing two copies of
+`a` and one of `b` has three elements counting repetitions, whereas the
+corresponding set contains only two values. **Support** means the set of
+elements with nonzero counts; a finite bag has finite support.
+
+A **table** is a bag of tuples, so duplicate rows retain their multiplicity.
+This matters when modeling database operations: combining rows can change
+counts even when the distinct row values stay the same. cvc5 connects bag
+operations to equations on integer counts. The bag solver supplies those
+equations, arithmetic checks the numbers, and the element theories determine
+which apparent elements are equal. This chapter follows that cooperation and
+the construction of concrete bags from the resulting counts.
+
 Source baseline: [2026-09-18](../source-baseline.md). Start with
 [TheoryBags][theory], [BagSolver][solver], [SolverState][state],
 [Strategy][strategy] and [BagReduction][reduction].
@@ -73,6 +88,11 @@ The basic stage also handles filters and table product, join and group.
 The separate quantified stage currently dispatches `BAG_MAP`. A noninjective
 map can send several source elements to the same
 target, requiring aggregation of counts rather than copying a single count.
+Here a **map** applies a function to every element. If it sends both `a` and
+`b` to `c`, a bag with two copies of `a` and three of `b` produces five copies
+of `c`. An **injective** function never identifies distinct inputs, which
+makes the count relationship simpler.
+
 Filters need the truth of the predicate on each relevant element; table
 products and joins combine multiplicities as well as values. Follow the
 corresponding `BagSolver::check*` method and inference constructors for the

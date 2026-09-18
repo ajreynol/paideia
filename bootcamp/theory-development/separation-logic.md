@@ -2,6 +2,22 @@
 
 [Bootcamp](../README.md) / [How to develop a theory](README.md)
 
+**Separation logic** describes the contents and ownership of parts of memory.
+A **heap** maps allocated locations to stored values. A points-to assertion
+`x |-> 7` describes a heap containing exactly one cell, at location `x`,
+with value `7`. The assertion `emp` describes an empty heap. These are
+**spatial** assertions because their meaning includes which locations belong
+to the heap.
+
+The **separating conjunction** `P * Q` says the heap can be split into two
+disjoint parts satisfying `P` and `Q`. Thus `x |-> 7 * y |-> 7` requires
+different locations for `x` and `y`, even though their stored values agree.
+The **separating implication**, or magic wand, `P -* Q` says that adding any
+disjoint heap satisfying `P` would make the combined heap satisfy `Q`.
+cvc5 reasons about these spatial relationships using sets of locations and
+checks of candidate heaps. This chapter explains how those sets retain their
+connection to points-to data and the original spatial formulas.
+
 Source baseline: [2026-09-18](../source-baseline.md). The central implementation
 and callback adapter are [TheorySep][theory] and its [header][header].
 

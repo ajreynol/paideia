@@ -2,6 +2,20 @@
 
 [Bootcamp](../README.md) / [How to develop a theory](README.md)
 
+An SMT **array** is a total mapping from an index type to an element type.
+`select(a,i)` reads the value at index `i`; `store(a,i,v)` denotes an array
+equal to `a` everywhere except that index, where it has value `v`. A store
+constructs an expression for the updated array and leaves the original `a`
+available. The array type itself has no length field or out-of-bounds index.
+
+For example, reading index `2` after storing `7` at index `2` gives `7`.
+Reading a different index gives the original array's value there. With
+symbolic indices `i,j`, the solver may need to find out whether they are equal
+before deciding which case applies. Arrays also obey **extensionality**:
+they are equal exactly when all their reads agree. A disequality therefore
+needs an index witnessing different reads. These read/write rules and witnesses
+drive the registration, inference and model-construction code below.
+
 Source baseline: [2026-09-18](../source-baseline.md). Begin with
 [TheoryArrays][theory], its [class definition][header],
 [array rewriting][rewriter] and [options][options].
@@ -78,10 +92,13 @@ the lemma. Non-array disequalities also feed model constraints.
 
 `postCheck` has two distinct algorithmic routes. The ordinary route discharges
 queued read-over-write lemmas at full effort when eager lemma output is off.
-With `arraysWeakEquivalence`, it replays array merges into a weak-equivalence
-structure, groups reads by may-equal array representative and index
-representative, and finds reads connected without a relevant intervening
-write. It explains those paths to produce lemmas.
+Here **eager** means sending a consequence as soon as it is discovered; queuing
+it defers that work to a later stage. **Weak equivalence** tracks arrays joined
+by stores or equalities so reads can be compared at indices unaffected by
+those stores. With `arraysWeakEquivalence`, the solver replays array merges
+into a weak-equivalence structure, groups reads by may-equal array
+representative and index representative, and finds reads connected without a
+relevant intervening write. It explains those paths to produce lemmas.
 
 The weak-equivalence option is **false by default** in this snapshot. Its
 trigger also depends on full effort or eager lemma settings. The bootcamp's

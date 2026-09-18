@@ -1,5 +1,18 @@
 # Building and navigating
 
+Building cvc5 turns its C++ source into a solver executable and libraries.
+The executable reads inputs such as the tutorial's SMT-LIB files; a program
+can instead call the library through its API. This chapter gets you a local
+build for experiments and a map for finding the code behind an observation.
+
+There are three steps. **Configuration** chooses features, dependencies and
+compiler settings and writes build instructions. **Compilation and linking**
+produce the executable and libraries. **Testing** runs those built programs
+on selected cases. The source checkout and the build directory are separate:
+`build-dev` below holds generated files and compiled output for one chosen
+configuration. A debug build keeps checks and debugging information useful
+when following the solver's execution.
+
 Source baseline: [2026-09-18](source-baseline.md). Start in the root of a cvc5
 checkout, rather than this repository, for the commands below.
 
@@ -133,6 +146,12 @@ is easier to browse, but select its version deliberately when comparing an
 API or option with this prerelease source.
 
 ## Kinds connect a theory to the rest of the solver
+
+A **kind** identifies an expression's operation, such as addition or array
+read. Its **arity** says how many arguments it accepts, and its **type rule**
+says which argument types are legal and what result type follows. Many parts
+of the solver need this same information. cvc5 generates some of their shared
+declarations and dispatch code from metadata so the definitions stay connected.
 
 [CVC5-2022](references.md#cvc5-2022) gives a system-level map of the theory
 components. Use it to orient the source search below, then read the pinned

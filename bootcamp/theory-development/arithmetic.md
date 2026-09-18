@@ -2,6 +2,21 @@
 
 [Bootcamp](../README.md) / [How to develop a theory](README.md)
 
+The arithmetic theory asks whether equations and inequalities have a common
+assignment of integers or reals. These are mathematical integers and reals:
+integers have no machine-word overflow, and real reasoning uses exact
+relationships rather than ordinary floating-point rounding. For example,
+`x >= 3`, `y >= 2` and `x + y <= 4` cannot all hold.
+
+**Linear** expressions multiply variables only by constants, as in `2*x + y`.
+Products such as `x*y` are **nonlinear** and require additional algorithms.
+The value domain matters too: `2*x = 1` has a real solution but no integer
+solution. The solver often starts with an easier **relaxation**, which permits
+more assignments than the original problem, and then checks the missing
+requirements. A conflict in the relaxation rules out the original problem;
+a successful relaxed assignment still needs validation. This chapter follows
+linear constraints first, then integer reasoning and nonlinear refinement.
+
 Source baseline: [2026-09-18](../source-baseline.md). Start with
 [TheoryArith][theory], then follow its delegation into
 [TheoryArithPrivate][linear], [EqualitySolver][equality] and
@@ -11,6 +26,14 @@ model callbacks blank; this chapter supplies that missing route.
 ## Representation and invariants
 
 ### The wrapper and the linear core
+
+The linear core uses **simplex**, an algorithm that adjusts a candidate
+assignment while maintaining linear equations and trying to satisfy bounds.
+A **tableau** organizes those equations as rows. A pivot changes which variable
+a row solves for, allowing another assignment adjustment. For integer variables,
+**branching** splits cases and a **cut** adds a valid constraint excluding an
+unwanted fractional candidate. **Diophantine** reasoning concerns integer
+solutions to equations.
 
 `TheoryArith` is the theory-engine-facing coordinator. It owns arithmetic
 state and inference management, preprocessing/operator elimination, the
@@ -105,6 +128,12 @@ The implementation includes strategies for incremental linearization,
 transcendentals and coverings, selected by options and supported dependencies.
 Some combinations remain incomplete and must signal that fact instead of
 letting the linear relaxation justify `sat`.
+
+The two nonlinear approaches mentioned here organize different kinds of work.
+**Incremental linearization** adds linear constraints justified by nonlinear
+operations to reject bad candidates. **Coverings** records regions of possible
+real assignments that are excluded by constraints. **Transcendental** functions,
+such as sine and exponential, need reasoning beyond polynomial equations.
 
 Current options and their declared defaults are in [arith_options.toml][options].
 The new `nl-ext-initial-sign-lemmas` option adds early monomial zero-sign

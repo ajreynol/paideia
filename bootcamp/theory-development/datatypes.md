@@ -2,6 +2,22 @@
 
 [Bootcamp](../README.md) / [How to develop a theory](README.md)
 
+An **algebraic datatype** describes values built from named constructors.
+A list of integers, for example, is either `nil` or `cons(h,t)`, where `h`
+is an integer and `t` is another list. A **selector** reads a field, such as
+`head(cons(7,nil)) = 7`; a **tester** asks which constructor a value uses,
+such as whether a list is `nil`. These give the solver explicit structure
+to reason about even when a variable's full value is unknown.
+
+Constructors of different forms cannot produce the same value, and equal
+applications of the same constructor have equal fields. An **inductive**
+datatype contains finite constructor values, so `x = cons(0,x)` has no list
+solution. **Codatatypes** allow potentially infinite structures, including
+values represented by cycles, and need different reasoning. **Parametric**
+datatypes take type parameters, as a list can contain integers or strings.
+The implementation below keeps these structural rules consistent with the
+equalities learned during search.
+
 Source baseline: [2026-09-18](../source-baseline.md). The main implementation is
 [TheoryDatatypes][theory], with [rewriting][rewriter],
 [inference management][im] and a [SyGuS extension][sygus].
@@ -39,7 +55,11 @@ also receives registration. Initial lemmas are processed here, so registration
 can have visible inference effects.
 
 The relevant syntax is not limited to user-defined inductive datatypes:
-tuples and synthesis grammars also use datatype infrastructure. Before
+tuples and synthesis grammars also use datatype infrastructure.
+**Syntax-guided synthesis (SyGuS)** searches for an expression satisfying a
+specification while using only the forms allowed by a grammar. Datatype
+constructors can represent those permitted expression forms; the
+[synthesis introduction](quantifiers.md#synthesis) gives an example. Before
 changing a generic constructor rule, find its uses through the datatype
 utilities and the SyGuS extension.
 
@@ -58,6 +78,12 @@ local pass necessary; a sent lemma hands control back toward SAT. If a lemma
 is sent during splitting, pending local facts are handled according to the
 manager's protocol rather than blindly carried into another round. At last
 call, the active SyGuS extension has its own check.
+
+**Constructor splitting** asks search to choose a possible constructor when
+the current facts do not determine one: an unknown list must be either `nil`
+or a `cons`. The choice can expose new field constraints or a constructor
+clash. **Injectivity** names the reverse structural deduction: equality of
+two `cons` values forces equality of their corresponding fields.
 
 An inductive constraint `x = cons(a,x)` is the simplest cycle to understand,
 but useful tests also contain cycles exposed only by equality merges. A

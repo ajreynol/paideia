@@ -1,5 +1,17 @@
 # Making and investigating a change
 
+A solver change has both a mathematical obligation and an integration
+obligation. Replacing `x + 0` with `x`, for example, is justified by arithmetic;
+the implementation must also return a well-typed term, cooperate with caches
+and supply proof information when requested. A change to search state adds
+questions about when the state is valid and how it is restored on backtracking.
+
+This chapter explains how to take one small behavior from an input through
+the code and into a regression test. A **regression test** keeps a previously
+working or repaired case from silently breaking again. Start with the
+singleton-membership exercise below if the development interfaces are new:
+it follows an existing rule through the same steps a new rule would need.
+
 For work inside a theory solver, pair this general workflow with
 [How to develop a theory](theory-development/README.md) and its sub-guide
 for the affected theory.
@@ -45,6 +57,13 @@ construction and serialization of any new rule or skolem representation.
 
 ## Adding a lemma or rewrite
 
+A **rewrite** changes the representation of a term. A **lemma** adds a valid
+constraint that helps search rule out impossible choices. For example,
+`x > 0 => x >= 0` can guide arithmetic search. If a deduction depends on
+current assumptions, its **explanation** records those assumptions; a lemma
+must retain them as guards where needed. This is how a theory communicates
+useful reasoning without making a temporary branch assumption permanent.
+
 For a lemma, write down the assumptions and conclusion before selecting an
 inference-manager method. If current facts imply `C`, output must represent
 that implication or have an explanation path for the propagation; emitting
@@ -55,8 +74,9 @@ For a rewrite, decide whether it is unconditional normalization, a static
 preprocessing transformation, an auxiliary-definition transformation, or a
 context-dependent deduction. The same mathematical equation can belong in
 different places depending on which assumptions and introduced symbols it
-needs. Check termination, idempotence of the normalized result, type
-preservation and compatibility with node-attribute caches.
+needs. Check termination, type preservation and compatibility with
+node-attribute caches. Check **idempotence** too: rewriting a normalized result
+again should leave it unchanged.
 
 ### Worked change investigation: membership in a singleton
 
@@ -117,6 +137,14 @@ model and alternate-mode tester. The direct proof command illustrates a
 separate check. Record which checks actually ran in the change description.
 
 ## Proof objects are part of the implementation
+
+A proof records how a conclusion follows through named rules and their
+premises. For an `unsat` result, the overall proof derives a contradiction
+from the assertions; an individual rewrite can contribute a proof of equality
+between its input and output. **Reconstruction** fills in steps that search
+did not explicitly record, and **printing** exports the resulting proof in a
+format another tool can read. These are separate engineering tasks, so a
+change can affect one even when ordinary solving still returns the same answer.
 
 The singleton exercise above is a small instance of
 [REWRITE-DSL-2022](references.md#rewrite-dsl-2022): identify a term pattern,
@@ -184,6 +212,12 @@ trace the rewrite equality into the enclosing proof, then follow its export:
 
 ## Options, traces and statistics
 
+An **option** selects behavior. A **trace** reports selected internal events
+as they happen. An **output tag** requests a supported diagnostic view, such
+as the preprocessed assertions. A **statistic** summarizes work with a counter
+or timer. Use options to make an experiment reproducible, traces to follow
+control flow, and statistics to measure how much work occurred.
+
 Options originate in TOML files and are processed by
 [mkoptions.py][mkoptions]. Put a setting in the appropriate module with its
 type, declared default, help and restrictions. Then inspect `SetDefaults` and
@@ -215,6 +249,13 @@ input set, time/resource limits and repetitions. Do not rank solver strategies
 by a single debug-build run.
 
 ## Tests that cross the changed boundary
+
+Different tests observe different layers. A **unit test** can call a rewriter
+directly and inspect its returned term. An **API test** checks the behavior
+visible to a client program. A **solver regression** feeds a complete input
+through the executable. Choose a layer that can expose the defect, then check
+the surrounding integration: a correct local rewrite does not show that an
+incremental query restores its state correctly.
 
 Two papers connect directly to components useful in performance work.
 [INPUT-STABILITY-2025](references.md#input-stability-2025) is cited by the

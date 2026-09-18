@@ -2,6 +2,24 @@
 
 [Bootcamp](../README.md) / How to develop a theory
 
+A **theory** gives a family of symbols a mathematical meaning. A **theory
+solver** implements reasoning about constraints using those symbols. For
+example, the array theory says that reading at the index of a write returns
+the written value; its solver must recognize when this rule helps the current
+problem and communicate the consequence to search.
+
+A theory solver works inside a larger loop. It receives terms and facts,
+derives consequences or conflicts, and helps construct values when a model is
+possible. Other theories may own parts of the same expression: array indices
+can be integers, and list fields can be strings. Developing a theory therefore
+means preserving both its mathematical rules and the shared protocol for
+state, explanations and model construction.
+
+Each sub-guide first introduces the objects being reasoned about, then follows
+the same six stages through the implementation. Read its opening example and
+worked input before tracing callbacks if the theory is unfamiliar. The shared
+interface below supplies the vocabulary those callback descriptions use.
+
 Source baseline: [2026-09-18](../source-baseline.md).
 
 This category explains how to change a cvc5 theory solver. Start with the
@@ -50,6 +68,13 @@ Quantifiers provides a final example in which the shared ground-theory
 protocol delegates to a larger module architecture.
 
 ## Development workflow
+
+An **invariant** is a condition the implementation relies on maintaining, such
+as “every recorded lower bound has a reason valid in the current context.”
+The steps below follow an invariant from input handling to the final answer.
+A single user-visible change may touch several stages because a term must
+remain meaningful through simplification, search, backtracking and model
+construction.
 
 ### Choose a concrete starting problem
 
@@ -139,6 +164,10 @@ dependencies into edit locations and regression cases.
 ## Maintaining this category
 
 Keep each theory sub-guide in this directory and list it in the table above.
+Begin with the mathematical objects, a small example and the problem the
+solver must solve before presenting the source entry points. Introduce a new
+algorithmic term where it first matters, so readers can follow the chapter
+without already knowing that theory's implementation vocabulary.
 Preserve the six section headings; the guide checker verifies them and the
 parent index. Put the common protocol in [interface.md](interface.md), and put
 the theory's concrete implementation and exceptions in its sub-guide. Describe

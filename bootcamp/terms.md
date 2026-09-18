@@ -1,5 +1,18 @@
 # Terms, types and ownership
 
+A **term** is an expression that denotes a value. In `x + 1 > 0`, the
+subexpression `x + 1` is an integer term and the whole comparison is a Boolean
+term, also called a **formula**. A **sort**, or type, describes the values a
+term may denote. Declaring `x` as an integer does not assign it a particular
+integer: finding a suitable value is the solver's job.
+
+cvc5 represents expressions as immutable nodes connected to their arguments.
+Constructing `x + 1` builds that representation; it does not choose `x` or run
+a satisfiability check. Algorithms inspect nodes, build replacement nodes and
+attach bookkeeping to them. This chapter explains how those objects are
+shared, what their types and values mean, and who keeps them alive. These
+distinctions matter whenever code traverses or caches an expression.
+
 Source baseline: [2026-09-18](source-baseline.md).
 
 ## Public handles and their managers
@@ -34,6 +47,13 @@ alive for its objects' use and destruction, and do not mix terms from different
 managers in an API operation.
 
 ## A node is a shared DAG vertex
+
+A **directed acyclic graph (DAG)** is an expression tree with sharing: several
+parents can point to the same subexpression, and following child edges never
+leads back to an ancestor. For `(x + 1) * (x + 1)`, both arguments can point to
+one node for `x + 1`. **Interning** is the mechanism that reuses an existing
+node when the same structure is constructed again. A **handle** is the small
+C++ object through which code refers to that shared node.
 
 `Node` is a reference-counted handle to a `NodeValue`. Structural interning in
 the [node manager][nm] makes repeated construction of the same compound term
@@ -110,6 +130,15 @@ The API's [mkConst implementation][mkconst] makes that freshness explicit.
 
 ## Symbols, values and nullary operations
 
+A symbol names a value that may still be unknown; a value such as the integer
+`3` already denotes a particular object. A **bound variable** gets its meaning
+from an enclosing binder: in `forall x. x = x`, the quantifier binds `x` in
+its body. A lambda binds parameters of a function expression in the same way.
+For example, `lambda x. x + 1` denotes the function that adds one to its argument.
+The binder and its body together are called a **closure** in this code.
+An operation is **nullary** when it has no arguments. That describes syntax,
+so it does not by itself tell us whether the node is a symbol or a value.
+
 These distinctions matter when adding a rewrite or model rule:
 
 | Internal object | Example | Meaning |
@@ -154,6 +183,12 @@ in the [UF chapter](theory-development/uf.md). Replacing all applications by
 one untyped argument list would lose distinctions needed by that reasoning.
 
 ## References and attributes have different lifetimes
+
+Expression sharing raises a memory-management question: when is it safe to
+reclaim a node? An owning `Node` handle contributes to the node's reference
+count; a borrowed handle relies on an owner elsewhere. Metadata has a second
+lifetime question: even if a node is still alive, is a cached answer about it
+still true after search changes its assumptions?
 
 `TNode` is the non-owning, non-reference-counting node handle. Another owner
 must keep its node alive. It is useful for short traversals; storing it in a
@@ -200,6 +235,13 @@ why a transformation needs a recoverable justification, while
 Use those accounts when deciding what information an auxiliary term must retain.
 
 ## Skolems record why a new symbol exists
+
+Solving often introduces symbols that the user did not write. They can name
+a complicated expression or stand for a needed witness. For example, if two
+arrays differ, there must be some index at which their reads differ; an
+auxiliary symbol can name that index. cvc5 uses **skolems** for several such
+roles. The introducing transformation must retain the symbol's meaning and
+the constraints that justify its use.
 
 The [SkolemManager][skolems] supplies reproducible identities for auxiliary
 symbols. `mkPurifySkolem(t)` returns a symbol representing a term; requesting

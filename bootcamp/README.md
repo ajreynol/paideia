@@ -3,8 +3,24 @@
 This is paideia's developer guide, an artifact maintained
 in `bootcamp/`. It follows a term from construction through preprocessing,
 Boolean search, theory reasoning and model construction, then visits each
-theory covered by the original bootcamp. The intended reader knows C++ and
-the basic idea of SMT and wants to change cvc5.
+theory covered by the original bootcamp. The intended reader knows programming
+and some C++ and wants to change cvc5. The chapters introduce the solver
+concepts before following them into classes and callbacks.
+
+cvc5 answers whether a collection of logical constraints can all hold at once.
+For example, over integers, `x > 3` and `x < 5` can both hold: choose `x = 4`.
+Adding `x != 4` makes them impossible to satisfy together. These outcomes are
+called **satisfiable** (`sat`) and **unsatisfiable** (`unsat`). A **model** is
+an interpretation of the symbols that satisfies the constraints; it can assign
+values to variables and meanings to functions. `unknown` means that the solver
+did not establish either answer.
+
+**SMT** means *satisfiability modulo theories*. A theory gives operations their
+meaning: arithmetic fixes what `+` means, while the array theory fixes how a
+read relates to a write. Boolean search explores choices such as which side
+of an `or` holds; theory solvers check whether those choices make mathematical
+sense. This cooperation, and the transformations that prepare expressions for
+it, are the subject of the guide.
 
 The account was checked on **2026-09-18** against upstream `main` at
 [`3dcc1ef5421ab62cc1ee9af52d70042ce6861af0`](https://github.com/cvc5/cvc5/tree/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0).
@@ -51,6 +67,15 @@ by several solvers. Neither relationship is shown by a control-flow arrow.
 
 ## Reading and running the examples
 
+The examples use **SMT-LIB**, a text language for describing solver commands
+and formulas. Operations use prefix notation: `(+ x 1)` means `x + 1`,
+`(= x y)` means equality, and `(distinct x y)` means disequality.
+`declare-const` introduces an unknown value of a given type; `assert` adds a
+constraint; `check-sat` asks whether the active constraints can all hold.
+`set-logic` selects the intended theory combination. A `QF_` prefix means
+*quantifier-free*; `ALL` selects a broad combination. Each worked example
+explains the mathematics separately from this syntax.
+
 For a practical first session, build the pinned checkout, run the
 [three-check query](query.md#a-small-query-to-trace), inspect the
 [conditional-term example](preprocessing.md#worked-example-a-conditional-inside-a-function-application),
@@ -84,14 +109,21 @@ using experimental theories; the debug build recipe is the starting point.
 
 | Term | Meaning in this guide |
 | --- | --- |
-| Term / node | An expression, or its internal DAG representation; a Boolean formula is also a term |
+| Satisfiable / valid | Satisfiable means true in at least one allowed interpretation; valid means true in every allowed interpretation |
+| Term / node | An expression, or a vertex in its internal shared expression graph; a Boolean formula is also a term |
+| Sort / type | The domain of a term's values, such as integers, Booleans or arrays |
 | Atom / literal | A Boolean variable or indivisible Boolean constraint, such as `x < y`; a literal is an atom or its negation |
+| Ground | Contains no variables bound by a quantifier or lambda; a declared unknown such as `a` can still occur in a ground term |
 | Fact | A literal delivered as holding in the current context; registration alone does not make a term a fact |
-| Rewrite | A transformation of a term; its phase determines which assumptions and auxiliary definitions are allowed |
-| Lemma / explanation | A constraint returned to search / the reasons a conditional deduction follows |
+| Inference | A reasoning step that derives a conclusion from premises using a rule |
+| Ordinary rewrite | Replacement by an equivalent term, independent of the current assertions or search branch; used throughout solving |
+| Preprocessing | Transformation of assertions before search, normally preserving satisfiability; may use other assertions or introduce auxiliary definitions |
+| Lemma / explanation | A valid constraint added to search / the premises justifying a deduction under current facts |
 | Equality class | Terms known equal in an equality engine; its representative is one chosen member |
 | Candidate model | A proposed interpretation still subject to theory checks, combination and refinement |
 | Context | State with a backtracking boundary; SAT branches and user push/pop scopes are different boundaries |
+| Eager / lazy | Performing work as soon as possible / deferring it until a later stage or until needed |
+| Sound / complete | Sound reasoning draws only justified conclusions; a complete decision procedure can settle every input in its stated fragment, given sufficient resources |
 
 The [common theory interface](theory-development/interface.md) expands these
 distinctions where they affect implementation.

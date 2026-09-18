@@ -1,5 +1,18 @@
 # The path of a query
 
+A satisfiability query asks whether all currently asserted formulas can be
+true together. The solver combines **Boolean search**, which chooses truth
+values for constraints, with **theory reasoning**, which checks their meaning.
+For example, search could tentatively make both `x > 0` and `x < 0` true;
+arithmetic must reject that choice. Search then learns a constraint preventing
+the same incompatible choices and tries another branch.
+
+This cooperation is called **CDCL(T)**: conflict-driven clause learning with
+theory solvers. The result is `sat` when the constraints admit a model,
+`unsat` when they are shown inconsistent, or `unknown` when the run cannot
+establish either. A single query can require many rounds of search, deductions
+and model checks. This chapter follows those rounds and the state they share.
+
 Source baseline: [2026-09-18](source-baseline.md). The starting point here is a
 well-typed formula already constructed by the API or parser.
 
@@ -31,6 +44,12 @@ top-level substitutions, and enabled proof services. `EnvObj` gives internal
 objects convenient access to it. “Global” in an `Env` comment means available
 throughout that solver; it does not mean a process-wide singleton. The node
 manager can outlive and be shared by several environments.
+
+**Backtracking** abandons tentative search choices and restores the state from
+before them. A user can also delimit assertions with `push` and remove the
+most recent scope with `pop`. cvc5 calls the corresponding rollback boundaries
+**contexts**. SAT backtracking can happen many times inside one `check-sat`,
+even when the user never calls `push` or `pop`.
 
 Keep three lifetimes distinct:
 
@@ -74,6 +93,15 @@ performs exactly one internal search. Likewise, `checkSatAssuming` uses scoped
 assumptions; it does not permanently append them to the user's assertions.
 
 ## PropEngine turns formulas into a Boolean search
+
+A **SAT (propositional satisfiability) solver** works with Boolean variables
+and **clauses**, which are disjunctions such as `p or not q`. A conjunction
+of clauses is **conjunctive
+normal form (CNF)**. Converting a formula into this representation gives search
+a uniform input. A **trail** records the truth assignments currently chosen or
+deduced; a **decision** is a tentative choice, and a **propagation** is forced
+by what is already known. A conflict identifies choices that cannot hold
+together and supplies the reason for learning a new clause.
 
 [PropEngine][prop] owns the CNF/SAT-facing machinery. `CnfStream` maps Boolean
 nodes to SAT literals and emits clauses. Theory atoms get Boolean variables
@@ -122,6 +150,14 @@ with using the existing skolem-lemma interface. Definitions, proofs,
 preregistration and decision relevance all need the same correspondence.
 
 ## A complete assignment is still a candidate
+
+A complete Boolean assignment settles the truth of the encoded atoms. A
+theory model must also supply values that make those choices consistent:
+the arithmetic values, function interpretations and other theory objects must
+agree on shared terms. A **candidate model** is a proposal under examination.
+**Refinement** adds a justified constraint excluding a bad proposal, then
+resumes search. An **effort level** tells a theory which stage of this process
+is requesting work.
 
 The [TheoryEngine][te] orchestrates theory checks, propagation and combination.
 At standard effort, theories process new information and inexpensive

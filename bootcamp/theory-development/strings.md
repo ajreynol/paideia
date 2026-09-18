@@ -2,6 +2,21 @@
 
 [Bootcamp](../README.md) / [How to develop a theory](README.md)
 
+A **string** is a finite sequence of characters. Solving a string problem
+means finding whole strings that satisfy constraints on their contents,
+lengths and operations. For example, `x ++ "a" = "ba"` forces `x = "b"`,
+where `++` denotes concatenation. A length constraint such as `len(x) = 1`
+restricts the number of characters but does not by itself choose a character.
+A **sequence** generalizes this idea to elements of another type, such as
+integers or even other sequences.
+
+String problems can combine **word equations** (equalities between
+concatenations), arithmetic on lengths and **regular-expression membership**.
+A regular expression describes a language of permitted strings; membership
+asks whether a string belongs to that language. The solver must make all these
+views agree, often before any concrete string is known. That is why this
+chapter follows several cooperating algorithms and their shared state.
+
 Source baseline: [2026-09-18](../source-baseline.md). Start at
 [TheoryStrings][theory], [TermRegistry][registry] and [Strategy][strategy].
 
@@ -26,8 +41,12 @@ specialized solvers then operate on that common state:
 
 A *normal form* here decomposes a string into concatenated components modulo
 known equalities. It is more informative than ordinary syntactic rewriting.
+“Modulo known equalities” means treating components already known equal as
+interchangeable, with those equalities retained as reasons for the deduction.
 For example, equal concatenations with different constant prefixes can be
 inconsistent immediately, while variable prefixes may require a length split.
+Such a **split** asks search to consider cases, for example whether one
+component is shorter than, equal in length to, or longer than another.
 Length terms cross to arithmetic, so local string consistency is not enough
 to construct a global model.
 

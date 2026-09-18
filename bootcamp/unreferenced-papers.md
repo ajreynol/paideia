@@ -2,6 +2,14 @@
 
 [Bootcamp](README.md) / Unreferenced papers
 
+A paper can describe a modified solver used for an experiment while the
+ordinary cvc5 checkout contains a different implementation. **Upstream** means
+the main cvc5 project; a research **fork** is a separately maintained version.
+This appendix helps explain why a feature encountered in a paper may not be
+available in the source used by the tutorial. Consult it when following a
+paper-to-code connection; it is background for that comparison, and the
+theory chapters can be read independently.
+
 This review list records papers describing CVC4/cvc5 implementation features
 that are **not present in the pinned `main` implementation and therefore are
 not taught as available features in this guide**. It accompanies the footnote
