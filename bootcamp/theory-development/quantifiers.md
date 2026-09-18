@@ -79,6 +79,22 @@ cached evaluation remains consistent with the term database. A persistent
 cache keyed only by the quantified formula would miss changes to relevant
 ground terms and equalities.
 
+### Match an instantiation strategy to its paper
+
+The worked `f(a)` example below illustrates the common instance shape. The
+following papers explain different ways of finding the substitution; they
+should not be read as interchangeable descriptions of one algorithm.
+
+| Strategy and paper | Current implementation reading task |
+| --- | --- |
+| E-matching: [LOCAL-EXTENSIONS-2015](../references.md#local-extensions-2015), [CCFV-2017](../references.md#ccfv-2017) | Follow trigger terms and equality representatives; [trigger metadata](https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/quantifiers/ematching/trigger_term_info.h) cites free-variable congruence closure |
+| Conflict-based: [CONFLICT-INST-2014](../references.md#conflict-inst-2014) | [QuantConflictFind](https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/quantifiers/quant_conflict_find.cpp): identify the candidate ground conflict used to guide substitution |
+| Enumeration: [ENUM-INST-2018](../references.md#enum-inst-2018) | [InstStrategyEnum](https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/quantifiers/inst_strategy_enumerative.h): separate tuple generation from entailment filtering |
+| Theory-specific CEGQI: [ARITH-CEGQI-2017](../references.md#arith-cegqi-2017), [BV-INVERT-2018](../references.md#bv-invert-2018), [BV-INVERT-2021](../references.md#bv-invert-2021) | [CegInstantiator](https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/quantifiers/cegqi/ceg_instantiator.h) and per-theory instantiators: find the arithmetic projection or invertibility condition |
+| Syntax-guided: [SYQI-2021](../references.md#syqi-2021) | Ask which grammar supplies terms unavailable from ordinary ground matching |
+| Model-based: [MBQI-2009](../references.md#mbqi-2009), [MBQI-ENUM-2025](../references.md#mbqi-enum-2025) | [InstStrategyMbqi](https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/quantifiers/inst_strategy_mbqi.h) and [MbqiEnum](https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/quantifiers/mbqi_enum.cpp): connect a counterexample in the candidate model to terms usable in an instance |
+| Choice terms: [CHOICE-INST-2026](../references.md#choice-inst-2026) | In `MbqiEnum`, follow the choice grammar, witness elimination and the auxiliary lemmas constraining introduced symbols |
+
 ### Two dimensions of effort
 
 `TheoryQuantifiers::postCheck` delegates to the engine, which has its own
@@ -124,6 +140,17 @@ formulas in the model. This makes value queries agree with the asserted
 literal; it does **not** independently evaluate a universal formula over all
 values. Satisfaction is the engine's completeness obligation described above.
 
+The finite-model line develops through
+[FMF-INSTANTIATION-2013](../references.md#fmf-instantiation-2013),
+[FMF-2013](../references.md#fmf-2013) and
+[FMF-CONSTRAINTS-2017](../references.md#fmf-constraints-2017). Compare each
+paper's domain/instance completeness argument with the owning module's
+completeness check. [RECURSIVE-FUNCTIONS-2016](../references.md#recursive-functions-2016)
+adds recursive definitions; [INDUCTION-2015](../references.md#induction-2015)
+addresses induction; [HIGHER-ORDER-2019](../references.md#higher-order-2019)
+adds function-valued terms. These features share infrastructure but introduce
+different obligations.
+
 ### Synthesis
 
 Syntax-guided synthesis is an additional consumer of this architecture.
@@ -133,6 +160,25 @@ as datatypes, which is why the datatype theory has a SyGuS extension and
 last-call behavior. The top-level API path is in `smt/sygus_solver.cpp`.
 Changing datatype enumeration or rewriting can therefore affect synthesis
 even when ordinary satisfiability tests look unchanged.
+
+The paper-to-code route is especially explicit here:
+[SYGUS-CEGQI-2015](../references.md#sygus-cegqi-2015) is cited by
+`SynthEngine` and [EmbeddingConverter](https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/quantifiers/sygus/embedding_converter.h).
+[REFUTATION-SYNTHESIS-2019](../references.md#refutation-synthesis-2019)
+gives the extended account, and [CVC4SY-2019](../references.md#cvc4sy-2019)
+explains fast term enumeration. For a candidate that fits all current
+examples, identify the verification query that can still reject it.
+
+Several further procedures have identifiable components in this snapshot:
+
+| Procedure and paper | Current code and reading task |
+| --- | --- |
+| Classification: [SYGUS-CLASSIFICATION-2019](../references.md#sygus-classification-2019) | [CegisUnif](https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/quantifiers/sygus/cegis_unif.h) cites the paper; follow how classified pieces become a full candidate |
+| Reuse inside SMT: [SYGUS-CORE-2017](../references.md#sygus-core-2017) | `ExampleEvalCache` and `SygusQePreproc`: identify the evaluation or elimination result that justifies pruning |
+| Abduction: [ABDUCTION-2020](../references.md#abduction-2020) | `SygusAbduct` and `AbductionSolver`: find both the implication and consistency obligations |
+| Constant repair: [SYNTHESIS-CONSTANTS-2023](../references.md#synthesis-constants-2023) | `SygusRepairConst`: follow the quantified query that fills symbolic constant positions in a candidate |
+| Solution fitting: [SOLUTION-FITTING-2023](../references.md#solution-fitting-2023) | `SygusReconstruct`: match a solution to a target grammar using enumeration and discovered equalities |
+| Oracle reasoning: [ORACLES-2022](../references.md#oracles-2022) | `OracleEngine` explicitly cites the paper; `OracleChecker` relates current interpretations to external responses |
 
 ## Developing and validating a change
 

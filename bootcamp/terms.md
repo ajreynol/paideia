@@ -147,6 +147,12 @@ For a new polymorphic kind, test ill-typed and parametric cases as well as its
 obvious ground use. Matching a `Kind` without checking the instantiated type
 is a common mistake in congruence and care-graph indexing.
 
+The distinction between `APPLY_UF`, an operator, and an ordinary child becomes
+especially useful when reading [HIGHER-ORDER-2019](references.md#higher-order-2019).
+Compare the application walk above with partial application and lambda terms
+in the [UF chapter](theory-development/uf.md). Replacing all applications by
+one untyped argument list would lose distinctions needed by that reasoning.
+
 ## References and attributes have different lifetimes
 
 `TNode` is the non-owning, non-reference-counting node handle. Another owner
@@ -186,6 +192,12 @@ must respect the cache's lifetime and assumptions; context-sensitive or
 option-sensitive simplification belongs in a suitably scoped mechanism.
 This observation is a development constraint, not evidence of a particular
 current cache bug.
+
+Proof reconstruction makes term identity and binding observable outside the
+rewriter. [FLEXIBLE-PROOFS-2022](references.md#flexible-proofs-2022) explains
+why a transformation needs a recoverable justification, while
+[CPC-2026](references.md#cpc-2026) supplies a calculus-level perspective.
+Use those accounts when deciding what information an auxiliary term must retain.
 
 ## Skolems record why a new symbol exists
 

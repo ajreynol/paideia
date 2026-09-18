@@ -31,6 +31,13 @@ There is also a `ppStaticRewrite` hook. Several transformations described as
 arithmetic and bit-vector equality transformations. Check the current override
 and its caller rather than treating every preprocessing rewrite as one phase.
 
+A useful literature distinction is between discovering a rewrite and
+justifying its use. [REWRITE-ENUM-2019](references.md#rewrite-enum-2019)
+searches for candidate rules; [REWRITE-DSL-2022](references.md#rewrite-dsl-2022)
+describes how rules support fine-grained reconstruction. Neither makes a
+context-dependent deduction a globally valid cached rewrite. For string-specific
+examples, see [STRINGS-ABSTRACTION-2019](references.md#strings-abstraction-2019).
+
 ## Assertion substitution is a scoped operation
 
 `Theory::ppAssert` can solve an assertion for a variable and record a
@@ -106,6 +113,13 @@ look for the corresponding rule/checker or reconstruction route as a separate
 part of the change.
 
 ## Inspect the boundary before debugging search
+
+[FLEXIBLE-PROOFS-2022](references.md#flexible-proofs-2022) explains how
+preprocessing transformations retain proof dependencies, while
+[REWRITE-DSL-2022](references.md#rewrite-dsl-2022) details reconstruction of
+individual rewrites. In the conditional-term example below, identify both
+the auxiliary definition and the rewritten assertion: the final assertion's
+proof must still account for the transformation introducing that definition.
 
 ### Worked example: a conditional inside a function application
 

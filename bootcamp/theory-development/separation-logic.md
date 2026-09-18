@@ -75,6 +75,11 @@ not yet a separation-logic model.
 
 ## Equality and combination
 
+[SEP-2016](../references.md#sep-2016) explains the heap-label and refinement
+procedure above. Read heap decomposition beside the sets encoding: disjointness
+constrains heap domains, and does not follow merely from using different names
+for location terms.
+
 The equality notification adapter has no specialized new-class or disequality
 work. `eqNotifyMerge` is significant: it brings together points-to information
 from two label classes, runs the compatibility checks and preserves the
@@ -150,6 +155,16 @@ debugging that difference. For negative spatial assertions, continue with
 the upstream [negative spatial simplification regression][negative-example]
 and inspect which labeled obligations are active before interpreting a
 candidate heap.
+
+### Relate the example to the papers
+
+The two points-to atoms each describe a singleton domain. The separating
+conjunction requires those domains to be disjoint, while the asserted address
+equality makes them overlap. Derive that conflict using the heap interpretation
+in [SEP-2016](../references.md#sep-2016), then follow the labels and equalities
+that explain it in `TheorySep`. As a contrast, ordinary Boolean conjunction
+does not demand disjoint heaps; changing the connective changes the premise
+of the argument.
 
 ### Further validation
 

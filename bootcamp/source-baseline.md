@@ -86,6 +86,42 @@ example. Record that build's version, options and outputs separately.
 
 ## Mechanical checks
 
+### Literature pass
+
+The literature expansion on **2026-09-18** added the
+[research bibliography](references.md), with **92 entries** and contextual
+citations throughout the architecture and theory tutorials. Discovery used
+the CVC4/cvc5 publication pages and author catalogs recorded there. Inclusion
+required a connection to a specific component in the pinned source; entries
+supported only by a research branch, application or project association were
+excluded. Each retained entry has its own source links and connection note.
+
+Paper-to-code connections were checked against the existing source pin,
+including explicit references in the string helpers, CEGQI and enumerative
+instantiation headers, SyGuS embedding, bit-vector abstraction, split Gröbner
+bases, arithmetic refinement and rewrite proof reconstruction. Current class
+names and paths come from that source; a paper's experimental implementation
+is not assumed to be merged. Partial connections are scoped explicitly: for
+example, the parametric-bit-vector paper is linked to the PIAND/power-of-two
+integer backend, and the distributed-solving paper to partition generation.
+Proof-format papers connect to the formats actually emitted by the printers.
+
+The tutorial's [unreferenced-papers footnote](unreferenced-papers.md) separately
+records six publications covering five missing implementation features.
+It also records the partial finite-field proof integration: rule declarations
+exist, while the examined field-solving path lacks the corresponding producer
+and checker. The audit distinguishes absence at this pin from a demonstrated
+removal or an incorrect claim about a paper's own experimental version.
+
+An external-link pass found and replaced three stale author-hosted PDF URLs
+for solution fitting, distributed partitioning and CPC. Publisher access
+restrictions and redirects prevent treating automated HTTP responses as a
+universal availability check. Primary publication links and bibliographic
+metadata remain separately reviewable in the bibliography. This pass did not
+reproduce paper experiments or add new runtime claims about cvc5.
+
+### Guide structure and source links
+
 The small [guide checker](../scripts/check_guide.py) reads the authored
 Markdown. It checks local links and heading fragments, reference definitions,
 the artifact's hierarchy of chapter indexes, the six shared theory sub-guide
@@ -110,6 +146,12 @@ After the expansion pass, the checker passed with **28 local targets and
 by the tutorials were checked against the pinned files, and `git diff --check`
 passed. The six-section structure of every theory sub-guide is unchanged.
 
+After the literature pass and unreferenced-paper audit, the checker passed
+with **30 local targets and 250 distinct pinned cvc5 paths**, including all
+new citation anchors and implementation reading stops. `git diff --check`
+also passed. The tutorial
+inputs and the six-section structure are preserved.
+
 It does not fetch dependencies, generate prose, authenticate a checkout or
 confirm that a method still behaves as described. Supply an independently
 verified checkout or archive at the baseline. It also does not check external
@@ -132,6 +174,10 @@ been installed.
    Preserve reasoning and examples that explain why an invariant matters.
    Add new source links for new claims. Label proposed designs, measured
    results and unverified hypotheses distinctly.
+   Update affected [literature connections](references.md) alongside the code
+   account: preserve stable citation keys, correct publication metadata and
+   explain when the current implementation has diverged from a cited paper.
+   Remove entries whose implementation connection no longer holds.
 5. Advance this baseline and source links together **after** reviewing the
    affected account. For a deliberately partial update, record a separate
    explicit section baseline and adjust the checker before using mixed pins;

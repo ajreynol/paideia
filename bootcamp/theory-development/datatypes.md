@@ -64,6 +64,13 @@ but useful tests also contain cycles exposed only by equality merges. A
 codatatype permits cyclic values, so the inductive cycle rule cannot be
 applied indiscriminately to all datatype sorts.
 
+The calculus is developed in [CODATATYPES-2015](../references.md#codatatypes-2015)
+and the expanded [CODATATYPES-2017](../references.md#codatatypes-2017).
+Read the constructor clash, injectivity and cycle rules beside the corresponding
+class metadata. [SHARED-SELECTORS-2018](../references.md#shared-selectors-2018)
+explains why internal selectors can be shared across constructors; this does
+not make two unrelated surface selectors interchangeable.
+
 ## Equality and combination
 
 `eqNotifyNewClass` creates class information for constructors and registers
@@ -79,6 +86,12 @@ constructors. It must distinguish instantiations, not just constructor names.
 Shared-term notification inherits the base behavior. `getEqualityStatus`
 returns the engine's known relation, or `EQUALITY_FALSE_IN_MODEL` when separate
 classes may be interpreted differently.
+
+[DATATYPE-POLITENESS-2020](../references.md#datatype-politeness-2020) and
+[DATATYPE-POLITENESS-2022](../references.md#datatype-politeness-2022) supply
+the combination perspective. A constructor skeleton can constrain both the
+datatype domain and values from field theories, so locally consistent
+constructor choices still need a compatible combined model.
 
 ## Model construction
 
@@ -143,6 +156,17 @@ values are `x = cons(0,nil)`, `y = nil`, head `0`, and tail `nil`, modulo
 printing. Next try `(head nil)`: this is a wrong-constructor selector, so
 the previous head equation no longer determines its value. The upstream
 [datatype example][example] includes constructor, selector and tester syntax.
+
+### Relate the example to the papers
+
+The two-class list cycle is an inductive acyclicity obligation from
+[CODATATYPES-2017](../references.md#codatatypes-2017). Follow the equality
+representatives across the constructor edges rather than searching only for
+a syntactic `x = cons(..., x)`. Compare the paper's codatatype treatment before
+reusing that check for potentially infinite structures. For the grammar
+use of datatypes, [CVC4SY-2019](../references.md#cvc4sy-2019) explains the
+separate enumeration problem; [INDUCTION-2015](../references.md#induction-2015)
+addresses another distinct task, proving quantified inductive properties.
 
 ### Further validation
 

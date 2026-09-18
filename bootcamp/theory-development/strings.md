@@ -31,6 +31,13 @@ inconsistent immediately, while variable prefixes may require a length split.
 Length terms cross to arithmetic, so local string consistency is not enough
 to construct a global model.
 
+`CoreSolver` and `BaseSolver` explicitly connect these normal-form and cycle
+rules to [STRINGS-2014](../references.md#strings-2014); the longer solver
+account is [STRINGS-2016](../references.md#strings-2016). For arbitrary element
+sorts, read [SEQUENCES-2022](../references.md#sequences-2022) and
+[SEQUENCES-2023](../references.md#sequences-2023). The common concatenation
+vocabulary does not remove the extra element-equality obligations of `Seq(T)`.
+
 ## Preprocessing and registration
 
 `ppRewrite` now includes purification of `STRING_FROM_CODE`, checks on
@@ -76,6 +83,16 @@ normal-form equality/disequality, code points, length equalities, sequence
 array checks, reductions, membership and cardinality. Many steps can stop the
 round by producing a lemma. When debugging a missing late inference, first
 check whether an earlier step legitimately returned control to SAT.
+
+### Match a paper to the specialized solver
+
+| Paper | Current reading stop and question |
+| --- | --- |
+| [STRINGS-CDS-2017](../references.md#strings-cds-2017) | `ExtfSolver`: which equalities justify context-dependent simplification? |
+| [STRINGS-ABSTRACTION-2019](../references.md#strings-abstraction-2019) | [StringsEntail](https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/strings/strings_entail.h) and [ArithEntail](https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/strings/arith_entail.h): what can rewriting establish before search? |
+| [REGEXP-LENGTH-2015](../references.md#regexp-length-2015), [REGEXP-REDUCTIONS-2020](../references.md#regexp-reductions-2020) | `RegExpSolver` and reduction helpers: how do membership, lengths and auxiliary constraints interact? |
+| [CODE-POINTS-2020](../references.md#code-points-2020) | `CodePointSolver`: which string lengths permit a character-code interpretation? |
+| [STRINGS-LAZY-2022](../references.md#strings-lazy-2022) | `ExtfSolver` and strategy scheduling: can a conflict avoid an expensive reduction? |
 
 ## Equality and combination
 
@@ -166,6 +183,16 @@ constraint; regex reasoning is a separate strategy participant, so success
 on word equations does not validate it. The upstream [strings example][example]
 combines operations, lengths and membership; the [sequence example][seq-example]
 shows the corresponding syntax when elements are integers instead of characters.
+
+### Relate the example to the papers
+
+The fixed component lengths make the first alignment in the word equation
+forced. Compare that with the normal-form reasoning in
+[STRINGS-2014](../references.md#strings-2014), then remove the length facts
+and identify the missing side condition. The useful code question is where
+that condition becomes an explanation or a split. When adding regexp
+membership, use [REGEXP-LENGTH-2015](../references.md#regexp-length-2015)
+to reason about the interaction; cancellation alone is not a regexp procedure.
 
 ### Further validation
 

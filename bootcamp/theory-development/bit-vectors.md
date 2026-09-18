@@ -24,6 +24,11 @@ eager versus lazy bit blasting and from the main CDCL(T) SAT backend.
 Read [bv_options.toml][options] together with effective defaults before
 describing a run.
 
+[BV-EAGER-LAZY-2014](../references.md#bv-eager-lazy-2014) explains the
+translation tradeoffs in the historical CVC4 backends. Compare those choices
+with the current classes above, keeping translation timing separate from
+internal/external SAT routing.
+
 ## Preprocessing and registration
 
 `ppAssert` first tries base variable elimination and then specialized
@@ -82,6 +87,13 @@ The minimum width and value-refinement budget have dedicated options. This
 feature is not supported by `bitblast-internal` at this baseline. It is a
 substantial addition to the bootcamp's two-backend account, but it does not
 change bit-vector semantics or justify using approximate results.
+
+The current [AbstractionModule header](https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/bv/abstract/abstraction_module.h)
+explicitly cites [BV-ABSTRACTION-2024](../references.md#bv-abstraction-2024),
+originally evaluated in Bitwuzla. Compare the paper's abstract operators and
+refinement lemmas with this integration. The four-bit increment example below
+does not exercise expensive multiplication or division; use a suitable wider
+operator when investigating this module.
 
 ## Equality and combination
 
@@ -150,6 +162,23 @@ width and signedness. For an incremental exercise, temporarily assert
 `x != #b1111` in the original unsigned problem: it becomes `unsat` and must
 be `sat` again after a pop. See the upstream [bit-vector example][example]
 for more construction and query syntax.
+
+### Relate the example to the papers
+
+[INT-BLASTING-2022](../references.md#int-blasting-2022) connects the example
+to `IntBlaster`: identify the range and modulo-16 constraints preserving the
+overflow case. For symbolic-width work, [BV-PARAMETRIC-2025](../references.md#bv-parametric-2025)
+has a narrower connection to this snapshot: the integer backend's `PIAndSolver`
+and `Pow2Solver`. Those files implement lazy reasoning about parametric integer
+AND and powers of two; they do not establish a parametric-bit-vector front end
+in `main`. Changing the concrete width of this input exercises neither claim.
+
+For quantified bit-vectors, read [BV-INVERT-2018](../references.md#bv-invert-2018)
+and [BV-INVERT-2021](../references.md#bv-invert-2021) with
+[BvInstantiator](https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/quantifiers/cegqi/ceg_bv_instantiator.h).
+Its comments connect variable solving to the paper's invertibility conditions.
+Trace the condition needed to construct an instantiation term; ground overflow
+tests do not exercise that construction.
 
 ### Further validation
 

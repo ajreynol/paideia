@@ -101,6 +101,14 @@ in sharing, using candidate index values where available to reduce comparisons.
 Unknown index values require a more conservative search. Equality status uses
 the base implementation; an absent override is not an absent service.
 
+The extensional-array background is [ARRAYS-2001](../references.md#arrays-2001).
+Read [ARRAYS-GENERALIZED-2009](../references.md#arrays-generalized-2009)
+with lazy read-over-write and extensionality instances, and
+[WEAK-ARRAYS-2014](../references.md#weak-arrays-2014) for the optional weak
+equivalence approach. Compare the papers' relations with the separate
+equality structures above; a store dependency does not assert that its two
+arrays are equal.
+
 ## Model construction
 
 `computeRelevantTerms` closes the model's needed reads over stores, including
@@ -167,6 +175,17 @@ only `a != b`. Read [notifyFact][extensionality] and identify the new index
 input contains no reads, the model must distinguish these two generated
 reads. The upstream [arrays and bit-vectors example][example] shows a
 larger problem with concrete index and element sorts.
+
+### Relate the example to the papers
+
+In [ARRAYS-GENERALIZED-2009](../references.md#arrays-generalized-2009), locate
+the read-over-write axiom corresponding to the tutorial's `i != j` case.
+Then inspect the code that decides when to instantiate it: the axiom is
+unconditional, but choosing which terms deserve its instances is an algorithmic
+choice. For an extensionality exercise, assert `a != b` and identify the
+fresh index witnessing different reads. [ARRAYS-2001](../references.md#arrays-2001)
+provides the historical extensional-array account; the current implementation
+supplies the actual witness and explanation plumbing.
 
 ### Further validation
 

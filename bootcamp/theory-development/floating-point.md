@@ -24,6 +24,13 @@ backend at build time. Do not describe the MPFR change as replacement of the
 symbolic theory solver. See [floatingpoint_literal_mpfr.cpp][mpfr] and
 the pinned [NEWS][news].
 
+The semantic reference is [FP-SEMANTICS-2015](../references.md#fp-semantics-2015).
+For symbolic encodings, read [SYMFPU-2019](../references.md#symfpu-2019)
+with [FpWordBlaster](https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/fp/fp_word_blaster.h):
+its symbolic types wrap cvc5 nodes so SymFPU can build expressions. This
+paper-to-code connection concerns the symbolic path; current constant folding
+must be checked separately in the MPFR implementation.
+
 ## Preprocessing and registration
 
 ### Make underspecified cases explicit
@@ -142,6 +149,14 @@ The answer is `sat` with the predicate true. These tests exercise special-value
 semantics; they do not cover rounding or real-conversion refinement. For those,
 continue with the upstream [floating-point arithmetic example][example],
 keeping symbolic operands if the purpose is to reach the word blaster.
+
+### Relate the example to the papers
+
+Use [FP-SEMANTICS-2015](../references.md#fp-semantics-2015) to derive the
+signed-zero and NaN cases before following their symbolic encoding in
+[SYMFPU-2019](../references.md#symfpu-2019). Logical equality and `fp.eq`
+observe different aspects of a floating-point value, so the encoding must
+retain enough information to implement both relations.
 
 ### Further validation
 

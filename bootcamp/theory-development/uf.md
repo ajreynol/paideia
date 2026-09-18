@@ -66,6 +66,13 @@ full effort. `needsCheckLastEffort` reflects which of these extensions needs
 the final candidate stage. A no-op `postCheck` in a minimal UF example says
 little about a problem using finite domains or conversions.
 
+[HIGHER-ORDER-2019](../references.md#higher-order-2019) explains the
+higher-order extension; compare its function-extensionality obligation with
+`HoExtension`'s witness for `f != g`. Finite-domain work follows a different
+route: [FMF-2013](../references.md#fmf-2013) and
+[FMF-CONSTRAINTS-2017](../references.md#fmf-constraints-2017) explain why
+congruence alone does not settle domain cardinality.
+
 ## Equality and combination
 
 The new-class, merge and disequality notifications maintain the cardinality
@@ -147,6 +154,14 @@ interpretation that maps two domain elements to the same result. Compare the
 larger upstream [UF example][example] for function/model queries. Use
 `-o post-asserts` before choosing a breakpoint; even a conditional example
 can be simplified before a particular search callback runs.
+
+### Relate the example to the papers
+
+The clause `a != b or f(a) = f(b)` records the equality premise needed for
+congruence. For terms owned by different theories, continue with
+[SHARING-2011](../references.md#sharing-2011) and
+[CAREFUL-2013](../references.md#careful-2013): find where the theories agree
+on the argument equality before using it in their local reasoning.
 
 ### Validation
 

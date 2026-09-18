@@ -79,6 +79,17 @@ the relevant reason. This is materially different from the bootcamp's
 unconditional rejection description. Support and defaults are in
 [sets_options.toml][options] and the corresponding checks.
 
+[SETS-2016](../references.md#sets-2016) and its extended account
+[SETS-2018](../references.md#sets-2018) explain the cardinality procedure.
+Read them beside the cardinality extension, distinguishing membership closure
+from constraints on region sizes. [RELATIONS-2017](../references.md#relations-2017)
+explains the relational extension. [SET-COMPREHENSIONS-2025](../references.md#set-comprehensions-2025)
+connects specifically to `SET_FILTER` and the `set.all`/`set.some` rewrites:
+bounded quantification becomes a constraint on a filtered set. Compare
+`checkFilterUp`/`checkFilterDown` with `checkReduceComprehensions`, which reduces
+general comprehension to quantified formulas. A completeness result for one
+of these fragments does not automatically cover their combinations.
+
 ## Equality and combination
 
 `eqNotifyNewClass` records empty-set and singleton structure. Merging singleton
@@ -154,6 +165,16 @@ require `k` to belong specifically to `A`. This symmetric-difference condition
 explains why an inference that always chooses one direction would be too
 strong. Continue with the upstream [set example][example] and
 [relation example][rel-example] to see finite-set and tuple syntax.
+
+### Relate the example to the papers
+
+In [SETS-2018](../references.md#sets-2018), relate the cardinality constraints
+to the example's two **distinct values**. Remove their disequality and the
+same two member terms can denote one element. Compare this with
+[TABLES-2024](../references.md#tables-2024): set-based relations eliminate
+duplicates, while the [bag tutorial](bags.md) must preserve multiplicities.
+For a relational rule, write its membership condition on tuples before
+following it into the relational solver.
 
 ### Further validation
 

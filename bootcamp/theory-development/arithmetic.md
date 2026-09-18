@@ -31,6 +31,14 @@ variable. Integer checking, cuts, Diophantine reasoning and branching address
 that gap. The relevant code is in `src/theory/arith/linear/`; nonlinear
 procedures live under `src/theory/arith/nl/`.
 
+For the simplex foundation, read [SIMPLEX-2006](../references.md#simplex-2006)
+beside [LinearEquality](https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/arith/linear/linear_equality.h),
+whose update discussion cites that paper. CVC4-specific developments are
+[SIMPLEX-SOI-2013](../references.md#simplex-soi-2013) and
+[ARITH-LP-MIP-2014](../references.md#arith-lp-mip-2014). The tutorial's three
+bounds illustrate explained infeasibility; they do not measure which pivot
+heuristic wins on a larger tableau.
+
 ## Preprocessing and registration
 
 `ppAssert` delegates to the linear core. It normalizes a candidate equality
@@ -103,6 +111,16 @@ The new `nl-ext-initial-sign-lemmas` option adds early monomial zero-sign
 constraints when incremental linearization is active; it is disabled by
 default. Such a strategy addition should be documented separately from the
 core arithmetic representation.
+
+The nonlinear reading path starts with
+[EXTENSIONS-2017](../references.md#extensions-2017) and
+[NRA-COOPERATION-2022](../references.md#nra-cooperation-2022). Then separate
+the two algorithm families: [CDCAC](https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/arith/nl/coverings/cdcac.h)
+explicitly cites [CAC-2021](../references.md#cac-2021), while the transcendental
+helpers cite [TRANSCENDENTAL-2017](../references.md#transcendental-2017).
+[NRA-PROOFS-2026](../references.md#nra-proofs-2026) connects incremental
+linearization lemmas to proof reconstruction. These papers explain the
+mathematics; current effort levels and option defaults remain source questions.
 
 ## Equality and combination
 
@@ -182,6 +200,16 @@ quantity, while multiplication semantics cannot. Inspect the model values
 used by [NonlinearExtension][nonlinear] before choosing a refinement rule.
 The upstream [linear arithmetic example][example] adds incremental checks
 and value queries.
+
+### Relate the example to the papers
+
+In the nonlinear variation `x = 2, x*x = 3`, identify which abstraction
+forgot multiplication and which valid inequality would exclude the candidate.
+This is the refinement question in
+[EXTENSIONS-2017](../references.md#extensions-2017). For quantified arithmetic,
+read [ARITH-CEGQI-2017](../references.md#arith-cegqi-2017) with the
+[quantifier chapter](quantifiers.md): identify the counterexample and the
+arithmetic substitution derived from it.
 
 ### Further validation
 

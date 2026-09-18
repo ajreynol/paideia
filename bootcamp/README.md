@@ -23,6 +23,14 @@ shared workflow, the common theory contract and a sub-guide for each theory.
 Use [Making and investigating a change](development.md) for the repository-wide
 work around options, proof plumbing, tests and debugging.
 
+The [research bibliography](references.md) connects the tutorials to the
+CVC4/cvc5 literature, with primary paper links and notes about the relevant
+examples, algorithms and implementation classes. Begin with the
+[cvc5 system paper](references.md#cvc5-2022) and the
+[SMT beginner's tutorial](references.md#smt-tutorial-2024), then follow the
+citations within each chapter. Every retained paper has an explicit connection
+to the pinned `main` source; notes identify which part of a paper is relevant.<sup>[1](unreferenced-papers.md)</sup>
+
 ```mermaid
 flowchart TD
   A[Parser or API client] --> B[TermManager: terms and sorts]
@@ -125,6 +133,7 @@ index lives with those sub-guides, alongside their shared contract.
 
 | Reference | What it records |
 | --- | --- |
+| [Research references and code connections](references.md) | CVC4/cvc5 papers by topic, primary links, stable citation keys and tutorial/code reading notes |
 | [Bootcamp coverage and corrections](bootcamp-coverage.md) | Every original bootcamp topic's destination, material corrections and added topics |
 | [Source baseline and updates](source-baseline.md) | Exact upstream revision, verification limits, mechanical checks and update procedure |
 
@@ -140,3 +149,11 @@ Reading the guide does not require the original document.
 
 This artifact describes implementation and engineering contracts; it does not
 certify cvc5's answers or the correctness of an emitted proof.
+
+---
+
+<sup>1</sup> **[Unreferenced papers](unreferenced-papers.md).** Papers describing
+features absent from the pinned code and this tutorial's feature account, with
+paper claims, source evidence and links to research implementations. The audit
+distinguishes experimental features and partial integrations from established
+deprecation or incorrect claims.

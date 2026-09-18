@@ -118,6 +118,12 @@ separate check. Record which checks actually ran in the change description.
 
 ## Proof objects are part of the implementation
 
+The singleton exercise above is a small instance of
+[REWRITE-DSL-2022](references.md#rewrite-dsl-2022): identify a term pattern,
+its replacement and a reconstructible equality. Rule discovery uses different
+machinery: [REWRITE-ENUM-2019](references.md#rewrite-enum-2019) connects to
+`CandidateRewriteDatabase`, which searches for candidate equalities.
+
 The guide's scope includes how proof-producing code is connected. This section
 does not assess the adequacy of any proof system or external checker.
 
@@ -164,6 +170,18 @@ separate options. Inspect [proof_options.toml][proof-options] and
 checking is a further workflow with its own format/version support; printing
 a proof or passing an internal debug check is not the same operation.
 
+### Read the proof literature at the producer and printer boundaries
+
+[FLEXIBLE-PROOFS-2022](references.md#flexible-proofs-2022) explains the
+`ProofGenerator`/`TrustNode` architecture above. For the singleton example,
+trace the rewrite equality into the enclosing proof, then follow its export:
+
+| Export path | Paper and reading task |
+| --- | --- |
+| CPC/Eunoia | [CPC-2026](references.md#cpc-2026) and [ETHOS-2026](references.md#ethos-2026): compare the CPC rules with `EoPrinter` output; Ethos is the separate checker for that framework |
+| LFSC | [LFSC-2013](references.md#lfsc-2013): read `LfscPrinter` with the distinction between rule premises and computational side conditions |
+| Alethe | [ALETHE-2021](references.md#alethe-2021) and the [format specification](references.md#alethe-spec-2025): follow `AlethePostProcessor` and `AlethePrinter` from internal rules to exported steps |
+
 ## Options, traces and statistics
 
 Options originate in TOML files and are processed by
@@ -197,6 +215,16 @@ input set, time/resource limits and repetitions. Do not rank solver strategies
 by a single debug-build run.
 
 ## Tests that cross the changed boundary
+
+Two papers connect directly to components useful in performance work.
+[INPUT-STABILITY-2025](references.md#input-stability-2025) is cited by the
+[Normalize pass](https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/preprocessing/passes/normalize.cpp);
+compare equivalent input orderings when assessing a speedup.
+[PARTITIONING-2023](references.md#partitioning-2023) connects to
+[PartitionGenerator](https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/partition_generator.h):
+record how cubes are selected and emitted before measuring their solving cost.
+The generator's presence does not imply that a distributed executor is part
+of the ordinary query path.
 
 `test/unit/` contains internal unit tests, `test/api/` API tests, and
 `test/regress/cli/` solver inputs exercised by the

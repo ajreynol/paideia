@@ -57,6 +57,10 @@ chapters add query and preprocessing walkthroughs; general development
 chapters cover building, options, debugging, tests and proof-producing
 interfaces, including a concrete rewrite-to-regression exercise.
 
+The [research bibliography](bootcamp/references.md) connects 92 publications
+to specific components in the pinned cvc5 `main` source, with citations beside
+the tutorial algorithms and examples they explain.
+
 The developer guide is this repository's artifact and lives in `bootcamp/`.
 It is Markdown; nothing needs to be installed to read it. The
 [chapter index](bootcamp/README.md#chapters) lists its contents. Its source

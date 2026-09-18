@@ -27,6 +27,11 @@ entry points reject unsupported use. Enabling a field logic at runtime does
 not install the dependency. The `ff` feature option and build modes impose
 additional configuration checks.
 
+[FINITE-FIELDS-2023](../references.md#finite-fields-2023) is the primary
+solver paper. Compare its polynomial encoding with `CocoaEncoder`, especially
+the auxiliary variable for disequality: solving in an algebraic closure and
+solving in the declared finite field are different questions.
+
 ## Preprocessing and registration
 
 The theory supplies a field rewriter and otherwise uses common preprocessing
@@ -74,6 +79,12 @@ not be presented as a necessary unconditional preprocessing step. Current
 instead of the default one-basis route. Read the selected algorithm before
 trying to reproduce a trace. Timeout/incomplete results propagate through
 the subtheory instead of becoming a guessed model.
+
+The [split_gb header](https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/ff/split_gb.h)
+explicitly names [SPLIT-GB-2024](../references.md#split-gb-2024). Read that
+paper with the split-basis route described above; its backend organization
+differs from the one-basis approach in
+[FINITE-FIELDS-2023](../references.md#finite-fields-2023).
 
 ## Equality and combination
 
@@ -139,7 +150,23 @@ new user field variable. The upstream [finite-field example][example] shows
 typed literals and incremental checks over the same modulus. A build that
 rejects the input for missing CoCoA has not tested this algebraic reasoning.
 
+### Relate the example to the papers
+
+For the no-root example, find the condition restricting a polynomial solution
+to `F_p` in [FINITE-FIELDS-2023](../references.md#finite-fields-2023).
+Then follow the root-construction path to the concrete field assignment.
+For [SPLIT-GB-2024](../references.md#split-gb-2024), identify where constraints
+are shared between bases and where the same base-field restriction is enforced.
+
 ### Further validation
+
+The proof interface is a separate limit of the current integration.
+[FINITE-FIELD-PROOFS-2026](../references.md#finite-field-proofs-2026) has a
+partial code counterpart in the finite-field `ProofRule` declarations, but
+`TheoryFiniteFields::getProofChecker` still returns `nullptr`, and its
+subtheory-conflict path supplies no proof generator. The declarations alone
+do not establish the paper's proof-producing pipeline in this snapshot.
+See the [source audit](../unreferenced-papers.md#partial-case-finite-field-proof-production).
 
 For a change, test equality and disequality over a small prime where expected
 solutions are easy to enumerate, then a problem with two field sorts and an

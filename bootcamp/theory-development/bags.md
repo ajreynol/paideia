@@ -22,6 +22,13 @@ structure and multiplicities; replacing them by set operations loses duplicate
 rows. A bag solver's relevant element/count inventory is consequently as
 important as its inventory of bag terms.
 
+The solver contribution in [TABLES-2024](../references.md#tables-2024) develops
+theories of tables and relations. Read its bag semantics beside the count
+equations here and the table rules in `InferenceGenerator`; the paper's SQL
+translation is outside this implementation mapping. The system overview
+[CVC5-2022](../references.md#cvc5-2022) documents the earlier bag support;
+the current code includes operations beyond that snapshot.
+
 ## Preprocessing and registration
 
 `ppRewrite` expands choose, cardinality, fold, table aggregate and table
@@ -154,6 +161,17 @@ The upstream [bag example][example] extends these ideas to several concrete
 elements and model queries. For tables, remember that tuple identity and
 multiplicity are separate: a join that finds the correct rows can still
 compute the wrong number of copies.
+
+### Relate the example to the papers
+
+[TABLES-2024](../references.md#tables-2024) gives a concrete reason to care
+about the example's addition of multiplicities: duplicate rows matter under
+bag semantics. Contrast `bag.union_disjoint`, which adds counts, with a
+maximum-multiplicity union and with the set union in
+[RELATIONS-2017](../references.md#relations-2017). Reusing the same inference
+for those operators would change the mathematical operation. Follow a count
+lemma through `InferenceGenerator` and arithmetic before studying table joins;
+the simple count example does not exercise the whole SQL encoding.
 
 ### Further validation
 

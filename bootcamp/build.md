@@ -134,6 +134,10 @@ API or option with this prerelease source.
 
 ## Kinds connect a theory to the rest of the solver
 
+[CVC5-2022](references.md#cvc5-2022) gives a system-level map of the theory
+components. Use it to orient the source search below, then read the pinned
+kind and option definitions for the interface exposed by this build.
+
 Each theory's `kinds.toml` describes its kinds, metakinds, arities, type rules,
 rewriter and related traits. `src/expr/mkexpr.py` and the theory generators
 consume this metadata. `KINDS_TOML_FILES` in `src/CMakeLists.txt` assembles the

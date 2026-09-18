@@ -15,6 +15,13 @@ The prerequisites are [terms and ownership](../terms.md),
 Use the general [development workflow](../development.md) for adding kinds,
 options, proof support and tests, and [building](../build.md) for commands.
 
+Use the [research reading map](../references.md#reading-map) to find the
+papers behind a procedure. The sub-guides connect those papers to current
+classes and to the rule exercised by each example. When changing an inference,
+identify the paper's side conditions, where the implementation checks them,
+and which premises its explanation retains. A useful regression changes one
+of those conditions so the inference must stop applying.
+
 ## Shared contract and theory sub-guides
 
 The [common theory interface](interface.md) supplies the contract for routing,
@@ -142,6 +149,13 @@ When extending a sub-guide, retain its source links and follow the
 the [bootcamp coverage map](../bootcamp-coverage.md) when a topic moves. A
 structural edit does not establish that the source baseline has advanced or
 that the suggested validation cases have been executed.
+
+Keep literature citations close to the algorithm or example they explain.
+Add publication metadata and a reading note to the shared
+[bibliography](../references.md), then use its stable heading key from the
+chapter. Include a paper only when a specific component in the pinned source
+supports the connection. If only part of its contribution is implemented,
+identify that part; do not cite an unmerged extension as a current feature.
 
 [theory]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/theory.cpp
 [im]: https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/theory_inference_manager.cpp

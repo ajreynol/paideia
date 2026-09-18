@@ -136,6 +136,13 @@ whether it has ever been preregistered; strings explicitly handles this case.
 These defaults matter when the individual theory chapters say a hook is
 inherited. An absent override is not evidence that an input never reaches it.
 
+For the algorithmic pattern behind theory-specific refinements, read
+[EXTENSIONS-2017](../references.md#extensions-2017). Relate an extension's
+new lemma to the fact, conflict and propagation contracts above: a valid
+conditional deduction still needs its premises when it crosses the boundary.
+[FLEXIBLE-PROOFS-2022](../references.md#flexible-proofs-2022) explains the
+corresponding proof-production obligation.
+
 ## Effort levels are a scheduling contract
 
 `EFFORT_STANDARD` is the ordinary propagation/checking stage during Boolean
@@ -230,6 +237,15 @@ creates is to make the participating theories agree on a case and its
 consequences, not to add a new arithmetic axiom.
 
 ## Models combine constraints from several owners
+
+The care-graph account is [SHARING-2011](../references.md#sharing-2011),
+expanded in [CAREFUL-2013](../references.md#careful-2013). Use the `f(x), f(y)`
+example above to identify the shared terms and equality arrangement.
+[POLITE-2010](../references.md#polite-2010) and
+[DATATYPE-POLITENESS-2022](../references.md#datatype-politeness-2022) explain
+combination conditions relevant to datatype domains and their field theories.
+These are conditions on models and witness constructions; installing equality
+callbacks alone does not establish them.
 
 [Model management][model-manager] gathers relevant terms and theory
 contributions into a [TheoryModel][model]. `computeRelevantTerms` determines

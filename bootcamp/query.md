@@ -3,6 +3,12 @@
 Source baseline: [2026-09-18](source-baseline.md). The starting point here is a
 well-typed formula already constructed by the API or parser.
 
+The system papers [CVC4-2011](references.md#cvc4-2011) and
+[CVC5-2022](references.md#cvc5-2022) explain the architecture's evolution;
+[SMT-TUTORIAL-2024](references.md#smt-tutorial-2024) supplies the logical
+background. Use them with the current call chain below: a system paper's
+architecture diagram does not specify today's ownership or callback order.
+
 ## SolverEngine and Env
 
 The public `Solver` forwards operations to one [SolverEngine][se]. Its job
@@ -95,6 +101,14 @@ different events. Preregistration policy is configurable, and theories can
 have their own additional eager/lazy registration policy. Do not conflate
 either of those with when a SAT variable becomes assigned.
 
+The SAT/theory boundary also has an interface-level account in
+[IPASIR-UP-2023](references.md#ipasir-up-2023) and
+[USER-PROPAGATORS-2024](references.md#user-propagators-2024). Compare their
+propagation, explanation and backtracking requirements with the current
+[CaDiCaL theory propagator](https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/prop/cadical/cdclt_propagator.h).
+In the push/pop example below, an explanation must remain valid in the
+context in which it is used even though Boolean search may revisit a branch.
+
 ## Definitions must participate in decisions
 
 Suppose preprocessing turns `Q or P(ite(c,a,b))` into `Q or P(k)` plus the
@@ -129,6 +143,12 @@ report that a known wrong `sat` answer has already been returned. Resource
 limits and incomplete procedures are additional reasons a check can return
 `unknown`. Read the result and its explanation instead of inferring a result
 from the absence of a theory conflict.
+
+For the mathematical reason that independently plausible theory models may
+not combine, read [SHARING-2011](references.md#sharing-2011) and
+[CAREFUL-2013](references.md#careful-2013). For the extra obligation introduced
+by quantified assertions, compare [FMF-2013](references.md#fmf-2013): assigning
+a truth value to a universal formula does not check all its instances.
 
 ## A small query to trace
 
