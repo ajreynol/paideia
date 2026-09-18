@@ -2,7 +2,7 @@
 
 The interface is built and nothing it was built to produce is. This is the order
 the work would go in, so that a reader can tell what is intended from what
-exists. The move out of dokimasia changed none of it: `run_empeiria` reaches for
+exists. Nothing on it depends on another repository: `run_empeiria` reaches for
 nothing outside its own directory and the cvc5 checkout.
 
 ## First

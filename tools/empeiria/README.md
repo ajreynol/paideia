@@ -16,31 +16,28 @@ how the maintainers answered the last ones?*
 [kanon's research-project rules](https://github.com/ajreynol/kanon/blob/main/docs/policy.md)
 by choice rather than by obligation — paideia is an **associate** of the Eunoia
 ecosystem and owes it nothing — and not a project announcement. It is not linked
-from the root [`README`](../../README.md), which is the only front page paideia
-has: there is no `docs/` directory here and no register to be listed in, and
-nothing should be built to hold one until there is something to show.
-`ajreynol/paideia` is a **public** remote: unadvertised means *not pointed at*,
-not *not visible*. Nothing here makes a claim about cvc5 or should be quoted as
+from the root [`README`](../../README.md), which is paideia's only front page,
+and it has no row in the [documentation index](../../docs/README.md) either:
+that index names what this repository publishes, and a research project is not
+among it. `ajreynol/paideia` is a **public** remote: unadvertised means *not
+pointed at*, not *not visible*. Nothing here makes a claim about cvc5 or should be quoted as
 though it did.
 
-**An island, and now a different kind of one.** empeiria reads cvc5's tree and
-its own ledger, and nothing else — the line here used to say it read dokimasia's
-analyses too, and the script never did. In dokimasia the island property said
-something useful: a working tool did not import this, no test covered it, no
-baseline ratcheted it, no CI job ran it, and deleting the directory left the
-repository exactly as functional. In paideia it says much less, because there is
-no working tool here to be independent of — this repository is a README and two
-research projects. What survives the move is the operative half, that its one
-script is invoked by hand from somebody else's checkout and nothing runs it on a
-schedule.
+**An island, and a weak kind of one.** empeiria reads cvc5's tree and its own
+ledger, and nothing else. The island property says much less here than the
+research-project rules intend, because there is no working tool in this
+repository to be independent of — paideia is a front page, some documents and
+two research projects. What it does still say is the operative half: nothing
+imports this, no test covers it, no baseline ratchets it, no CI job runs it, its
+one script is invoked by hand from somebody else's checkout, and deleting the
+directory leaves the repository exactly as functional.
 
-**The move cost this project less than it cost its sibling.** `run_empeiria`
-resolves its ledger and [`triage.md`](triage.md) relative to its own location
-and reaches for nothing else outside the cvc5 checkout it is run from, so it
-works here exactly as it worked in dokimasia and needed no change. What it lost
-is proximity: everything under *What it inherits* below is in another repository
-now, and a practice you have to go and fetch is one you can quietly stop
-reading.
+**It reaches outside this tree for nothing but the cvc5 checkout.**
+`run_empeiria` resolves its ledger and [`triage.md`](triage.md) relative to its
+own location, which is why the sibling project's cross-repository dependency has
+no counterpart here. What it does lack is proximity: everything under *What it
+inherits* below is in another repository, and a practice you have to go and
+fetch is one you can quietly stop reading.
 
 **Where "read-only" stops, stated rather than assumed.** A project that writes
 fixes cannot be read-only everywhere, so the boundary is drawn precisely:
@@ -69,13 +66,13 @@ one twice over: nobody is teaching this project a rule, and *mathesis* is
 knowing rather than doing. If it turns out that a written rule would have worked
 all along, the name is wrong and that is itself the finding.
 
-**It sits more easily under παιδεία than it did under δοκιμασία**, which is
-worth a sentence and not more: ἐμπειρία is what a practitioner has from cases,
-παιδεία is the forming of somebody who does not have it yet, and a project whose
-output is a record of how cvc5's maintainers actually answered is closer to
-material for a guide than it ever was to proof analysis. That is an observation
-about two Greek words. It is not an argument that the move was right — the move
-was a person's decision and stands on their reasons, not on this paragraph.
+**It sits easily under παιδεία**, which is worth a sentence and not more:
+ἐμπειρία is what a practitioner has from cases, παιδεία is the forming of
+somebody who does not have it yet, and a project whose output is a record of how
+cvc5's maintainers actually answered is closer to material for a guide than to
+proof analysis. That is an observation about two Greek words, and it is not an
+argument for where this project lives — that is a person's decision and stands
+on their reasons rather than on this paragraph.
 
 ## The charter
 
@@ -108,13 +105,14 @@ run_empeiria --record 12905         # afterwards: what the maintainer did
 run_empeiria --list                 # what has been worked, and what came back
 ```
 
-`--triage` is the standing obligation and the only command that does not need a
-cvc5 checkout — it reads the tracker, not the tree. The rest refuse to run
-outside a cvc5 checkout and refuse a dirty tree; it creates
-the branch itself rather than asking the assistant to, because a branch the
-assistant forgot is a diff on somebody's main. `--show-prompt` runs nothing and
-works anywhere, so the prompt is auditable without a checkout to hand. It makes
-no network calls, and it never pushes, posts or opens anything.
+`--triage` is the standing obligation and needs no cvc5 checkout — it reads the
+tracker, not the tree. The rest refuse to run outside a cvc5 checkout and refuse
+a dirty tree; work on an issue creates the branch itself rather than asking the
+assistant to, because a branch the assistant forgot is a diff on somebody's
+main. **`--show-prompt` is exempt from both refusals** — it runs nothing and
+writes nothing, so the prompt is auditable anywhere, and it says on stderr which
+tree the prompt it printed names. It makes no network calls, and it never
+pushes, posts or opens anything.
 
 **The goals, in order.**
 
@@ -148,11 +146,11 @@ becomes a second tool:
 
 - **Proof-completeness bugs.** Those are dokimasia's, and they belong in
   [its register](https://github.com/ajreynol/dokimasia/blob/main/docs/issues.md). If an issue turns out to be one it leaves
-  this repository altogether, which since the move is a carry between
-  repositories, and a person does it.
+  this repository altogether — a carry between repositories, and a person does
+  it.
 - **Sending anything upstream.** Producing a fix is in scope; delivering it is
-  not, ever. See the next section — dokimasia's policy is kept here by choice
-  and there is no lighter standard for the change of address.
+  not, ever. See the next section — dokimasia's policy is kept here by choice,
+  and keeping it means keeping it whole.
 - **Deciding cvc5's design.** It fixes reported defects. A patch that changes
   what cvc5 chose to do is a proposal, and proposals go through a person.
 - **Speaking for dokimasia, or for paideia.** Nothing here is either one's
@@ -168,13 +166,13 @@ and saying so now is cheaper than discovering it later.
 ## The PR policy is borrowed, and unchanged
 
 **empeiria does not open pull requests against cvc5.** The rule comes from
-[dokimasia's `pr-policy.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/pr-policy.md), which no longer governs this
+[dokimasia's `pr-policy.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/pr-policy.md), which does not govern this
 project by being its parent's: paideia is an associate, owes the ecosystem
 nothing, and has no policy of its own to impose. It governs because this project
-kept it — and keeping it is worth nothing unless the standard stays where it
-was, so: **no separate channel, and no lighter standard than it had in
-dokimasia.** This section only says how its three parts land on a project that
-writes fixes.
+keeps it — and keeping it is worth nothing unless the standard stays where it
+was, so: **no separate channel, and no lighter standard than dokimasia's own.**
+This section only says how its three parts land on a project that writes
+fixes.
 
 - **The act stays with a person.** No `git push`, no `gh pr create`, no tracker
   call. *Executor* means the patch exists in a working tree a person is driving,
@@ -206,11 +204,10 @@ directory. A person decides when any of it is carried.
 
 ## What it inherits from dokimasia, and where
 
-This project was built inside dokimasia's repository because that tool has
-evidence — cases it ran, behaviours it verified — and the rule then was to cite
-what it took, so a reader could tell what was checked from what was reasoned.
-The rule holds after the move and matters more than it did: none of the
-following is in this repository, and every link in the table leaves it.
+This project has no evidence of its own. dokimasia has it — cases it ran,
+behaviours it verified — and the rule is to cite what is taken, so a reader can
+tell what was checked from what was reasoned. None of the following is in this
+repository, and every link in the table leaves it.
 
 | inherited | where it was established |
 | --- | --- |
@@ -220,30 +217,26 @@ following is in this repository, and every link in the table leaves it.
 | the reporting policy in full — the bar, the three verdicts, and that we never open a PR | [`docs/pr-policy.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/pr-policy.md), shared rather than restated |
 | the postmortem shape — one block per round, about the workflow rather than the subject | [`docs/postmortem.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/postmortem.md) |
 
-That table used to end with the reason this was a child of dokimasia rather than
-its own repository: dokimasia already ran the loop, already wrote the block, and
-had already learned things about it that would otherwise be re-learned. All of
-that is still true and none of it is here any more. The move traded a shared
-repository for a citation, and a citation is the weaker of the two — nothing now
-breaks when dokimasia's practice and this project's drift apart.
+**What holds the two practices together is a citation, and a citation is weak.**
+dokimasia ran this loop first, wrote the block first, and learned things about it
+that would otherwise be re-learned here; all of that is true and none of it is in
+this repository. Nothing breaks when dokimasia's practice and this project's
+drift apart, which is the cost of the arrangement and is worth knowing before
+the drift rather than after.
 
 ## Status
 
 **Started 2026-09-01**, by an explicit human instruction, which is the only way
-one of these may begin. On the occasion of cvc5
+one of these may begin, on the occasion of cvc5
 [#12905](https://github.com/cvc5/cvc5/issues/12905) — a fatal failure in
 `theory_engine.cpp` on a strings-and-quantifiers benchmark, which is a theory
-explanation defect and **not** a proof bug — at the time, the first concrete
-case of an issue *dokimasia* could not take and should not ignore. That is the
-tension the move settles: paideia's subject is cvc5's code rather than cvc5's
-proofs, so an ordinary defect is no longer an awkward guest. The routing
-question it raised is written up in
+explanation defect and **not** a proof bug. It is the kind of issue that fits
+here and would be an awkward guest in a repository about proofs: paideia's
+subject is cvc5's code. The routing question it raised is written up in
 [dokimasia's `docs/cases/`](https://github.com/ajreynol/dokimasia/blob/main/docs/cases/out-of-scope-bug-report.md).
 
 **Moved out of dokimasia into paideia on 2026-09-18**, by the same kind of
-instruction. `run_empeiria` resolves everything relative to itself and needed no
-change; what the move changed is where the documents it cites live, and they are
-all in another repository now.
+instruction.
 
 **What exists is the interface and nothing it was built to produce.**
 `run_empeiria` works — it guards the tree, makes the branch and hands over the
@@ -256,15 +249,18 @@ format is wrong.
 
 There are three endings and a person picks: it graduates into its own
 repository, it is folded into the parent, or it is retired in place with a note
-saying what was learned. Going quiet is not one of them. *Folded into the
-parent* changed meaning with the move and has not been re-decided: the parent is
-now paideia, which has nothing to fold anything into.
+saying what was learned. Going quiet is not one of them. **What *folded into the
+parent* would mean here is undecided**: the parent is paideia, which has nothing
+to fold anything into.
 
 **Owed elsewhere, and not ours to make.** The ecosystem's authoritative name
 register is
 [kanon's glossary](https://github.com/ajreynol/kanon/blob/main/docs/glossary.md),
-kept by the president of eo; editing somebody else's register is a person's
-edit. There is already an entry for empeiria, and the move made two parts of it
-wrong: it calls this a *child project of dokimasia*, and its **Charter** link
-points into `ajreynol/dokimasia`. Both are owed a correction. paideia itself has
-no entry at all.
+kept by the president of eo, and editing somebody else's register is a person's
+edit. Read on 2026-09-18, its entry for empeiria is wrong in two places — it
+calls this a *child project of dokimasia*, and its **Charter** link points at a
+path in `ajreynol/dokimasia` that no longer exists, since that repository
+removed the directory — and there is no entry for paideia at all. Both
+corrections are asked for as `D1` in [paideia's discussion
+file](../../docs/discussion.md), staged there and carried by nobody but a
+person.

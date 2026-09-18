@@ -1,20 +1,19 @@
 # anakrisis — the plan
 
-One thing is built and the move broke it. This is the order the rest would go
-in, so that a reader can tell what is intended from what exists.
+One thing is built and nothing it was built to produce is. This is the order the
+rest would go in, so that a reader can tell what is intended from what exists.
 
-**Before any of it.** `--delta` shells out to `python3 -m dokimasia report` and
-looks for that module two directories above itself, which is now paideia rather
-than dokimasia. Nothing below this line can be attempted until a person decides
-how this project finds dokimasia from its new home. It is not listed as a task
-because it is not this project's decision to take.
+**What every task below needs.** `--delta` shells out to `python3 -m dokimasia
+report`, which is in another repository: `DOKIMASIA_ROOT`, or a `dokimasia`
+checkout beside this one. The command refuses to run without it rather than
+reporting a delta it could not compute, so nothing here silently proceeds on a
+missing instrument.
 
 ## First
 
 - [x] **`run_anakrisis --delta`** — the computed half. Two runs of dokimasia's
   analyses, at the merge base and at the head, subtracted. About 2.5s on a cvc5
   checkout, no build, one detached worktree that is removed on any exit.
-  **Built and run in dokimasia; it does not run from here.**
 - [x] **Make the subtraction mean something.** The first version compared the
   two reports with `diff` and returned mostly line numbers moving and lists in
   an unstable order. It is now a set difference over lines with `:NNN`
@@ -57,11 +56,10 @@ because it is not this project's decision to take.
   that is what dokimasia prints, and both of the limits in the
   [charter](README.md#the-two-limits-named-before-the-first-use) come from it.
   A structured output would fix them — and building one is dokimasia's
-  decision, not this project's, taken when somebody asks for the thing the
-  charter names as its wishue rather than because some other repository would
-  like it. This entry used to be written down where dokimasia's maintainer
-  would come across it. Since the move it is not, so asking is now a person's
-  carry rather than something a reader stumbles on.
+  decision, not this project's. The ask is written down as `D2` in [paideia's
+  discussion file](../../docs/discussion.md), where it says what has changed
+  since dokimasia declined it and that a no with a reason attached ends it.
+  Carrying it across the boundary is a person's, and nothing sends it.
 - **An index of open pull requests.** The sibling project here keeps one for
   issues and it earns its place, because picking which issue to work is the
   hard part. Picking which pull request to examine is not: run the delta on the

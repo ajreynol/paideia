@@ -10,10 +10,10 @@ reviewed, which is the condition under which a format is reliably wrong. It is
 meant to be replaced after two or three real ones, and
 [`TODO.md`](TODO.md) says so as a task rather than as a hope.
 
-**And it currently describes something that does not run.** The delta half needs
-dokimasia's analyses, which this repository no longer contains; see the charter.
-Nothing in this protocol has been changed on that account, because what the
-protocol should say is a question for after the delta works again.
+**The delta half needs dokimasia's analyses, which are in another repository.**
+`run_anakrisis` is told where that checkout is and refuses to run when it cannot
+find one; the charter says how. Nothing in this protocol turns on where the
+analyses live, so nothing here was written around that.
 
 ## A review has two halves and they are not equally good
 
@@ -65,15 +65,16 @@ that matters: **an empty delta is not a clean bill of health.**
 ## What the read is allowed to be about
 
 Scoped to what dokimasia has measured, because that is the only thing this can
-say that a cvc5 reviewer could not say faster. **Since the move every document
-in that scope is in another repository** — all four links below leave paideia,
-and a reviewer who cannot open them cannot write the read half:
+say that a cvc5 reviewer could not say faster. **Every document in that scope is
+in another repository** — all four links below leave paideia, and a reviewer who
+cannot open them cannot write the read half:
 
 - **A new hole.** An inference with no reconstruction, a rule the seam cannot
   print, a trust step with no stated reason, a proofless call on a path that
-  had one. The ten [hygiene
+  had one. The [hygiene
   rules](https://github.com/ajreynol/dokimasia/blob/main/docs/hygiene.md) are
-  the list, each with the measurement behind it.
+  the list, each with the measurement behind it, and the count is theirs to
+  change.
 - **A promise that stopped holding.** Something
   [`contract.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/contract.md)
   says cvc5 guarantees, that this change makes untrue — most sharply, an option
@@ -122,7 +123,7 @@ HUMAN RESPONSE:
 | **objection** | something looks wrong, and there is evidence. Rare, and held to dokimasia's bar in full — a claim about behaviour needs something to have been run |
 | **cannot tell** | in scope, and we cannot decide. An honest answer and a useful one; it names what would settle it |
 
-**`HUMAN RESPONSE:` stays empty.** It is a maintainer's, and the two labels
+**`HUMAN RESPONSE:` stays empty.** It is a maintainer's, and the two fields
 exist to keep what an assistant concluded apart from what a person decided.
 `run_anakrisis --record N` fills it afterwards with what the maintainers
 actually did, in their words rather than a summary — the difference between the

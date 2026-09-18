@@ -4,20 +4,24 @@
 #   cd ~/cvc5 && gh pr checkout 12893 && run_anakrisis 12893
 #
 # The job is one question: what does this change do to the inventory of ways
-# cvc5 can produce no proof? That half is computed rather than judged -- the
-# parent's analyses are run at the merge base and at the head and subtracted --
-# and an assistant reads a delta it did not produce. See review.md.
+# cvc5 can produce no proof? That half is computed rather than judged --
+# dokimasia's analyses are run at the merge base and at the head and subtracted
+# -- and an assistant reads a delta it did not produce. See review.md.
+#
+# dokimasia is another repository. Set DOKIMASIA_ROOT, or keep a checkout of it
+# beside this one; this refuses to run rather than guessing further.
 #
 #   run_anakrisis 12893 --delta         the inventory delta alone; no assistant
 #   run_anakrisis 12893                 the delta, then a review by an assistant
 #   run_anakrisis 12893 --baseline      the same review with no delta -- the control
-#   run_anakrisis 12893 --show-prompt   print the prompt, run nothing
+#   run_anakrisis 12893 --show-prompt   print the prompt, run no assistant
 #   run_anakrisis --record 12893        afterwards: what the maintainers did
 #   run_anakrisis --list                what has been reviewed, and what came back
 #
-# The baseline for this task already exists. ../../prompts/check_cvc5_issue
-# hands an assistant a prompt and a checkout and gets useful work out of it with
-# no instrument at all, and that is what this has to beat -- not "no review".
+# The baseline for this task already exists. dokimasia's
+# prompts/check_cvc5_issue hands an assistant a prompt and a checkout and gets
+# useful work out of it with no instrument at all, and that is what this has to
+# beat -- not "no review".
 # So --baseline runs the same review with the delta withheld: the two prompts
 # differ by the delta and by nothing else, which is what makes the comparison a
 # measurement rather than an impression.
@@ -25,13 +29,52 @@
 # It makes no network calls: it reviews whatever is checked out, and prints the
 # fetch command rather than running it. Nothing is pushed, nothing is posted, no
 # review is submitted and no pull request is approved -- ever. The governing
-# document is ../../docs/pr-policy.md, which applies here unchanged.
+# document is dokimasia's docs/pr-policy.md, kept here by this project's own
+# choice now that dokimasia is not its parent, and unchanged.
 
 set -euo pipefail
 
 HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-DOKI=$(CDPATH= cd -- "$HERE/../.." && pwd)
 LEDGER="$HERE/ledger"
+
+# Where dokimasia is. The delta is two runs of *its* analyses and the review is
+# scoped to *its* documents, and neither is in this repository, so this cannot be
+# derived from the script's own location: DOKIMASIA_ROOT answers it if it is set,
+# and otherwise a checkout beside this repository, which is how these trees are
+# usually laid out. Nothing here guesses further and nothing here fetches.
+DOKI="${DOKIMASIA_ROOT:-}"
+if [ -z "$DOKI" ] && [ -d "$HERE/../../../dokimasia" ]; then
+  DOKI=$(CDPATH= cd -- "$HERE/../../../dokimasia" && pwd)
+fi
+
+# Fail closed, before anything runs and before a prompt is built. Empty output
+# is how this script spells "nothing changed", so a dokimasia that is absent or
+# is not the one this expects has to stop the run rather than shorten it -- and
+# the prompt hands an assistant three of these paths by name, so a path that
+# does not exist is a review scoped to nothing.
+require_doki() {
+  if [ -z "$DOKI" ] || [ ! -d "$DOKI" ]; then
+    echo "run_anakrisis: no dokimasia checkout found, so there is no delta to" >&2
+    echo "               compute. That repository is not this one:" >&2
+    echo >&2
+    echo "                   DOKIMASIA_ROOT=/path/to/dokimasia run_anakrisis $PR" >&2
+    echo >&2
+    echo "               or keep a 'dokimasia' checkout beside this repository." >&2
+    exit 2
+  fi
+  missing=""
+  for rel in dokimasia/__main__.py docs/hygiene.md docs/contract.md docs/pr-policy.md; do
+    [ -e "$DOKI/$rel" ] || missing="$missing $rel"
+  done
+  if [ -n "$missing" ]; then
+    echo "run_anakrisis: $DOKI does not look like a dokimasia checkout." >&2
+    echo "               missing:$missing" >&2
+    echo "               The first is the module the delta runs; the others are" >&2
+    echo "               the documents the read half is scoped to, and the prompt" >&2
+    echo "               names every one of them by path." >&2
+    exit 2
+  fi
+}
 
 # A response lives on the lines *after* the marker, not on it -- the same bug
 # the sibling project here hit, and the same fix.
@@ -66,7 +109,8 @@ usage: run_anakrisis [--pr] N [--delta] [--baseline] [--codex] [--base REF]
   --list          what has been reviewed, and what came back
   --codex         run codex instead of claude
   --print         run non-interactively and print the result
-  --show-prompt   print the prompt and exit, running nothing
+  --show-prompt   print the prompt and exit; computes the delta, because the
+                  delta is in the prompt, and runs no assistant
   --force         proceed even though the working tree is dirty
 
 Run it in the root of a cvc5 checkout, with the pull request already checked
@@ -169,6 +213,10 @@ if [ "$MODE" = record ]; then
   echo "   recorded in $f" >&2
   exit 0
 fi
+
+# Everything past here either computes the delta or builds the prompt, and both
+# need dokimasia. --list and --record above do not, and still work without it.
+require_doki
 
 # --- what are we comparing against? -----------------------------------------
 if [ -z "$BASEREF" ]; then
@@ -355,9 +403,10 @@ fi
 
 read -r -d '' PROMPT <<PROMPT_END || true
 You are reviewing a pull request to cvc5, in a cvc5 checkout at $ROOT. You are
-running out of a research project in the dokimasia repository, whose subject is
+running out of a research project in the paideia repository, whose subject is
 one question and not code review in general: can a path through the solver
-produce no proof at all?
+produce no proof at all? The analyses the delta comes from, and the documents
+named below, are dokimasia's, in a separate checkout at $DOKI.
 
 The pull request:
 
@@ -375,7 +424,7 @@ Your half, in this order:
 
 $STEP1
 2. **Read the diff for what this repository has evidence about**, and nothing
-   else. The list is the ten hygiene rules in $DOKI/docs/hygiene.md and the
+   else. The list is the hygiene rules in $DOKI/docs/hygiene.md and the
    promises in $DOKI/docs/contract.md. Style, naming, performance and
    architecture are out of scope and stay out even when you can see something.
    cvc5's own reviewers do that better and this project has no standing to.

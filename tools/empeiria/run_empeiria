@@ -18,7 +18,9 @@
 # It makes no network calls. It builds a prompt and hands it to an assistant in
 # a session a person is driving; whatever the assistant then reads is its own
 # business. Nothing is pushed, no tracker is touched, and no pull request is
-# opened -- ever. See ../../docs/pr-policy.md, which governs here unchanged.
+# opened -- ever. The governing document is dokimasia's docs/pr-policy.md, in a
+# separate repository, kept here by this project's own choice now that dokimasia
+# is not its parent, and unchanged.
 
 set -euo pipefail
 
@@ -58,7 +60,8 @@ usage: run_empeiria [--issue] N [--codex] [--branch NAME] [--print]
   --codex         run codex instead of claude
   --branch NAME   branch to work on (default: empeiria/issue-N)
   --print         run non-interactively and print the result
-  --show-prompt   print the prompt and exit, running nothing
+  --show-prompt   print the prompt and exit, running nothing. The only
+                  form of --issue that works outside a cvc5 checkout
   --force         proceed even though the working tree is dirty
 
 Run it in the root of a cvc5 checkout.
@@ -165,23 +168,32 @@ case "$ISSUE" in ''|*[!0-9]*)
 esac
 : "${BRANCH:=empeiria/issue-$ISSUE}"
 
-# --- must be cvc5 ------------------------------------------------------------
-if ! ROOT=$(git rev-parse --show-toplevel 2>/dev/null); then
-  echo "run_empeiria: not in a git repository." >&2
-  echo "              Run this in the root of a cvc5 checkout." >&2
-  exit 2
-fi
-is_cvc5=0
-case "$(git -C "$ROOT" remote get-url origin 2>/dev/null || true)" in
-  *cvc5/cvc5*|*cvc5.git*|*/cvc5) is_cvc5=1 ;;
-esac
-if [ "$is_cvc5" = 0 ] && [ -f "$ROOT/configure.sh" ] && [ -d "$ROOT/src/theory" ]; then
-  is_cvc5=1
-fi
-if [ "$is_cvc5" = 0 ]; then
-  echo "run_empeiria: $ROOT does not look like a cvc5 checkout." >&2
-  echo "              Expected a cvc5 origin remote, or configure.sh and src/theory/." >&2
-  exit 2
+# --- must be cvc5, unless nothing is going to happen -------------------------
+# --show-prompt is the exemption, and it is what the flag is for: it runs
+# nothing, writes nothing and touches no tree, so the prompt is auditable
+# without a cvc5 checkout to hand. Guarding it made that claim false -- the
+# refusal fired before the prompt was ever built. Everything else here still
+# refuses, including --record, which edits a ledger about work done in a tree.
+if [ "$SHOW" = 1 ]; then
+  ROOT=$(git rev-parse --show-toplevel 2>/dev/null || printf '%s' "$PWD")
+else
+  if ! ROOT=$(git rev-parse --show-toplevel 2>/dev/null); then
+    echo "run_empeiria: not in a git repository." >&2
+    echo "              Run this in the root of a cvc5 checkout." >&2
+    exit 2
+  fi
+  is_cvc5=0
+  case "$(git -C "$ROOT" remote get-url origin 2>/dev/null || true)" in
+    *cvc5/cvc5*|*cvc5.git*|*/cvc5) is_cvc5=1 ;;
+  esac
+  if [ "$is_cvc5" = 0 ] && [ -f "$ROOT/configure.sh" ] && [ -d "$ROOT/src/theory" ]; then
+    is_cvc5=1
+  fi
+  if [ "$is_cvc5" = 0 ]; then
+    echo "run_empeiria: $ROOT does not look like a cvc5 checkout." >&2
+    echo "              Expected a cvc5 origin remote, or configure.sh and src/theory/." >&2
+    exit 2
+  fi
 fi
 
 # --- record: after the fact --------------------------------------------------
@@ -281,8 +293,15 @@ usually where the work gets done.
 PROMPT_END
 
 # --show-prompt runs nothing, so it is answerable anywhere and on any tree:
-# that is what makes the prompt auditable without a clean checkout to hand.
-if [ "$SHOW" = 1 ]; then printf '%s\n' "$PROMPT"; exit 0; fi
+# that is what makes the prompt auditable without a checkout to hand. The tree
+# it names is whichever one you ran it in, said on stderr so that the prompt
+# itself stays the only thing on stdout.
+if [ "$SHOW" = 1 ]; then
+  echo "-- run_empeiria: the prompt as it would be issued; the tree it names" >&2
+  echo "   is $ROOT, which is wherever this was run." >&2
+  printf '%s\n' "$PROMPT"
+  exit 0
+fi
 
 # --- past here there are side effects, so the tree must be clean -------------
 if [ "$FORCE" = 0 ] && [ -n "$(git -C "$ROOT" status --porcelain)" ]; then

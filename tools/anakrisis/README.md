@@ -16,34 +16,35 @@ that worth a maintainer's time?*
 [kanon's research-project rules](https://github.com/ajreynol/kanon/blob/main/docs/policy.md)
 by choice rather than by obligation — paideia is an **associate** of the Eunoia
 ecosystem and owes it nothing — and not a project announcement. It is not linked
-from the root [`README`](../../README.md), which is the only front page paideia
-has: there is no `docs/` directory here and no register to be listed in, and
-nothing should be built to hold one until there is something to show.
-`ajreynol/paideia` is a **public** remote: unadvertised means *not pointed at*,
-not *not visible*. **Nothing here is anybody's opinion of anybody's pull
-request** — not paideia's, and no longer dokimasia's — and no review written
-here has been sent to anyone.
+from the root [`README`](../../README.md), which is paideia's only front page,
+and it has no row in the [documentation index](../../docs/README.md) either:
+that index names what this repository publishes, and a research project is not
+among it. `ajreynol/paideia` is a **public** remote: unadvertised means *not
+pointed at*, not *not visible*. **Nothing here is anybody's opinion of anybody's
+pull request** — not paideia's and not dokimasia's — and no review written here
+has been sent to anyone.
 
-**An island, and now a different kind of one.** anakrisis runs dokimasia's
-analyses as a subprocess against two trees and diffs the results; it reads
-cvc5's tree and its own ledger. In dokimasia the island property said something
-useful: a working tool did not import this, no test covered it, no baseline
-ratcheted it, no CI job ran it, and deleting the directory left the repository
-exactly as functional. In paideia it says much less, because there is no working
-tool here to be independent of — this repository is a README and two research
-projects. What survives the move is the operative half, that its one script is
-invoked by hand from somebody else's checkout and nothing runs it on a schedule.
+**An island, and a weak kind of one.** anakrisis runs dokimasia's analyses as a
+subprocess against two trees and diffs the results; it reads cvc5's tree and its
+own ledger. The island property says much less here than the research-project
+rules intend, because there is no working tool in this repository to be
+independent of — paideia is a front page, some documents and two research
+projects. What it does still say is the operative half: nothing imports this, no
+test covers it, no baseline ratchets it, no CI job runs it, its one script is
+invoked by hand from somebody else's checkout, and deleting the directory leaves
+the repository exactly as functional.
 
-**What did not survive the move is the analysis it subtracts, and today that
-means it does not run.** `run_anakrisis --delta` computes the delta by invoking
-`python3 -m dokimasia report`, and it finds that module by walking two
-directories up from its own location — which used to be dokimasia's repository
-root and is now paideia's. paideia contains no such module, so **`--delta` is
-broken by this move and has not been repaired here.** The repair is a decision
-about an interface — an environment variable, a configured checkout path, a
-dependency declared some other way — and it is a person's to make, not this
-document's. Until it is made, everything below that describes what the delta
-does describes what it did in its old home.
+**The analysis it subtracts is in another repository, and it has to be told
+where.** `run_anakrisis --delta` computes the delta by invoking `python3 -m
+dokimasia report`, so it needs a dokimasia checkout. `DOKIMASIA_ROOT` names one;
+failing that it tries a `dokimasia` checkout beside this repository, which is how
+these trees are usually laid out. It guesses no further, it fetches nothing, and
+**it refuses to run when it cannot find one** — naming what was missing, whether
+that is the module the delta runs or any of the three documents the read half is
+scoped to, every one of which the prompt hands an assistant by path. Failing
+closed is affordable here and is not a precaution: empty output is how this
+spells *nothing changed*, so a run that could not read the analyses has to stop
+rather than report a clean result.
 
 **Where "read-only" stops, stated rather than assumed.** Two places, both
 narrow. *Inside this repository* it writes only within `tools/anakrisis/`, and
@@ -73,16 +74,14 @@ And the sealed jar is the discipline this project most needs: a review may rely
 only on what it recorded at review time, which is dokimasia's **run-it**
 applied to a review rather than to a finding.
 
-**It used to pair with the parent, and that argument left with the move.**
-δοκιμασία is the scrutiny of the officer **before office** and ἀνάκρισις is the
-examination of the case **before trial**; dokimasia asked whether the code
-already in the tree was fit to serve and this asked the same question of the
-change wanting in. The rhyme was part of the case for keeping this project in
-that repository rather than somewhere else. It is not a case for keeping it in
-παιδεία, and nothing will be invented here to replace it. The name still fits
-the project, which is what the two paragraphs above are about and is the part
-that never depended on the parent: an examination, before the thing is admitted,
-that decides nothing.
+**It rhymes with δοκιμασία, and a rhyme is not an argument.** δοκιμασία is the
+scrutiny of the officer **before office** and ἀνάκρισις is the examination of
+the case **before trial**: one asks whether the code already in the tree is fit
+to serve, and this asks the same question of the change wanting in. That reads
+well and settles nothing about where either belongs, and nothing is invented
+here in its place. The name fits for the reason the two paragraphs above give,
+which is the part that depends on nothing outside this directory: an
+examination, before the thing is admitted, that decides nothing.
 
 *The alternative with a real argument behind it was* **κρίσις** *— the judgement
 itself. It is the wrong word for the same reason it is the tempting one: this
@@ -116,12 +115,11 @@ nothing else.
 
 **What makes it answerable at all.** dokimasia already computes the inventory
 from a checkout, with no build, in about a second. Running it twice — at the
-merge base and at the head — and subtracting is the whole mechanism. This
-paragraph used to say *answerable here and nowhere else*, and the move retired
-that claim: the mechanism needs dokimasia to hand, not dokimasia's repository
-around it. The result is still a claim about a change that few are in a position
-to make, and it is still **cheap-to-refute** by construction — two commands and
-a diff, and anybody with both checkouts can run them.
+merge base and at the head — and subtracting is the whole mechanism, and what it
+needs is dokimasia *to hand* rather than dokimasia's repository around it. The
+result is a claim about a change that few are in a position to make, and it is
+**cheap-to-refute** by construction — two commands and a diff, and anybody with
+both checkouts can run them.
 
 **The goals, in order.**
 
@@ -155,11 +153,9 @@ asks](https://github.com/ajreynol/dokimasia/blob/main/docs/issues.md#open--asks)
 and dokimasia's
 [`TODO.md`](https://github.com/ajreynol/dokimasia/blob/main/TODO.md) currently
 declines to build a machine format for it until somebody asks for exactly this.
-Since the move, "somebody asks" means somebody crosses a repository boundary to
-ask. It was also the shortest route to the thing anoieu's report card said
-*dokimasia* was short of — its consumers were people, and a CI job is not a
-person. That report card is about a repository this project no longer lives in,
-and nothing has been said about paideia.
+Asking crosses a repository boundary, so the ask is staged as `D2` in
+[paideia's discussion file](../../docs/discussion.md) — written down for a
+person to carry, and sent to nobody.
 
 **Out of scope**, explicitly, because a research project with no boundary
 becomes a second tool:
@@ -167,8 +163,8 @@ becomes a second tool:
 - **General code review.** Not style, not naming, not performance, not
   architecture. cvc5's own reviewers and CI do all of that better, and an
   unsolicited opinion on somebody's variable names spends credibility on work
-  that has earned none — dokimasia's, when this project lived there; paideia's
-  now, which is a smaller thing to spend only because there is less of it. The
+  that has earned none — paideia's, which is a smaller thing to spend only
+  because there is less of it. The
   read half is scoped to what dokimasia has measured: the [hygiene
   rules](https://github.com/ajreynol/dokimasia/blob/main/docs/hygiene.md), the
   [contract](https://github.com/ajreynol/dokimasia/blob/main/docs/contract.md),
@@ -185,8 +181,8 @@ becomes a second tool:
   question about a change, it leaves this repository altogether and enters
   dokimasia's register at
   [`docs/issues.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/issues.md),
-  where it is held to that project's bar like anything else. Since the move
-  that is a carry between repositories, and a person does it.
+  where it is held to that project's bar like anything else. That is a carry
+  between repositories, and a person does it.
 - **Speaking for dokimasia, or for paideia.** Nothing here is either one's
   position.
 
@@ -196,8 +192,8 @@ would be goal 3 — what a review has to carry to be wanted — which is a fact
 about one project's maintainers rather than a result. If that turns out to
 generalise, the place for it is [dokimasia's
 `postmortem.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/postmortem.md)
-— somebody else's document since the move, and so a person's to carry it to —
-and not a `report/` here.
+— somebody else's document, and so a person's to carry it to — and not a
+`report/` here.
 
 ## The two limits, named before the first use
 
@@ -224,9 +220,9 @@ does.
 
 **anakrisis posts nothing to cvc5.** The rule comes from [dokimasia's
 `pr-policy.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/pr-policy.md),
-which no longer governs this project by being its parent's: paideia is an
+which does not govern this project by being its parent's: paideia is an
 associate, owes the ecosystem nothing, and has no policy of its own to impose.
-It governs because this project kept it — and keeping it is worth nothing
+It governs because this project keeps it — and keeping it is worth nothing
 unless the standard stays where it was, so: **no separate channel, and no
 lighter standard than it had in dokimasia.** This section says only how that
 lands on a project whose whole output looks like something you would paste into
@@ -260,11 +256,11 @@ touches the outside world.
 
 ## What it inherits from dokimasia, and where
 
-This project was built inside dokimasia's repository because that tool has
-evidence, and the rule then was to cite what it took, so a reader could tell
-what was checked from what was reasoned. The rule holds after the move and
-matters more than it did: none of the following is in this repository, and every
-link in the table leaves it.
+This project has no evidence of its own. dokimasia has it — cases it ran,
+behaviours it verified, places the documentation and the implementation
+disagreed — and the rule is to cite what is taken, so a reader can tell what was
+checked from what was reasoned. None of the following is in this repository, and
+every link in the table leaves it.
 
 | inherited | where it was established |
 | --- | --- |
@@ -277,21 +273,21 @@ link in the table leaves it.
 | running an assistant against a cvc5 checkout without touching anything outside it | [`prompts/check_cvc5_issue`](https://github.com/ajreynol/dokimasia/blob/main/prompts/check_cvc5_issue), [`../empeiria/README.md`](../empeiria/README.md) |
 | **the baseline this project has to beat** — that prompt-based tooling with no instrument already produces useful work | [`prompts/check_cvc5_issue`](https://github.com/ajreynol/dokimasia/blob/main/prompts/check_cvc5_issue), which is the same job with the delta subtracted out |
 
-That table used to end with the reason this was a child of dokimasia rather than
-its own repository: without the inventory there is no delta, and without the
-delta this is a general-purpose reviewer with no instrument and nothing to
-distinguish it. The first half is still true; the conclusion is not. The
-inventory is now something this project reaches across a repository boundary for
-rather than something it sits inside, and every row above is a citation of an
-outside source rather than an inheritance. **That is the standing risk the move
-introduced** — a borrowed instrument is easier to leave broken than a local one,
-and this one is broken right now.
+**The instrument is borrowed, and that is the standing risk.** Without the
+inventory there is no delta, and without the delta this is a general-purpose
+reviewer with no instrument and nothing to distinguish it. The inventory is
+something this project reaches across a repository boundary for rather than
+something it sits inside, so every row above is a citation of an outside source
+rather than an inheritance — and a borrowed instrument is easier to leave broken
+than a local one. What stands against that is the refusal: the command stops and
+says what it could not find, rather than reviewing a change without the one
+thing it was built to bring.
 
 ## Using it
 
-**Not as written, since the move**: every line below that needs the delta needs
-`python3 -m dokimasia report` to be findable, and it is not. The commands are
-left here as the record of the interface rather than as instructions that work.
+Everything but `--list` and `--record` needs a dokimasia checkout, because
+everything else either computes the delta or names dokimasia's documents in a
+prompt. Set `DOKIMASIA_ROOT` where one is not beside this repository.
 
 ```bash
 cd ~/cvc5
@@ -299,10 +295,13 @@ gh pr checkout 12893                  # the person's, or an assistant's: a netwo
 run_anakrisis 12893 --delta           # the inventory delta alone; no assistant
 run_anakrisis 12893                   # the delta, then a review by an assistant
 run_anakrisis 12893 --baseline        # the same review, delta withheld: the control
-run_anakrisis 12893 --show-prompt     # print the prompt, run nothing
+run_anakrisis 12893 --show-prompt     # print the prompt, run no assistant
 run_anakrisis --record 12893          # afterwards: what the maintainers did
 run_anakrisis --list                  # what has been reviewed, and what came back
 ```
+
+`--show-prompt` computes the delta, because the delta is *in* the prompt; what
+it does not do is start an assistant.
 
 The protocol the review follows — what a review must carry, the block it is
 written in, and what *nothing to say* means — is [`review.md`](review.md). The
@@ -314,29 +313,29 @@ record is [`ledger/`](ledger/). The plan is [`TODO.md`](TODO.md).
 one of these may begin. **Moved out of dokimasia into paideia on 2026-09-18**,
 by the same kind of instruction.
 
-`run_anakrisis --delta` and `--baseline` worked and had been run in dokimasia.
-The two limits above were found by running the first: it compared the two
-reports with `diff`, and most of what came back was line numbers moving.
-**`--delta` does not run here** — it looks for dokimasia two directories up and
-finds paideia — and nothing has been done about that. Nothing else exists
-either: no pull request has been reviewed in either arm, the ledger is empty,
-and the review protocol in [`review.md`](review.md) is a first guess written
-before a single review, which is exactly the condition under which a format is
-wrong.
+**`run_anakrisis --delta` and `--baseline` run**, against a dokimasia checkout
+they are pointed at. The two limits above were found by running the first: it
+compared the two reports with `diff`, and most of what came back was line
+numbers moving. Nothing past the interface exists — no pull request has been
+reviewed in either arm, the ledger is empty, and the review protocol in
+[`review.md`](review.md) is a first guess written before a single review, which
+is exactly the condition under which a format is wrong.
 
 There are three endings and a person picks: it graduates into its own
 repository, it is folded into the parent, or it is retired in place with a note
-saying what was learned. Going quiet is not one of them. *Folded into the
-parent* changed meaning with the move and has not been re-decided: the parent is
-now paideia, which has nothing to fold anything into, and the instrument this
-project folds back toward is in dokimasia.
+saying what was learned. Going quiet is not one of them. **What *folded into
+the parent* would mean here is undecided**: the parent is paideia, which has
+nothing to fold anything into, and the instrument this project would fold back
+toward is in dokimasia.
 
 **Owed elsewhere, and not ours to make.** The ecosystem's authoritative name
 register is
 [kanon's glossary](https://github.com/ajreynol/kanon/blob/main/docs/glossary.md),
-kept by the president of eo; editing somebody else's register is a person's
-edit, and this note used to name the wrong repository for it. There is already
-an entry for anakrisis, and the move made two parts of it wrong: it calls this a
-*child project of dokimasia*, and its **Charter** link points into
-`ajreynol/dokimasia`. Both are owed a correction. paideia itself has no entry at
-all.
+kept by the president of eo, and editing somebody else's register is a person's
+edit. Read on 2026-09-18, its entry for anakrisis is wrong in two places — it
+calls this a *child project of dokimasia*, and its **Charter** link points at a
+path in `ajreynol/dokimasia` that no longer exists, since that repository
+removed the directory — and there is no entry for paideia at all. Both
+corrections are asked for as `D1` in [paideia's discussion
+file](../../docs/discussion.md), staged there and carried by nobody but a
+person.

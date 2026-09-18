@@ -1,0 +1,13 @@
+# Working space, untracked and saying so.
+#
+# scratch/      anything transient: a run's output, a scratch checkout, notes
+#               nobody should have to read
+# *.local.md    a document deliberately not committed, carrying a line at the
+#               top that says so — otherwise a reader cannot tell an intention
+#               from an oversight
+
+scratch/
+*.local.md
+
+__pycache__/
+*.pyc
