@@ -10,10 +10,10 @@ reviewed, which is the condition under which a format is reliably wrong. It is
 meant to be replaced after two or three real ones, and
 [`TODO.md`](TODO.md) says so as a task rather than as a hope.
 
-**The delta half needs dokimasia's analyses, which are in another repository.**
+**The delta half needs dokimasia's analyzer, which is in another repository.**
 `run_anakrisis` is told where that checkout is and refuses to run when it cannot
 find one; the charter says how. Nothing in this protocol turns on where the
-analyses live, so nothing here was written around that.
+analyzer lives, so nothing here was written around that.
 
 ## A review has two halves and they are not equally good
 
@@ -24,7 +24,7 @@ project will embarrass itself.
 
 | | the delta | the read |
 | --- | --- | --- |
-| produced by | `run_anakrisis --delta` — two runs of dokimasia's analyses, subtracted | an assistant, reading the diff |
+| produced by | `run_anakrisis --delta` — two runs of dokimasia's analyzer, subtracted over observation ids | an assistant, reading the diff |
 | what it can say | *this change moved a number dokimasia tracks* | *this looks like it does something dokimasia has evidence about* |
 | how it is wrong | dokimasia's analysis is wrong, or the change is invisible to it | any of the ordinary ways a confident reading is wrong |
 | in the review | quoted verbatim, never paraphrased | at most a few lines, each citing what grounds it |
@@ -35,30 +35,36 @@ with an opinion about somebody's naming.
 
 **And there is a third thing a review can be, which is a control.**
 `run_anakrisis --baseline` runs the same review with the delta withheld,
-because the baseline for this task is not *no review*: it is
-[`check_cvc5_issue`](https://github.com/ajreynol/dokimasia/blob/main/prompts/check_cvc5_issue),
-prompt-based tooling with no instrument in it, which already produces useful
-work. A control review is written to the same protocol, is labelled `arm:
+because the baseline for this task is not *no review*: it is prompt-based
+tooling with no instrument in it, which already produces useful work — the
+charter says where that is established now that dokimasia has retired the
+launcher it was established with. A control review is written to the same
+protocol, is labelled `arm:
 baseline` in its header, and is the only thing that can turn *the delta helped*
 from an impression into a comparison. Where a pull request has both, neither is
 read without the other.
 
 ## What the delta may claim, exactly
 
-The delta is a diff of what `dokimasia report` printed at two commits, with line
-numbers normalised away and reordering ignored. So a delta line means:
+The delta is the set difference between the observations dokimasia's analyzer
+recorded at the two commits, taken over ids that carry no revision, no line
+number and no wording. So a delta line means:
 
-> at the head of this branch, dokimasia's analyses print this where they
-> printed that at the merge base.
+> at the head of this branch, dokimasia records this observation where it did
+> not at the merge base, or the reverse.
 
-It does **not** mean the change caused it — a rebase, an unrelated file, or a
-count that moved for a reason elsewhere in the diff all produce the same line.
-Attributing a delta line to the change is the first thing the read has to do,
-and it is done by finding the hunk in `git diff BASE...HEAD` that produced it.
-**A delta line nobody could attribute stays in the review as unattributed**,
-which is more useful than dropping it and much more useful than guessing.
+It does **not** mean the change caused it — a rebase, an unrelated file, or an
+observation that appeared for a reason elsewhere in the diff all produce the
+same line. **Nor does a `-` and a `+` under one code necessarily mean two
+things happened**: an entity cvc5 renamed leaves exactly that shape, because a
+renamed entity is a new id. Attributing a delta line to the change is the first
+thing the read has to do, and it is done by finding the hunk in
+`git diff BASE...HEAD` that produced it; checking the rename reading is part of
+that and not a separate step. **A delta line nobody could attribute stays in the
+review as unattributed**, which is more useful than dropping it and much more
+useful than guessing.
 
-Two limits bound every delta and belong in any review that quotes one; the
+Three limits bound every delta and belong in any review that quotes one; the
 charter states them in full and they are not restated here beyond the sentence
 that matters: **an empty delta is not a clean bill of health.**
 

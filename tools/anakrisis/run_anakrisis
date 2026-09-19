@@ -5,8 +5,9 @@
 #
 # The job is one question: what does this change do to the inventory of ways
 # cvc5 can produce no proof? That half is computed rather than judged --
-# dokimasia's analyses are run at the merge base and at the head and subtracted
-# -- and an assistant reads a delta it did not produce. See review.md.
+# dokimasia's analyzer is run at the merge base and at the head, and the two
+# dumps are subtracted over observation ids -- and an assistant reads a delta it
+# did not produce. See review.md.
 #
 # dokimasia is another repository. Set DOKIMASIA_ROOT, or keep a checkout of it
 # beside this one; this refuses to run rather than guessing further.
@@ -18,10 +19,10 @@
 #   run_anakrisis --record 12893        afterwards: what the maintainers did
 #   run_anakrisis --list                what has been reviewed, and what came back
 #
-# The baseline for this task already exists. dokimasia's
-# prompts/check_cvc5_issue hands an assistant a prompt and a checkout and gets
-# useful work out of it with no instrument at all, and that is what this has to
-# beat -- not "no review".
+# The baseline for this task already exists. Prompt-based tooling that hands an
+# assistant a prompt and a checkout gets useful work out of the arrangement with
+# no instrument at all, and that is what this has to beat -- not "no review".
+# README.md says where that is established.
 # So --baseline runs the same review with the delta withheld: the two prompts
 # differ by the delta and by nothing else, which is what makes the comparison a
 # measurement rather than an impression.
@@ -29,15 +30,15 @@
 # It makes no network calls: it reviews whatever is checked out, and prints the
 # fetch command rather than running it. Nothing is pushed, nothing is posted, no
 # review is submitted and no pull request is approved -- ever. The governing
-# document is dokimasia's docs/pr-policy.md, kept here by this project's own
-# choice now that dokimasia is not its parent, and unchanged.
+# document is the bar in dokimasia's docs/findings.md, kept here by this
+# project's own choice now that dokimasia is not its parent, and unchanged.
 
 set -euo pipefail
 
 HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 LEDGER="$HERE/ledger"
 
-# Where dokimasia is. The delta is two runs of *its* analyses and the review is
+# Where dokimasia is. The delta is two runs of *its* analyzer and the review is
 # scoped to *its* documents, and neither is in this repository, so this cannot be
 # derived from the script's own location: DOKIMASIA_ROOT answers it if it is set,
 # and otherwise a checkout beside this repository, which is how these trees are
@@ -63,13 +64,13 @@ require_doki() {
     exit 2
   fi
   missing=""
-  for rel in dokimasia/__main__.py docs/hygiene.md docs/contract.md docs/pr-policy.md; do
+  for rel in scripts/dokimasia_analyzer docs/hygiene.md docs/contract.md docs/findings.md; do
     [ -e "$DOKI/$rel" ] || missing="$missing $rel"
   done
   if [ -n "$missing" ]; then
     echo "run_anakrisis: $DOKI does not look like a dokimasia checkout." >&2
     echo "               missing:$missing" >&2
-    echo "               The first is the module the delta runs; the others are" >&2
+    echo "               The first is the command the delta runs; the others are" >&2
     echo "               the documents the read half is scoped to, and the prompt" >&2
     echo "               names every one of them by path." >&2
     exit 2
@@ -252,6 +253,7 @@ fi
 # --- the delta ---------------------------------------------------------------
 BASESUB=$(git -C "$ROOT" log -1 --format='%h %s' "$BASE")
 HEADSUB=$(git -C "$ROOT" log -1 --format='%h %s' "$HEADSHA")
+PROV=""                          # the control arm computes none, on purpose
 
 if [ "$BASELINE" = 1 ]; then
   if [ "$MODE" = delta ]; then
@@ -276,71 +278,105 @@ trap cleanup EXIT
 rmdir "$WT"                       # git wants to create it itself
 git -C "$ROOT" worktree add --detach --quiet "$WT" "$BASE"
 
-BASEOUT=$(mktemp); HEADOUT=$(mktemp)
-trap 'cleanup; rm -f "$BASEOUT" "$HEADOUT"' EXIT
-( cd "$DOKI" && python3 -m dokimasia report "$WT" ) > "$BASEOUT"
-( cd "$DOKI" && python3 -m dokimasia report "$ROOT" ) > "$HEADOUT"
+DUMPS=$(mktemp -d)
+trap 'cleanup; rm -rf "$DUMPS"' EXIT
 
-DELTA=$(python3 - "$BASEOUT" "$HEADOUT" <<'PY'
-"""The subtraction, as a multiset difference over normalised lines.
+# Two runs of dokimasia's analyzer, writing dumps rather than prose. --no-update
+# touches no database, so this needs no Koine checkout and mutates nothing of
+# theirs. The banner each run prints is provenance, so it goes to stderr rather
+# than into the delta.
+"$DOKI/scripts/dokimasia_analyzer" --cvc5 "$WT"   --no-update --dump "$DUMPS/base.json" >&2
+"$DOKI/scripts/dokimasia_analyzer" --cvc5 "$ROOT" --no-update --dump "$DUMPS/head.json" >&2
 
-A positional diff of the two reports is mostly noise: a site whose line number
-moved reads as a change, and a list the parent prints in an order that is not
-stable reads as several. Both were the first version of this, and both are the
-reason it is a set difference over lines with `:NNN` normalised away.
+# The comparability check, before the subtraction and separately from it. Two
+# runs are subtractable only if they selected the same analyses and each covered
+# its whole scope; without that, a record present in one and absent from the
+# other says nothing about cvc5. This refuses rather than qualifying, because a
+# qualified delta is one somebody reads the first line of.
+PROV=$(python3 - "$DUMPS/base.json.run.json" "$DUMPS/head.json.run.json" 2>&1 <<'PY'
+import json
+import sys
 
-What survives is what the parent printed at one commit and not the other, which
-is the claim this can actually make.
+base, head = (json.load(open(p, encoding="utf-8")) for p in sys.argv[1:3])
+
+if base.get("analyses") != head.get("analyses"):
+    sys.exit("the two runs selected different analyses:\n"
+             f"  base {base.get('analyses')}\n  head {head.get('analyses')}")
+incomplete = [n for n, r in (("base", base), ("head", head)) if not r.get("complete")]
+if incomplete:
+    sys.exit(f"{' and '.join(incomplete)} did not cover the whole declared scope "
+             "(`complete` is false), so the difference is over a partial catalogue")
+if base.get("analyzer_sha256") != head.get("analyzer_sha256"):
+    sys.exit("the two runs were produced by different analyzer implementations")
+
+
+def digest(run):
+    return [t.get("input_sha256") for t in run.get("targets", ())]
+
+
+print("analyses  " + ", ".join(base.get("analyses", ())))
+print("analyzer  " + (base.get("analyzer_commit") or "?")[:12]
+      + (", dirty" if base.get("analyzer_dirty") else "")
+      + f", implementation {(base.get('analyzer_sha256') or '?')[:12]}")
+if digest(base) == digest(head):
+    print("input     identical at both commits -- nothing this analyzer reads "
+          "changed, so an empty delta below is the only possible result")
+PY
+) || {
+  echo "run_anakrisis: the two runs are not subtractable." >&2
+  printf '               %s\n' "$PROV" >&2
+  exit 3
+}
+
+DELTA=$(python3 - "$DUMPS/base.json" "$DUMPS/head.json" <<'PY'
+"""The subtraction, as a set difference over observation ids.
+
+Every record in a dump carries `id`, which dokimasia computes from
+`[owner, code, entity]` and from nothing else -- no revision, no line number
+and no wording -- so the same finding at the merge base and at the head has the
+same id. The difference of the two id sets is therefore exact: not a diff, not
+normalised prose, and not sensitive to how anything is printed.
+
+What it is *not* is a rename tracker. A renamed entity is a new id, so it reads
+as one removal and one addition rather than as a move, and the pair is only
+visible to somebody who looks at it.
 """
-import collections
-import re
+import json
 import sys
 
 
 def load(path):
-    """(section, normalised line) -> [original lines], in the order printed."""
-    section, order, seen = "(top)", [], collections.defaultdict(list)
-    for raw in open(path, encoding="utf-8", errors="ignore"):
-        line = raw.rstrip("\n")
-        if line.startswith("== "):
-            section = line[3:].strip()
-            continue
-        if not line.strip() or set(line.strip()) <= {"=", "-"}:
-            continue
-        key = (section, re.sub(r":\d+\b", ":L", line.strip()))
-        if not seen[key]:
-            order.append(key)
-        seen[key].append(line)
-    return seen, order
+    return {r["id"]: r for r in json.load(open(path, encoding="utf-8"))}
 
 
-base, _ = load(sys.argv[1])
-head, order = load(sys.argv[2])
-counts = collections.Counter({k: len(v) for k, v in head.items()})
-counts.subtract({k: len(v) for k, v in base.items()})
-
-added = [k for k in order if counts[k] > 0]
-removed = [k for k in base if counts[k] < 0]
-if not added and not removed:
+base, head = (load(p) for p in sys.argv[1:3])
+gone = [base[i] for i in base if i not in head]
+new = [head[i] for i in head if i not in base]
+if not gone and not new:
     sys.exit(0)
 
-# Grouped by analysis, removals before additions, so a count that moved reads as
-# the pair it is.
-sections = []
-for k in removed + added:
-    if k[0] not in sections:
-        sections.append(k[0])
-for sec in sections:
-    print(f"== {sec}")
-    for k in removed:
-        if k[0] == sec:
-            print("  - " + base[k][0].strip())
-    for k in added:
-        if k[0] == sec:
-            print("  + " + head[k][0].strip())
+
+def line(sign, r):
+    text = f"  {sign} {r.get('entity') or r.get('bug') or r['id']}"
+    description = (r.get("description") or "").strip()
+    return f"{text} -- {description}" if description else text
+
+
+codes = []
+for r in gone + new:
+    if r.get("code") not in codes:
+        codes.append(r.get("code"))
+for code in sorted(codes, key=str):
+    print(f"== {code}")
+    for r in sorted(gone, key=lambda r: str(r.get("entity"))):
+        if r.get("code") == code:
+            print(line("-", r))
+    for r in sorted(new, key=lambda r: str(r.get("entity"))):
+        if r.get("code") == code:
+            print(line("+", r))
     print()
-print(f"{len(removed)} line(s) gone, {len(added)} new, "
-      f"across {len(sections)} analysis/analyses.")
+print(f"{len(gone)} observation(s) gone, {len(new)} new, "
+      f"across {len(codes)} code(s).")
 PY
 ) || {
   # Never `|| true` here. A crash in the subtraction exits with no output, and
@@ -352,7 +388,7 @@ PY
 }
 
 if [ -z "$DELTA" ]; then
-  DELTA="none -- the analyses printed the same thing at both commits."
+  DELTA="none -- no observation appeared or disappeared at the declared scope."
 fi
 
 fi
@@ -367,14 +403,17 @@ print_delta() {
     echo
     return
   fi
-  echo "   how    dokimasia report, run at both; line numbers normalised, order ignored"
+  echo "   how    dokimasia_analyzer --no-update --dump, run at both;"
+  echo "          set difference over observation ids"
+  printf '%s\n' "$PROV" | sed 's/^/   /'
   echo
   printf '%s\n' "$DELTA"
   echo
-  echo "   An empty or small delta is not a clean bill of health. This is a diff"
-  echo "   of what dokimasia report printed, and that report is prose written for"
-  echo "   a reader: it summarises and it truncates. It is also static -- no"
-  echo "   build, no run. See $HERE/README.md, 'The two limits'."
+  echo "   An empty delta is not a clean bill of health. It means no observation"
+  echo "   appeared or disappeared at the declared scope -- and the scope is the"
+  echo "   nine observation-producing analyses, not the measurements beside them."
+  echo "   A renamed entity reads as one removal and one addition. It is also"
+  echo "   static -- no build, no run. See $HERE/README.md, 'The three limits'."
 }
 
 if [ "$MODE" = delta ]; then
@@ -390,15 +429,20 @@ merits, and do not try to reconstruct what a delta would have said."
   STEP1="1. **Read the diff.** \`git diff $BASE...$HEADSHA\` is the change."
 else
   PREAMBLE="**Half of the review is already done and you did not do it.** The inventory
-delta below was computed by running dokimasia's analyses at the merge base and
-at the head of this branch and subtracting. Do not recompute it, do not
-second-guess the numbers, and quote it into the block verbatim."
+delta below was computed by running dokimasia's analyzer at the merge base and
+at the head of this branch and subtracting the two dumps over observation ids.
+Do not recompute it, do not second-guess the numbers, and quote it into the
+block verbatim."
   STEP1="1. **Attribute each delta line to the diff.** \`git diff $BASE...$HEADSHA\` is
    the change. For each line above, find the hunk that produced it and say so.
-   A delta line has three possible readings and they are not equally likely: the
-   change caused it, something unrelated in the range caused it, or dokimasia is
-   wrong. If you cannot attribute a line, say that -- an unattributed line stays
-   in the review as unattributed, and guessing is worse than either."
+   A delta line has four possible readings and they are not equally likely: the
+   change caused it, it is one half of a rename whose other half is the opposite
+   sign in the same block, something unrelated in the range caused it, or
+   dokimasia is wrong. Check the rename reading first, because the subtraction
+   cannot see one: a \`-\` and a \`+\` under the same code with entity names that
+   differ only in spelling are one moved thing, not two. If you cannot attribute
+   a line, say that -- an unattributed line stays in the review as unattributed,
+   and guessing is worse than either."
 fi
 
 read -r -d '' PROMPT <<PROMPT_END || true
@@ -432,9 +476,10 @@ $STEP1
    complete one: most pull requests to this project do not touch proof
    production. Choose it when the delta is empty and the diff touches nothing on
    the list. Do not manufacture a point in order to have written a review.
-4. **Hold anything about behaviour to having been run.** This repository has
-   been confidently wrong three times in one sitting with static arguments that
-   read correctly -- $DOKI/docs/pr-policy.md records all three. If you claim
+4. **Hold anything about behaviour to having been run.** The project this
+   instrument is borrowed from has been confidently wrong three times in one
+   sitting with static arguments that read correctly -- $DOKI/docs/goals.md
+   records all three, and $DOKI/docs/findings.md is the bar. If you claim
    this change makes something happen, say what you ran. If you ran nothing, say
    that instead; it is a weaker claim honestly labelled rather than a stronger
    one you cannot support.

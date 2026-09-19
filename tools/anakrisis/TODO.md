@@ -3,29 +3,36 @@
 One thing is built and nothing it was built to produce is. This is the order the
 rest would go in, so that a reader can tell what is intended from what exists.
 
-**What every task below needs.** `--delta` shells out to `python3 -m dokimasia
-report`, which is in another repository: `DOKIMASIA_ROOT`, or a `dokimasia`
-checkout beside this one. The command refuses to run without it rather than
-reporting a delta it could not compute, so nothing here silently proceeds on a
-missing instrument.
+**What every task below needs.** `--delta` shells out to
+`scripts/dokimasia_analyzer`, which is in another repository: `DOKIMASIA_ROOT`,
+or a `dokimasia` checkout beside this one. The command refuses to run without it
+rather than reporting a delta it could not compute, so nothing here silently
+proceeds on a missing instrument.
 
 ## First
 
 - [x] **`run_anakrisis --delta`** — the computed half. Two runs of dokimasia's
-  analyses, at the merge base and at the head, subtracted. About 2.5s on a cvc5
+  analyzer, at the merge base and at the head, subtracted. About 2s on a cvc5
   checkout, no build, one detached worktree that is removed on any exit.
 - [x] **Make the subtraction mean something.** The first version compared the
   two reports with `diff` and returned mostly line numbers moving and lists in
-  an unstable order. It is now a set difference over lines with `:NNN`
-  normalised away, which is the only reason the output is readable.
+  an unstable order; the second was a set difference over lines with `:NNN`
+  normalised away, which made the output readable and left it a diff of prose.
+- [x] **Make the subtraction exact.** It is now a set difference over the
+  observation ids in dokimasia's dump, which carry no revision, no line number
+  and no wording, so the same finding at both commits compares equal. What the
+  two runs are checked for before subtracting — same analyses, both complete,
+  same analyzer — is in the script beside the subtraction. Run on 2026-09-19
+  over two cvc5 commits two hundred apart: 6 gone, 17 new, 7 codes, about two
+  seconds.
 - [x] **[`review.md`](review.md)** — what a review may claim, the four labels,
   the block, and the sealed jar.
 - [x] **`--baseline`** — the control arm: the same review with the delta
-  withheld. The baseline for this task is
-  [`check_cvc5_issue`](https://github.com/ajreynol/dokimasia/blob/main/prompts/check_cvc5_issue),
-  which is prompt-based tooling with no instrument and already produces useful
-  work, so what has to be shown is that the delta adds something rather than
-  that an assistant can review a diff.
+  withheld. The baseline for this task is prompt-based tooling with no
+  instrument, which already produces useful work, so what has to be shown is
+  that the delta adds something rather than that an assistant can review a diff.
+  The [charter](README.md#the-charter) says where that is established now that
+  dokimasia has retired the launcher it was established with.
 - [ ] **Review one real pull request end to end, in both arms.** Nothing about
   the format above has met a change somebody actually proposed, and a protocol
   designed before its first case is wrong in ways no amount of thinking finds.
@@ -52,14 +59,13 @@ missing instrument.
 
 ## Not yet
 
-- **A machine format out of dokimasia.** The delta is a diff of prose because
-  that is what dokimasia prints, and both of the limits in the
-  [charter](README.md#the-two-limits-named-before-the-first-use) come from it.
-  A structured output would fix them — and building one is dokimasia's
-  decision, not this project's. The ask is written down as `D2` in [paideia's
-  discussion file](../../docs/discussion.md), where it says what has changed
-  since dokimasia declined it and that a no with a reason attached ends it.
-  Carrying it across the boundary is a person's, and nothing sends it.
+- **Teaching the subtraction about renames.** A renamed entity reads as one
+  removal and one addition, which is the third limit in the
+  [charter](README.md#the-three-limits-named-before-the-first-use). Pairing them
+  automatically means guessing that two ids are one thing, and a wrong guess is
+  worse than the shape a reader can see: the review prompt names the reading
+  and a person makes it. Revisit if a real pull request shows the shape often
+  enough to be noise.
 - **An index of open pull requests.** The sibling project here keeps one for
   issues and it earns its place, because picking which issue to work is the
   hard part. Picking which pull request to examine is not: run the delta on the
@@ -70,6 +76,6 @@ missing instrument.
   network call, and it would produce a queue of reviews nobody asked for. If
   the wishue ever lands, cvc5's own CI is where a sweep belongs.
 - **Anything that posts.** No comment, no review, no approval — see the charter
-  and
-  [`pr-policy.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/pr-policy.md).
+  and [the bar in
+  `findings.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/findings.md#the-bar).
   The artifact is a file here.

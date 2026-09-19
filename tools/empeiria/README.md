@@ -1,21 +1,19 @@
 # empeiria
 
 **Footing:** `unadvertised-child` — the parent's front page does not name this
-project, and nothing a reader of paideia sees points inward to it. The
-argument behind that changed with the move and is weaker now: in dokimasia this
-was speculative work that would have borrowed a working tool's credibility the
-moment it were pointed at. paideia is a new and empty repository with no
-credibility to borrow, so what is left is the plain half — a fix for somebody's
-bug has earned nothing yet, and `tools/` is how it is discovered. That is
-enough.
+project, and nothing a reader of paideia sees points inward to it. The argument
+is the one this work started with: paideia publishes a developer's guide to
+cvc5's source that a reader is meant to rely on, and an unapplied fix for
+somebody's bug has earned none of that credibility. `tools/` is how this is
+discovered, and that is enough.
 
 *Can a front end fix cvc5's public bugs, and get better at it by learning from
 how the maintainers answered the last ones?*
 
 **Internal.** A research project held to
 [kanon's research-project rules](https://github.com/ajreynol/kanon/blob/main/docs/policy.md)
-by choice rather than by obligation — paideia is an **associate** of the Eunoia
-ecosystem and owes it nothing — and not a project announcement. It is not linked
+— paideia is a **member** of the Eunoia ecosystem, so those rules bind this
+directory as they bind the rest of the tree — and not a project announcement. It is not linked
 from the root [`README`](../../README.md), which is paideia's only front page,
 and it has no row in the [documentation index](../../docs/README.md) either:
 that index names what this repository publishes, and a research project is not
@@ -23,14 +21,14 @@ among it. `ajreynol/paideia` is a **public** remote: unadvertised means *not
 pointed at*, not *not visible*. Nothing here makes a claim about cvc5 or should be quoted as
 though it did.
 
-**An island, and a weak kind of one.** empeiria reads cvc5's tree and its own
-ledger, and nothing else. The island property says much less here than the
-research-project rules intend, because there is no working tool in this
-repository to be independent of — paideia is a front page, some documents and
-two research projects. What it does still say is the operative half: nothing
-imports this, no test covers it, no baseline ratchets it, no CI job runs it, its
-one script is invoked by hand from somebody else's checkout, and deleting the
-directory leaves the repository exactly as functional.
+**An island.** empeiria reads cvc5's tree and its own ledger, and nothing else.
+What the parent publishes is a written guide, so there is no import path for
+this to be off and the rule's interesting half is inapplicable here. The
+operative half holds in full: nothing imports this, no test covers it, no
+baseline ratchets it, no CI job runs it, its one script is invoked by hand from
+somebody else's checkout, and deleting the directory leaves the repository
+exactly as functional. The link that would break the rule is a pointer inward
+from the guide, and there is none.
 
 **It reaches outside this tree for nothing but the cvc5 checkout.**
 `run_empeiria` resolves its ledger and [`triage.md`](triage.md) relative to its
@@ -44,8 +42,8 @@ fixes cannot be read-only everywhere, so the boundary is drawn precisely:
 *inside this repository* it writes only within `tools/empeiria/`, and that is
 the island property in full. *Outside* it, it may edit a cvc5 working tree a
 person is driving — which is not a new licence but the one dokimasia already
-takes in
-[`pr-policy.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/pr-policy.md),
+takes in [the bar in
+`findings.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/findings.md#the-bar),
 where running an assistant in somebody's checkout is permitted and pushing from
 it is not. If that distinction ever blurs, this note is the thing that was
 wrong.
@@ -165,12 +163,14 @@ and saying so now is cheaper than discovering it later.
 
 ## The PR policy is borrowed, and unchanged
 
-**empeiria does not open pull requests against cvc5.** The rule comes from
-[dokimasia's `pr-policy.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/pr-policy.md), which does not govern this
-project by being its parent's: paideia is an associate, owes the ecosystem
-nothing, and has no policy of its own to impose. It governs because this project
-keeps it — and keeping it is worth nothing unless the standard stays where it
-was, so: **no separate channel, and no lighter standard than dokimasia's own.**
+**empeiria does not open pull requests against cvc5.** The rule comes from [the
+bar in dokimasia's
+`findings.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/findings.md#the-bar),
+which does not govern this project by being its parent's — dokimasia is not its
+parent, and paideia has no reporting policy of its own to impose. It governs
+because this project keeps it, and keeping it is worth nothing unless the
+standard stays where it was, so: **no separate channel, and no lighter standard
+than dokimasia's own.**
 This section only says how its three parts land on a project that writes
 fixes.
 
@@ -180,7 +180,7 @@ fixes.
   send it, and that is most tempting exactly here, where the artifact looks
   ready to go.
 - **The verdict is this project's.** Applying
-  [the bar](https://github.com/ajreynol/dokimasia/blob/main/docs/pr-policy.md#the-bar) to a fix rather than to a finding,
+  [the bar](https://github.com/ajreynol/dokimasia/blob/main/docs/findings.md#the-bar) to a fix rather than to a finding,
   the demanding rule is **run-it**: a patch that has not been built, and whose
   reproducer has not been run against it before and after, is a hypothesis
   wearing a diff. `cheap-to-refute` means the regression test comes with it.
@@ -211,11 +211,11 @@ repository, and every link in the table leaves it.
 
 | inherited | where it was established |
 | --- | --- |
-| the workflow that runs an assistant against a cvc5 issue and writes a `TRIAGE:` / `HUMAN RESPONSE:` block | [`prompts/check_cvc5_issue`](https://github.com/ajreynol/dokimasia/blob/main/prompts/check_cvc5_issue), [`docs/workflows.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/workflows.md) |
+| the workflow that runs an assistant against a cvc5 issue and writes a `TRIAGE:` / `HUMAN RESPONSE:` block | [`docs/cases/out-of-scope-bug-report.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/cases/out-of-scope-bug-report.md). The launcher and the document that defined it were retired from that tree; read on 2026-09-19, the case study is what still records the frame and says this repository now owns it |
 | that a reply is triage and only an artifact settles anything | [`docs/findings.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/findings.md) |
-| that a claim about behaviour is worthless until it has been run | [`docs/pr-policy.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/pr-policy.md) — three static arguments that read correctly and were false |
-| the reporting policy in full — the bar, the three verdicts, and that we never open a PR | [`docs/pr-policy.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/pr-policy.md), shared rather than restated |
-| the postmortem shape — one block per round, about the workflow rather than the subject | [`docs/postmortem.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/postmortem.md) |
+| that a claim about behaviour is worthless until it has been run | [`docs/goals.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/goals.md) — three static arguments that read correctly and were false, every one caught by running something |
+| the reporting policy in full — the bar, the three verdicts, and that we never open a PR | [`docs/findings.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/findings.md#the-bar), shared rather than restated |
+| the postmortem shape — one block per round, about the workflow rather than the subject | [`docs/experience.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/experience.md#what-a-run-learned-about-itself), which is where dokimasia salvaged it when `postmortem.md` was retired |
 
 **What holds the two practices together is a citation, and a citation is weak.**
 dokimasia ran this loop first, wrote the block first, and learned things about it
@@ -250,17 +250,16 @@ format is wrong.
 There are three endings and a person picks: it graduates into its own
 repository, it is folded into the parent, or it is retired in place with a note
 saying what was learned. Going quiet is not one of them. **What *folded into the
-parent* would mean here is undecided**: the parent is paideia, which has nothing
-to fold anything into.
+parent* would mean here is undecided**: the parent publishes a written guide to
+cvc5's source, so folding in would mean this project's output becoming material
+for that guide rather than a command anybody runs — which is a reading, not a
+decision, and the decision is a person's.
 
-**Owed elsewhere, and not ours to make.** The ecosystem's authoritative name
-register is
+**The register has this right.** The ecosystem's authoritative name register is
 [kanon's glossary](https://github.com/ajreynol/kanon/blob/main/docs/glossary.md),
 kept by the president of eo, and editing somebody else's register is a person's
-edit. Read on 2026-09-18, its entry for empeiria is wrong in two places — it
-calls this a *child project of dokimasia*, and its **Charter** link points at a
-path in `ajreynol/dokimasia` that no longer exists, since that repository
-removed the directory — and there is no entry for paideia at all. Both
-corrections are asked for as `D1` in [paideia's discussion
-file](../../docs/discussion.md), staged there and carried by nobody but a
-person.
+edit. Read on 2026-09-19, its entry for empeiria names paideia as the parent and
+its **Charter** link resolves to this file; *paideia* has an entry of its own.
+Both were wrong when this project moved and both were corrected in that tree, so
+nothing is owed here. What the register says about empeiria is the register's, and
+this page is not a second copy of it.

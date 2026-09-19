@@ -105,14 +105,14 @@ part that does apply: παιδεία is the word for how a newcomer is brought i
 practice by the people already inside it, and that is the transaction this
 repository is trying to write down. The name stands.
 
-**It is not in the register yet.** The ecosystem's authoritative name register
-is kanon's [`docs/glossary.md`](https://github.com/ajreynol/kanon/blob/main/docs/glossary.md),
-and as read on 2026-09-18 it has no entry for *paideia* — nor does any other
-project in the trees use the name. An entry is owed to the president of eo, who
-is the one who records what a name means and where the meaning came from; asking
-for it is [`docs/discussion.md`](docs/discussion.md) `D1`. Until that entry
-exists, the two paragraphs above are this repository's working account and not
-the register's.
+**It is in the register, and that entry is the authority rather than this
+one.** The ecosystem's authoritative name register is kanon's
+[`docs/glossary.md`](https://github.com/ajreynol/kanon/blob/main/docs/glossary.md),
+kept by the president of eo, who is the one who records what a name means and
+where the meaning came from; as read on 2026-09-19 it defines *paideia* and
+names the two child projects under it. The two paragraphs above are this
+repository's own account of why the word fits, written so somebody can disagree
+with it, and they do not speak for the register.
 
 ## Where it sits
 
@@ -123,8 +123,10 @@ more — it says nothing about cvc5, which keeps its own documentation, and
 nothing about whether a proof can be trusted. The ecosystem records one footing
 per tool in
 [`ecosystem.json`](https://github.com/ajreynol/kanon/blob/main/scripts/ecosystem/ecosystem.json),
-which is kanon's file to write; as read on 2026-09-18 it carries no entry for
-paideia.
+which is kanon's file to write and not ours; as read on 2026-09-19 its row for
+paideia still describes the tree as it stood before joining, which
+[`docs/discussion.md`](docs/discussion.md) `D3` tells them and asks nothing
+about.
 
 ## How this repository is maintained
 

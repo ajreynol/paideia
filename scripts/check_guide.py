@@ -3,7 +3,8 @@
 
 Checks local Markdown links/fragments, reference definitions, hierarchical
 artifact indexes, the theory sub-guide structure, the documentation index and
-cvc5 source-link pins. With --cvc5-source, also checks source path existence.
+cvc5 source-link pins. With --cvc5-source, also checks source path existence,
+first confirming that tree is at the documented baseline where it can.
 Generates and rewrites no files.
 It does not fetch anything, authenticate an archive, or verify prose semantics.
 Only the Markdown forms used by this guide are supported; this is not a renderer.
@@ -11,6 +12,7 @@ Only the Markdown forms used by this guide are supported; this is not a renderer
 
 import argparse
 import re
+import subprocess
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
@@ -38,6 +40,24 @@ def written_text(path):
     return FENCES.sub("", path.read_text(encoding="utf-8"))
 
 
+def source_revision(source_root):
+    """The revision of --cvc5-source, where it is a checkout and says so.
+
+    A source tree at the wrong revision reports every path the baseline added
+    since as missing, which reads as a guide citing files that do not exist.
+    That failure has happened, and the checkout was one commit behind. An
+    extracted archive carries no revision, so this answers None and the caller
+    says as much rather than asserting the tree matches.
+    """
+    try:
+        revision = subprocess.run(
+            ["git", "-C", str(source_root), "rev-parse", "HEAD"],
+            capture_output=True, text=True, timeout=10)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return revision.stdout.strip() if revision.returncode == 0 else None
+
+
 def anchors(text):
     counts = {}
     result = set()
@@ -57,9 +77,22 @@ def check(source_root=None):
     baseline = texts[BOOTCAMP / "source-baseline.md"]
     match = re.search(r"Upstream commit: `([0-9a-f]{40})`", baseline)
     if not match:
-        return ["source-baseline.md: missing full upstream commit"], 0, 0
+        return ["source-baseline.md: missing full upstream commit"], 0, 0, None
     commit = match[1]
     errors = []
+    # Confirm the source tree is the baseline before reading it. Where it is
+    # not, the path checks are switched off rather than run: reporting paths as
+    # missing from the wrong revision is a false finding, not a weaker one.
+    note = None
+    if source_root:
+        tree_revision = source_revision(source_root)
+        if tree_revision is None:
+            note = ("Source revision not confirmed: --cvc5-source is not a git "
+                    "checkout, so paths were checked against whatever it holds.")
+        elif tree_revision != commit:
+            return ([f"--cvc5-source is at {tree_revision}, not the documented "
+                     f"baseline {commit}; source paths were not checked"],
+                    0, 0, None)
     local_targets = set()
     source_paths = set()
     index_targets = {DOCS / "README.md": set()}
@@ -124,7 +157,7 @@ def check(source_root=None):
             index = DOCS / "README.md"
         if page != index and page not in index_targets.get(index, set()):
             errors.append(f"{page.relative_to(ROOT)}: missing from {index.relative_to(ROOT)}")
-    return errors, len(local_targets), len(source_paths)
+    return errors, len(local_targets), len(source_paths), note
 
 
 def main():
@@ -134,7 +167,7 @@ def main():
     args = parser.parse_args()
     if args.cvc5_source and not (args.cvc5_source / "src/theory/theory.cpp").is_file():
         parser.error("--cvc5-source must point to a cvc5 source root")
-    errors, local_count, source_count = check(args.cvc5_source)
+    errors, local_count, source_count, note = check(args.cvc5_source)
     if errors:
         for error in errors:
             print(error)
@@ -143,7 +176,11 @@ def main():
           f"{source_count} pinned cvc5 paths.")
     if not args.cvc5_source:
         print("Source path existence not checked; pass --cvc5-source to check it.")
-    print("Prose accuracy and source revision identity require separate review.")
+    elif note:
+        print(note)
+    else:
+        print("Source tree confirmed at the documented baseline commit.")
+    print("Prose accuracy requires separate review.")
     return 0
 
 

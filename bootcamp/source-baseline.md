@@ -200,7 +200,13 @@ six shared implementation sections, the repository documentation index and use
 of this source pin.
 Each chapter is indexed by its directory's README; a category README is indexed
 by its parent. Given a source tree, the checker also checks that each linked
-cvc5 path exists. Run these commands from the repository root:
+cvc5 path exists — **after confirming that tree is at the baseline commit,
+where it can.** A checkout at another revision is refused with its revision
+named and no path check is run, because a tree one commit off the baseline
+reports every path the baseline added as missing, which reads as a guide citing
+files that do not exist. An extracted archive carries no revision, so the
+checker says the revision was not confirmed rather than claiming it matched.
+Run these commands from the repository root:
 
 ```sh
 python3 scripts/check_guide.py
@@ -224,11 +230,18 @@ new citation anchors and implementation reading stops. `git diff --check`
 also passed. The tutorial
 inputs and the six-section structure are preserved.
 
+After the discussion and tooling pass on 2026-09-19, the checker passed with
+**33 local targets and 263 distinct pinned cvc5 paths** against a tree extracted
+at the baseline commit, and refused a checkout one commit earlier by naming its
+revision. That refusal is how the revision guard above came to be written.
+
 It does not fetch dependencies, generate prose, authenticate a checkout or
-confirm that a method still behaves as described. Supply an independently
-verified checkout or archive at the baseline. It also does not check external
-sites outside the pinned cvc5 source links. No CI or scheduled maintenance has
-been installed.
+confirm that a method still behaves as described. Confirming the revision is
+not authenticating the tree: it reads what the checkout says its `HEAD` is, and
+an archive says nothing. It also does not check external sites outside the
+pinned cvc5 source links, and a link into another repository in this ecosystem
+is resolved by nothing here. No CI or scheduled maintenance has been
+installed.
 
 ## A maintenance pass
 

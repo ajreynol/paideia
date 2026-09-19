@@ -54,12 +54,15 @@ one sends, posts, pushes or opens anything — ever. Their output is a file in
 their own directory, and whether any of it goes anywhere is yours.
 
 **One of them reaches across a repository boundary.** It computes its result by
-running dokimasia's analyses, which are in another repository, so it has to be
+running dokimasia's analyzer, which is in another repository, so it has to be
 told where that checkout is: `DOKIMASIA_ROOT=/path/to/dokimasia`, or a
 `dokimasia` checkout beside this one, which is the default it tries. It refuses
-to run rather than guessing, and names what it could not find. That dependency
-is the standing risk in this arrangement, and it is [`discussion.md`](discussion.md)
-`D2`.
+to run rather than guessing, and names what it could not find. **That dependency
+is the standing risk in this arrangement**, and nothing removes it: dokimasia
+owes us no stability and we have asked for none. What it does now rest on is a
+command with a stated interface and a documented record shape rather than on the
+layout of somebody's prose, which is what dokimasia recommended when asked. No
+topic is open about it.
 
 ## What is reserved to you
 
@@ -74,29 +77,32 @@ Not an agent's, on any prompt:
 
 ## What is owed elsewhere, and what is open
 
-**The register does not yet know this repository exists.** kanon's
-[`docs/glossary.md`](https://github.com/ajreynol/kanon/blob/main/docs/glossary.md)
-and the register beside it, read on 2026-09-18, have no entry for *paideia*, and
-both describe the two child projects here as belonging to another repository.
-Correcting somebody else's register is their edit and not ours; the ask is
-[`discussion.md`](discussion.md) `D1`.
-
-**The footing was settled by joining, on 2026-09-18.** The three decisions this
-page used to leave open — write an *associate* marker, join outright, or keep a
-note claiming no footing — were resolved by the second: the maintainer directed
-that this repository join, so the front page now carries the
-membership declaration and `.github/workflows/anoieu.yml` runs the shared policy
-check on every push. The dispute that kept the marker unwritten is moot here,
-since *associate* is no longer the word this tree uses about itself; it remains
-open for the repositories still on that footing.
-
-**What joining did not settle.** The ecosystem's own
+**This repository is a member, and one page of somebody else's says
+otherwise.** The front page carries the membership declaration and
+[`.github/workflows/anoieu.yml`](../.github/workflows/anoieu.yml) runs the
+shared policy check on every push, so the mechanical half of the footing is
+decided here on every commit. kanon's
 [`ecosystem.json`](https://github.com/ajreynol/kanon/blob/main/scripts/ecosystem/ecosystem.json)
-records a footing per tool and is kanon's file, not this one; as read on
-2026-09-18 it has no entry for paideia. A member is checked for declaring and
-for the form of its tree, and nothing more — the other half of the footing, that
-a member shares the approach the shared vision argues for, is a judgement no
-check here or anywhere makes.
+records one footing per tool and is kanon's file, not ours; read on 2026-09-19,
+its row for paideia is `candidate` and explains itself by a reading of this tree
+taken before the declaration was written. **Whether that row moves is theirs and
+is not something this repository argues for** — a repository pressing its own
+standing is the one shape the gate in [`discussion.md`](discussion.md) says must
+stop. The notice that the reading is out of date is `D3` there, and it asks for
+nothing.
+
+**The register has the name and both child projects.** kanon's
+[`docs/glossary.md`](https://github.com/ajreynol/kanon/blob/main/docs/glossary.md)
+is the authoritative name register; read on 2026-09-19 it defines *paideia* and
+names anakrisis and empeiria under it, with charter links into this tree.
+Nothing is owed there. Correcting somebody else's register is their edit and
+never ours.
+
+**What no check settles, here or anywhere.** A member is checked for declaring
+and for the form of its tree, and nothing more. The other half — that a member
+shares the approach the shared vision argues for — is a judgement, and the
+vision may never acquire a checker. Nobody's tick says this repository is
+worth having.
 
 ## What is deliberately not here
 
