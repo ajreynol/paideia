@@ -16,11 +16,81 @@ they are equal exactly when all their reads agree. A disequality therefore
 needs an index witnessing different reads. These read/write rules and witnesses
 drive the registration, inference and model-construction code below.
 
+**What can a read return when its index may equal the index of a write?**
+
+Work through the example first; the six implementation sections that follow
+are a reference for tracing or changing that behavior.
+See [Following an inference](../observing.md) for how to read the diagnostics.
+
+## Worked example: a read at a different index
+
+Save as `arrays.smt2`; run `build-dev/bin/cvc5 arrays.smt2`. The expected
+result is `unsat`.
+
+```smt2
+(set-logic QF_AX)
+(declare-sort I 0)
+(declare-sort E 0)
+(declare-const a (Array I E))
+(declare-const i I)
+(declare-const j I)
+(declare-const v E)
+(assert (distinct i j))
+(assert (distinct (select (store a i v) j) (select a j)))
+(check-sat)
+```
+
+The write changes only index `i`. Since `j` is different, both reads at `j`
+must agree. In a lemma-based explanation, the relevant read-over-write
+constraint has the shape:
+
+```text
+i = j  or  select(store(a,i,v),j) = select(a,j)
+```
+
+### Observe the solver
+
+```sh
+build-dev/bin/cvc5 -o post-asserts -o lemmas arrays.smt2
+build-dev/bin/cvc5 -t im arrays.smt2
+```
+
+Find the surviving read-over-write term. If a search inference handles it,
+look for `ARRAYS_READ_OVER_WRITE` and compare its condition with `i != j`.
+The implication form `(=> (not (= i j)) ...)` and the disjunction above express
+the same rule. Follow that identifier to `queueRowLemma` and `dischargeLemmas`.
+If preprocessing removes the store, the resulting equality or contradiction
+explains why no such search event is needed.
+
+Rerun after removing the index disequality. The rule must retain its guard:
+the satisfiable result is your check that the implementation has not treated
+a write at an unknown index as irrelevant.
+
+### Follow into the implementation
+
+Both disjuncts contradict the input. Inspect [queueRowLemma][queue] and
+[dischargeLemmas][discharge] for the search route. Array preprocessing can
+already use `i != j` to remove the store; inspect `-o post-asserts` to see
+whether this particular run needs a search lemma. A semantic example is not
+by itself evidence that a particular lemma counter increased.
+
+Remove `i != j` and the problem becomes satisfiable: take `i = j` and choose
+`v` different from the old value of `a` there. This checks the guard on the
+rule. A rewrite that discarded every store would incorrectly reject this
+variant.
+
+For a separate extensionality exercise, declare two arrays `a,b` and assert
+only `a != b`. Read [notifyFact][extensionality] and identify the new index
+`k` and the lemma `a = b or select(a,k) != select(b,k)`. Even though the
+input contains no reads, the model must distinguish these two generated
+reads. The upstream [arrays and bit-vectors example][example] shows a
+larger problem with concrete index and element sorts.
+
+## Representation and invariants
+
 Source baseline: [2026-09-18](../source-baseline.md). Begin with
 [TheoryArrays][theory], its [class definition][header],
 [array rewriting][rewriter] and [options][options].
-
-## Representation and invariants
 
 ### Reads, writes and several equality relations
 
@@ -39,8 +109,7 @@ model construction and syntactic store-chain relationships.
 The official equality engine handles asserted equalities and congruence.
 `d_mayEqualEqualityEngine` groups arrays used by the array algorithm and default
 value construction. There is also `d_ppEqualityEngine` for preprocessing.
-Thus the bootcamp's “two equality engines” describes only part of the current
-class. A may-equal relation is not a reason to assert actual array equality.
+A may-equal relation is not a reason to assert actual array equality.
 
 ## Preprocessing and registration
 
@@ -101,9 +170,8 @@ representative and index representative, and finds reads connected without a
 relevant intervening write. It explains those paths to produce lemmas.
 
 The weak-equivalence option is **false by default** in this snapshot. Its
-trigger also depends on full effort or eager lemma settings. The bootcamp's
-unqualified weak-equivalence description should not be used as the default
-execution trace. A change in one route needs tests explicitly selecting it.
+trigger also depends on full effort or eager lemma settings. A change in one
+route needs tests explicitly selecting it.
 
 ## Equality and combination
 
@@ -148,50 +216,6 @@ with these entry points for this theory.
 | Read-over-write consequences | `preRegisterTermInternal`, store/read indices and the selected `postCheck` route |
 | Array disequality | `notifyFact`, the cached extensionality witness and its guarded inference |
 | Default values or missing model reads | `computeRelevantTerms`, the may-equal groups and `collectModelValues` |
-
-### Worked example: a read at a different index
-
-Save as `arrays.smt2`; run `build-dev/bin/cvc5 arrays.smt2`. The expected
-result is `unsat`.
-
-```smt2
-(set-logic QF_AX)
-(declare-sort I 0)
-(declare-sort E 0)
-(declare-const a (Array I E))
-(declare-const i I)
-(declare-const j I)
-(declare-const v E)
-(assert (distinct i j))
-(assert (distinct (select (store a i v) j) (select a j)))
-(check-sat)
-```
-
-The write changes only index `i`. Since `j` is different, both reads at `j`
-must agree. In a lemma-based explanation, the relevant read-over-write
-constraint has the shape:
-
-```text
-i = j  or  select(store(a,i,v),j) = select(a,j)
-```
-
-Both disjuncts contradict the input. Inspect [queueRowLemma][queue] and
-[dischargeLemmas][discharge] for the search route. Array preprocessing can
-already use `i != j` to remove the store; inspect `-o post-asserts` to see
-whether this particular run needs a search lemma. A semantic example is not
-by itself evidence that a particular lemma counter increased.
-
-Remove `i != j` and the problem becomes satisfiable: take `i = j` and choose
-`v` different from the old value of `a` there. This checks the guard on the
-rule. A rewrite that discarded every store would incorrectly reject this
-variant.
-
-For a separate extensionality exercise, declare two arrays `a,b` and assert
-only `a != b`. Read [notifyFact][extensionality] and identify the new index
-`k` and the lemma `a = b or select(a,k) != select(b,k)`. Even though the
-input contains no reads, the model must distinguish these two generated
-reads. The upstream [arrays and bit-vectors example][example] shows a
-larger problem with concrete index and element sorts.
 
 ### Relate the example to the papers
 

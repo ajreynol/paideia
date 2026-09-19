@@ -15,6 +15,27 @@ distinctions matter whenever code traverses or caches an expression.
 
 Source baseline: [2026-09-18](source-baseline.md).
 
+## Start with the terms in the running query
+
+In [query.smt2](query.md#a-small-query-to-trace), `x` and `y` denote unknown
+integers, `f` denotes an unknown function, and `f(x)` denotes its application.
+The term `(<= x y)` has Boolean type. Making a node for it does not establish
+that it holds; `assert` supplies that obligation to the solver.
+
+```sh
+build-dev/bin/cvc5 -o pre-asserts -o post-asserts -o subs query.smt2
+```
+
+Locate `f(x)` before and after preprocessing. A term may be replaced, retain
+its syntax, or disappear from the prepared assertions. None of those events
+changes the original node in place. Different printed forms also need not
+mean different mathematical values. You will use this distinction when
+comparing an inference trace with the input.
+
+For a first reading, follow public handles, the application traversal table
+and the three meanings of equality below. Return to value representation,
+attributes and skolems when the code you are changing uses them.
+
 ## Public handles and their managers
 
 At the C++ API boundary, `Term` wraps an internal `Node`, `Sort` wraps a
@@ -38,8 +59,8 @@ This fragment illustrates API construction; it is not a standalone program.
 creates a bound variable. The word “constant” in an API name is not a reliable
 guide to internal `isConst()` behavior.
 
-The bootcamp calls `NodeManager` a singleton. That is obsolete: `TermManager`
-owns a node manager, multiple managers are supported, and solvers using the same
+`TermManager` owns a node manager, multiple managers are supported, and
+solvers using the same
 term manager share its term universe. The deprecated no-argument `Solver`
 constructor uses a thread-local default term manager. Do not mistake that
 compatibility route for the ownership model of all terms. Keep the manager
@@ -165,10 +186,7 @@ or lambdas may denote equal objects without syntactic identity. Do not extend
 constant-computation rule and normal-form requirements.
 
 `getConst<T>()` extracts a payload of the correct C++ type; it is also used
-for indexed-operator payloads. It does not evaluate arbitrary terms. The
-bootcamp's proposals to rename it to `getValue`, `isVar` to `isSymbol`,
-`TypeNode` to `Type`, or `expr/` to `node/` are not the names in this snapshot.
-The bootcamp's `UNINTERPRETED_CONSTANT` is now `UNINTERPRETED_SORT_VALUE`.
+for indexed-operator payloads. It does not evaluate arbitrary terms.
 
 `TypeNode` uses related representation machinery but denotes a sort, not a
 term. Type rules live beside the theories and are wired through kind metadata.
@@ -221,9 +239,8 @@ separately. See the [attribute specializations][attribute-internals].
 
 The ordinary rewriter still caches results in node attributes, through
 [rewriter_attributes.h][rw-attributes]. Different solvers sharing a manager
-can therefore observe shared caches. The bootcamp's suggestion of an RAII
-solver-local replacement should not be described as implemented. A rewrite
-must respect the cache's lifetime and assumptions; context-sensitive or
+can therefore observe shared caches. A rewrite must respect the cache's
+lifetime and assumptions; context-sensitive or
 option-sensitive simplification belongs in a suitably scoped mechanism.
 This observation is a development constraint, not evidence of a particular
 current cache bug.
@@ -247,8 +264,7 @@ The [SkolemManager][skolems] supplies reproducible identities for auxiliary
 symbols. `mkPurifySkolem(t)` returns a symbol representing a term; requesting
 the same purification reuses its identity. `mkSkolemFunction` uses a
 `SkolemId` plus index/cache terms, whose combination determines the symbol and
-its type. Array extensionality witnesses are one example. Current names use
-`SkolemId`; the bootcamp's `SkolemFunId` is historical.
+its type. Array extensionality witnesses are one example.
 
 `mkDummySkolem` creates a fresh auxiliary symbol without such a semantic
 definition. It is useful where a fresh symbol is what the algorithm actually
@@ -256,8 +272,7 @@ needs; using one to bypass a missing definition can make reconstruction and
 proof work harder. `getUnpurifiedForm` exposes one purification step, while
 `getOriginalForm` recursively recovers original terms through purification.
 Skolemization of quantified formulas now also involves the quantifiers'
-dedicated [Skolemize][skolemize] utility; do not look for the whole algorithm
-in a historical `mkSkolemize` entry point.
+dedicated [Skolemize][skolemize] utility.
 
 For example, the string solver may need arithmetic to reason about the length
 of `str.++(a,b)`. A direct equality between that length and `len(a)+len(b)`

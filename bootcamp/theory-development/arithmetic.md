@@ -17,13 +17,80 @@ requirements. A conflict in the relaxation rules out the original problem;
 a successful relaxed assignment still needs validation. This chapter follows
 linear constraints first, then integer reasoning and nonlinear refinement.
 
+**How do inconsistent bounds become an explanation for search?**
+
+Work through the example first; the six implementation sections that follow
+are a reference for tracing or changing that behavior.
+See [Following an inference](../observing.md) for how to read the diagnostics.
+
+## Worked example: a linear conflict with a reason
+
+Save as `arithmetic.smt2`; run `build-dev/bin/cvc5 arithmetic.smt2`. The
+expected result is `unsat`.
+
+```smt2
+(set-logic QF_LRA)
+(declare-const x Real)
+(declare-const y Real)
+(assert (>= x 3))
+(assert (>= y 2))
+(assert (<= (+ x y) 4))
+(check-sat)
+```
+
+A useful mathematical view introduces a tableau variable `s = x + y`.
+The lower bounds imply `s >= 5`, while the last assertion requires `s <= 4`.
+The conjunction of the three input bounds explains the contradiction.
+The implementation can normalize these expressions or find the conflict
+before simplex; this is not a promise of a particular pivot sequence.
+
+### Observe the solver
+
+```sh
+build-dev/bin/cvc5 -o post-asserts -o lemmas arithmetic.smt2
+build-dev/bin/cvc5 -t arith::conflict arithmetic.smt2
+```
+
+Match the normalized inequalities to the three original bounds. For example,
+`-x - y >= -4` is the same upper bound as `x + y <= 4`. A conflict source such
+as `ARITH_CONF_SIMPLEX` leads into the linear core; inspect its explanation
+for all bounds needed to rule out the candidate. A conjunction printed in a
+conflict event is the inconsistent set, as explained in
+[reading conflict output](../observing.md#read-the-event-before-the-formula).
+
+The linear core has paths outside the common `im` trace. An empty `-t im`
+run alone does not establish that arithmetic did no work. After changing `4`
+to `5`, use `:produce-models` and `(get-value (x y))` to check the forced values.
+
+### Follow into the implementation
+
+Use the [constraint representation][constraints] to find where a bound keeps
+its justification, the [tableau][tableau] for row relationships, and the
+[partial model][partial-model] for candidate assignments and bounds. Follow
+these objects back into [TheoryArithPrivate][linear]. Changing a numeric
+bound without maintaining its reason can preserve a local calculation while
+breaking conflict explanation or proof reconstruction.
+
+Two variations isolate different obligations. Change `4` to `5`: the
+problem is satisfiable, and the bounds force `x = 3, y = 2`. Change the
+problem to one integer `z` with `0 < z` and `z < 1`, using `QF_LIA`: it is
+unsatisfiable, although its real relaxation admits `z = 1/2`. Integer bound
+tightening may solve that tiny case without branching. The distinction is
+the absence of an integer model, not a prescribed internal algorithm.
+
+For nonlinear refinement, contrast this with a candidate assigning `x = 2`
+but `x*x = 3`: the linear abstraction can treat the product as an independent
+quantity, while multiplication semantics cannot. Inspect the model values
+used by [NonlinearExtension][nonlinear] before choosing a refinement rule.
+The upstream [linear arithmetic example][example] adds incremental checks
+and value queries.
+
+## Representation and invariants
+
 Source baseline: [2026-09-18](../source-baseline.md). Start with
 [TheoryArith][theory], then follow its delegation into
 [TheoryArithPrivate][linear], [EqualitySolver][equality] and
-[NonlinearExtension][nonlinear]. The bootcamp left most of the checking and
-model callbacks blank; this chapter supplies that missing route.
-
-## Representation and invariants
+[NonlinearExtension][nonlinear].
 
 ### The wrapper and the linear core
 
@@ -111,8 +178,8 @@ so an already-sent conflict or split can hand control back to SAT.
 
 The wrapper then handles nonlinear work at **full effort**. It builds a
 candidate arithmetic model cache and calls `NonlinearExtension::checkFullEffort`.
-This is a correction to a common older mental model: this wrapper's
-`postCheck` explicitly excludes `EFFORT_LAST_CALL`; nonlinear refinement here
+The wrapper's `postCheck` explicitly excludes `EFFORT_LAST_CALL`; nonlinear
+refinement here
 is integrated into full effort.
 
 There is still work at the last-call boundary: `needsCheckLastEffort` flushes
@@ -187,48 +254,6 @@ with these entry points for this theory.
 | Bounds, conflicts or integer repair | `TheoryArithPrivate`, its constraints and the linear core |
 | Surface operators and substitutions | `ppAssert`, `OperatorElim` and the split between rewriting and preprocessing |
 | Nonlinear refinement or candidate values | `NonlinearExtension`, the full-effort model cache and model collection |
-
-### Worked example: a linear conflict with a reason
-
-Save as `arithmetic.smt2`; run `build-dev/bin/cvc5 arithmetic.smt2`. The
-expected result is `unsat`.
-
-```smt2
-(set-logic QF_LRA)
-(declare-const x Real)
-(declare-const y Real)
-(assert (>= x 3))
-(assert (>= y 2))
-(assert (<= (+ x y) 4))
-(check-sat)
-```
-
-A useful mathematical view introduces a tableau variable `s = x + y`.
-The lower bounds imply `s >= 5`, while the last assertion requires `s <= 4`.
-The conjunction of the three input bounds explains the contradiction.
-The implementation can normalize these expressions or find the conflict
-before simplex; this is not a promise of a particular pivot sequence.
-
-Use the [constraint representation][constraints] to find where a bound keeps
-its justification, the [tableau][tableau] for row relationships, and the
-[partial model][partial-model] for candidate assignments and bounds. Follow
-these objects back into [TheoryArithPrivate][linear]. Changing a numeric
-bound without maintaining its reason can preserve a local calculation while
-breaking conflict explanation or proof reconstruction.
-
-Two variations isolate different obligations. Change `4` to `5`: the
-problem is satisfiable, and the bounds force `x = 3, y = 2`. Change the
-problem to one integer `z` with `0 < z` and `z < 1`, using `QF_LIA`: it is
-unsatisfiable, although its real relaxation admits `z = 1/2`. Integer bound
-tightening may solve that tiny case without branching. The distinction is
-the absence of an integer model, not a prescribed internal algorithm.
-
-For nonlinear refinement, contrast this with a candidate assigning `x = 2`
-but `x*x = 3`: the linear abstraction can treat the product as an independent
-quantity, while multiplication semantics cannot. Inspect the model values
-used by [NonlinearExtension][nonlinear] before choosing a refinement rule.
-The upstream [linear arithmetic example][example] adds incremental checks
-and value queries.
 
 ### Relate the example to the papers
 

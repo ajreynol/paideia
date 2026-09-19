@@ -17,12 +17,77 @@ can be compared or passed as arguments; a lambda expression describes such a
 function. This chapter starts with congruence, then explains where the richer
 features enter the same theory implementation.
 
+**When do equal arguments force equal function results?**
+
+Work through the example first; the six implementation sections that follow
+are a reference for tracing or changing that behavior.
+See [Following an inference](../observing.md) for how to read the diagnostics.
+
+## Worked example: explaining a congruence conflict
+
+Save this as `uf.smt2` and run `build-dev/bin/cvc5 uf.smt2` from your cvc5
+checkout. The expected result is `unsat`.
+
+```smt2
+(set-logic QF_UF)
+(declare-sort U 0)
+(declare-const a U)
+(declare-const b U)
+(declare-const c U)
+(declare-fun f (U) U)
+(assert (or (= a b) (= a c)))
+(assert (distinct (f a) (f b)))
+(assert (distinct (f a) (f c)))
+(check-sat)
+```
+
+There are two possible equality branches. If SAT chooses `a = b`, congruence
+forces `f(a) = f(b)`, contradicting the first disequality. If it chooses
+`a = c`, the other disequality conflicts. The disjunction prevents simply
+substituting one unconditional input equality for `a`.
+
+### Observe the solver
+
+```sh
+build-dev/bin/cvc5 -o post-asserts -o lemmas uf.smt2
+build-dev/bin/cvc5 -t theory-check -t im uf.smt2
+```
+
+Locate the disjunction and the two application disequalities after
+preprocessing. Then distinguish input facts from consequences of congruence.
+An `im` event identifies a path through the inference manager; equality-engine
+propagation can take another path. Symmetry breaking can also add equalities
+on this uninterpreted domain. Use an emitted identifier to locate its producer
+before attributing every equality to congruence.
+
+For the satisfiable variant below, enable `:produce-models` before the check
+and request `(get-value (a b (f a) (f b)))`. The useful observation is distinct
+arguments with equal results. The names of uninterpreted values do not matter.
+
+### Follow into the implementation
+
+Read [function-kind registration][register-functions], then
+[term preregistration][register-terms], then the equality engine's
+[explanation interface][explanations]. For the first branch, the relevant
+conflicting assumptions are `a = b` and `f(a) != f(b)`. The corresponding
+clause is `a != b or f(a) = f(b)`. The second branch has the analogous
+clause with `c`. This is a logical explanation of the conflict; the exact
+internal representatives and clause presentation can differ.
+
+Notice the direction of the rule. Ordinary UF does **not** make `f` injective:
+`f(a) = f(b)` does not imply `a = b`. As an exercise, replace the assertions
+by `a != b` and `f(a) = f(b)`. The result should be `sat`, with a function
+interpretation that maps two domain elements to the same result. Compare the
+larger upstream [UF example][example] for function/model queries. Use
+`-o post-asserts` before choosing a breakpoint; even a conditional example
+can be simplified before a particular search callback runs.
+
+## Representation and invariants
+
 Source baseline: [2026-09-18](../source-baseline.md). Main entry:
 [TheoryUF][theory]. Helpers include [HoExtension][ho],
 [CardinalityExtension][card], [ConversionsSolver][conv] and
 [DistinctExtension][distinct].
-
-## Representation and invariants
 
 ### What the solver represents
 
@@ -72,9 +137,7 @@ facts and handles higher-order function disequalities.
 **Extensionality** means that functions with the same result at every argument
 are equal. For **negative** equality `f != g`, it requires an argument at
 which the functions differ. The higher-order extension introduces and manages
-that witness. The bootcamp's description of this trigger as a positive
-function equality is incorrect at this baseline. Positive function equality
-instead participates in congruence.
+that witness. Positive function equality participates in congruence.
 
 `postCheck` runs the cardinality extension where enabled, runs conversions at
 last call, checks the distinct extension, and invokes higher-order checking at
@@ -131,45 +194,6 @@ with these entry points for this theory.
 | Application registration or congruence | `preRegisterTerm` and the registered `APPLY_UF`/`HO_APPLY` function kinds |
 | Function disequality or its model witness | `notifyFact`, `HoExtension` and `collectModelInfoHo` |
 | Finite domains, conversions or distinct constraints | The corresponding extension and its effort/context requirements |
-
-### Worked example: explaining a congruence conflict
-
-Save this as `uf.smt2` and run `build-dev/bin/cvc5 uf.smt2` from your cvc5
-checkout. The expected result is `unsat`.
-
-```smt2
-(set-logic QF_UF)
-(declare-sort U 0)
-(declare-const a U)
-(declare-const b U)
-(declare-const c U)
-(declare-fun f (U) U)
-(assert (or (= a b) (= a c)))
-(assert (distinct (f a) (f b)))
-(assert (distinct (f a) (f c)))
-(check-sat)
-```
-
-There are two possible equality branches. If SAT chooses `a = b`, congruence
-forces `f(a) = f(b)`, contradicting the first disequality. If it chooses
-`a = c`, the other disequality conflicts. The disjunction prevents simply
-substituting one unconditional input equality for `a`.
-
-Read [function-kind registration][register-functions], then
-[term preregistration][register-terms], then the equality engine's
-[explanation interface][explanations]. For the first branch, the relevant
-conflicting assumptions are `a = b` and `f(a) != f(b)`. The corresponding
-clause is `a != b or f(a) = f(b)`. The second branch has the analogous
-clause with `c`. This is a logical explanation of the conflict; the exact
-internal representatives and clause presentation can differ.
-
-Notice the direction of the rule. Ordinary UF does **not** make `f` injective:
-`f(a) = f(b)` does not imply `a = b`. As an exercise, replace the assertions
-by `a != b` and `f(a) = f(b)`. The result should be `sat`, with a function
-interpretation that maps two domain elements to the same result. Compare the
-larger upstream [UF example][example] for function/model queries. Use
-`-o post-asserts` before choosing a breakpoint; even a conditional example
-can be simplified before a particular search callback runs.
 
 ### Relate the example to the papers
 

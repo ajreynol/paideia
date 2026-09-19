@@ -13,6 +13,10 @@ on selected cases. The source checkout and the build directory are separate:
 configuration. A debug build keeps checks and debugging information useful
 when following the solver's execution.
 
+For a first session, finish the checkout and build steps, then go directly to
+the [three-check query](query.md#a-small-query-to-trace). The source directory
+map and build-design sections below are reference material for later changes.
+
 Source baseline: [2026-09-18](source-baseline.md). Start in the root of a cvc5
 checkout, rather than this repository, for the commands below.
 
@@ -55,6 +59,7 @@ A useful starting configuration is:
 ./configure.sh debug --name=build-dev --auto-download --unit-testing
 cmake --build build-dev -j 4
 cmake --build build-dev --target build-tests -j 4
+build-dev/bin/cvc5 --show-config
 ctest --test-dir build-dev -N
 ctest --test-dir build-dev --output-on-failure -L unit
 ```
@@ -65,6 +70,10 @@ for building their executables. For a first change, list tests with `-N`, select
 the relevant unit/API/regression tests, and run the broader checks required by
 the change. The upstream [installation instructions][install] and
 [test targets][tests] give the supported combinations.
+
+Confirm that `--show-config` reports tracing enabled. The tutorial uses output
+tags such as `-o lemmas` and debug traces such as `-t im`; the latter require
+that build feature. `--show-trace-tags` lists available trace tags.
 
 Use `--ninja` if Ninja is installed and `--ccache` if ccache is installed.
 `--asan` and `--ubsan` are useful for lifetime and undefined-behavior bugs.
@@ -170,8 +179,8 @@ belong in the build tree; change the template or metadata that produced them.
 
 ## Can a theory be disabled at build time?
 
-The bootcamp proposes this to reduce binary size and dependency exposure. The
-current configuration does **not** expose a general switch such as
+Reducing binary size or dependency exposure can motivate removing a theory.
+The current configuration does **not** expose a general switch such as
 `--disable-theory=strings`. It has optional packages and feature/build modes.
 Disabling CoCoA, for example, disables the available finite-field solving
 backend; it does not delete finite-field kinds, values, type checking and all
@@ -181,8 +190,7 @@ selection, not removal of code from the binary.
 The source list still includes theory implementations and collects kinds
 across theories. Generated type-checking, rewriting and enumeration dispatch
 can refer to a theory even when a proposed build omits its main solver class.
-This answers the bootcamp's kinds-generation concern: merely skipping
-construction of a `Theory` object cannot implement modular compilation.
+Skipping construction of a `Theory` object cannot implement modular compilation.
 
 A design for actual theory removal would need to define what survives at the
 API and parser boundary, how disabled kinds fail, which utility types remain,

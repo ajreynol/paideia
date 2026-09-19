@@ -16,11 +16,73 @@ a **lazy** strategy delays translation until terms or facts are needed.
 The chapter follows this encoding through the available backends and back
 to word values in the model.
 
+**What changes when arithmetic wraps at a fixed width?**
+
+Work through the example first; the six implementation sections that follow
+are a reference for tracing or changing that behavior.
+See [Following an inference](../observing.md) for how to read the diagnostics.
+
+## Worked example: overflow makes an inequality true
+
+Save as `bit-vectors.smt2`; run `build-dev/bin/cvc5 bit-vectors.smt2`.
+The expected result is `sat`, with `x = #b1111` (the printer may use hex).
+
+```smt2
+(set-logic QF_BV)
+(set-option :produce-models true)
+(declare-const x (_ BitVec 4))
+(assert (bvult (bvadd x #b0001) x))
+(check-sat)
+(get-value (x (bvadd x #b0001)))
+```
+
+The addition is modulo 16. For unsigned values 0 through 14, adding one
+increases the value; for 15 it produces 0. A conceptual adder uses carry
+`c0 = 1`, bits `si = xi xor ci`, and `c(i+1) = xi and ci`. The final carry
+is discarded. The unsigned comparison then relates the four result bits
+to the four input bits. The implementation may rewrite this pattern before
+building a circuit; inspect `ppRewrite`'s `UltAddOne` path as well as the
+[bit-blasting strategies][circuits].
+
+### Observe the solver
+
+```sh
+build-dev/bin/cvc5 -o post-asserts -o subs bit-vectors.smt2
+build-dev/bin/cvc5 --bv-solver=bitblast-internal -o lemmas -t bv-bitblast-internal bit-vectors.smt2
+```
+
+First check whether the overflow pattern became an equality fixing `x`.
+If so, this input tests a useful simplification but does not exercise an adder
+circuit. To investigate the encoding, replace the assertion with
+`(assert (= (bvmul x x) #b1001))`. Its four-bit solutions are 3, 5, 11 and 13.
+Keep the value query and interpret its second value simply as `x + 1`.
+
+Run this variant with each backend. The internal backend exposes bit-blasting
+lemmas to the main solver; the separate backend need not show its bit clauses
+in `-o lemmas`. Compare the returned value with the modular equation, then
+follow the backend-specific trace to the circuit construction.
+
+### Follow into the implementation
+
+To investigate backend routing, run the same file with `--bv-solver=bitblast`
+and with `--bv-solver=bitblast-internal`. In the first route, follow the
+[separate backend][external] from the theory atom to its bit-level assumption;
+in the second, inspect the [internal backend][internal] lemma connecting the
+atom with its encoding. Compare satisfiability and returned values before
+comparing traces: the two routes need not send identical lemmas.
+
+Replace `bvult` with `bvslt`. Now the satisfying value is `#b0111`: signed
+7 wraps to signed -8. This is a useful check that a change preserves both
+width and signedness. For an incremental exercise, temporarily assert
+`x != #b1111` in the original unsigned problem: it becomes `unsat` and must
+be `sat` again after a pop. See the upstream [bit-vector example][example]
+for more construction and query syntax.
+
+## Representation and invariants
+
 Source baseline: [2026-09-18](../source-baseline.md). Read
 [TheoryBV][theory] with the backend it constructs:
 [BVSolverBitblast][external] or [BVSolverBitblastInternal][internal].
-
-## Representation and invariants
 
 ### The backend boundary
 
@@ -51,8 +113,8 @@ For an equality fixing only bits `i..j`, the remaining bits must remain free;
 the substitution cannot replace the entire vector with the narrow value.
 
 `ppRewrite` includes `UltAddOne`, overflow-predicate elimination where
-appropriate, and backend preprocessing. Several equality rewrites from the
-bootcamp now live in `ppStaticRewrite`: solving equalities, optional bitwise
+appropriate, and backend preprocessing. `ppStaticRewrite` handles solving
+equalities, optional bitwise
 equality transformations, and sign-/zero-extension equalities against constants.
 The runtime rewriter, static preprocessing and backend translation therefore
 need separate tests if an operator's normalized representation changes.
@@ -105,14 +167,13 @@ bit blasting after the configured budget. An abstract `sat` result is not a
 finished bit-vector model.
 
 The minimum width and value-refinement budget have dedicated options. This
-feature is not supported by `bitblast-internal` at this baseline. It is a
-substantial addition to the bootcamp's two-backend account, but it does not
-change bit-vector semantics or justify using approximate results.
+feature is not supported by `bitblast-internal` at this baseline. Refinement
+must preserve exact bit-vector semantics.
 
 The current [AbstractionModule header](https://github.com/cvc5/cvc5/blob/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0/src/theory/bv/abstract/abstraction_module.h)
 explicitly cites [BV-ABSTRACTION-2024](../references.md#bv-abstraction-2024),
 originally evaluated in Bitwuzla. Compare the paper's abstract operators and
-refinement lemmas with this integration. The four-bit increment example below
+refinement lemmas with this integration. The four-bit increment example above
 does not exercise expensive multiplication or division; use a suitable wider
 operator when investigating this module.
 
@@ -147,42 +208,6 @@ with these entry points for this theory.
 | An operator or equality transformation | The rewriter, static preprocessing and the selected bit-blast translation |
 | Fact assertion, assumptions or conflicts | The active backend, especially the lifetime of permanent facts versus assumptions |
 | Abstraction or model values | The separate backend's refinement path and value-cache invalidation |
-
-### Worked example: overflow makes an inequality true
-
-Save as `bit-vectors.smt2`; run `build-dev/bin/cvc5 bit-vectors.smt2`.
-The expected result is `sat`, with `x = #b1111` (the printer may use hex).
-
-```smt2
-(set-logic QF_BV)
-(set-option :produce-models true)
-(declare-const x (_ BitVec 4))
-(assert (bvult (bvadd x #b0001) x))
-(check-sat)
-(get-value (x (bvadd x #b0001)))
-```
-
-The addition is modulo 16. For unsigned values 0 through 14, adding one
-increases the value; for 15 it produces 0. A conceptual adder uses carry
-`c0 = 1`, bits `si = xi xor ci`, and `c(i+1) = xi and ci`. The final carry
-is discarded. The unsigned comparison then relates the four result bits
-to the four input bits. The implementation may rewrite this pattern before
-building a circuit; inspect `ppRewrite`'s `UltAddOne` path as well as the
-[bit-blasting strategies][circuits].
-
-To investigate backend routing, run the same file with `--bv-solver=bitblast`
-and with `--bv-solver=bitblast-internal`. In the first route, follow the
-[separate backend][external] from the theory atom to its bit-level assumption;
-in the second, inspect the [internal backend][internal] lemma connecting the
-atom with its encoding. Compare satisfiability and returned values before
-comparing traces: the two routes need not send identical lemmas.
-
-Replace `bvult` with `bvslt`. Now the satisfying value is `#b0111`: signed
-7 wraps to signed -8. This is a useful check that a change preserves both
-width and signedness. For an incremental exercise, temporarily assert
-`x != #b1111` in the original unsigned problem: it becomes `unsat` and must
-be `sat` again after a pop. See the upstream [bit-vector example][example]
-for more construction and query syntax.
 
 ### Relate the example to the papers
 

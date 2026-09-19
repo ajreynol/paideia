@@ -17,11 +17,71 @@ bit-vector expressions that encode their components, rounding and special
 cases. Those expressions then go to bit-vector reasoning. This chapter follows
 both paths and their connections to real arithmetic and model construction.
 
+**Why can two floating-point values compare equal while remaining distinct?**
+
+Work through the example first; the six implementation sections that follow
+are a reference for tracing or changing that behavior.
+See [Following an inference](../observing.md) for how to read the diagnostics.
+
+## Worked example: two meanings of equality
+
+Save as `floating-point.smt2`; run `build-dev/bin/cvc5 floating-point.smt2`.
+The expected result is `sat`. The two `fp.isZero` queries are true; SMT
+equality is false, while `fp.eq` is true.
+
+```smt2
+(set-logic QF_FP)
+(set-option :produce-models true)
+(declare-const x (_ FloatingPoint 8 24))
+(declare-const y (_ FloatingPoint 8 24))
+(assert (fp.eq x y))
+(assert (distinct x y))
+(check-sat)
+(get-value ((fp.isZero x) (fp.isZero y) (= x y) (fp.eq x y)))
+```
+
+The format has 8 exponent bits and 24 significand bits, including the implicit
+leading bit. The two values must be opposite signed zeros. SMT equality
+distinguishes positive zero from negative zero, whereas `fp.eq` equates them.
+NaN cannot satisfy the first assertion, because `fp.eq` is false whenever
+either operand is NaN. Conversely, SMT equality is reflexive even for NaN.
+
+### Observe the solver
+
+```sh
+build-dev/bin/cvc5 -o post-asserts -o lemmas floating-point.smt2
+build-dev/bin/cvc5 -t fp-wordBlastTerm -t im floating-point.smt2
+```
+
+Start with the four returned Boolean values. They check the semantic
+property without requiring you to read the whole encoding. Next find a
+word-blasting event for a symbolic operand and a corresponding `FP_` inference.
+Follow the identifier to its producer; inspect how zero and sign information
+enter that formula. Encodings can be large, so examine one event at a time.
+
+For the NaN variant, compare the queried predicate with the reflexive SMT
+equality `(= x x)`. This separates a mistake in special-value semantics from
+a failure to reach the symbolic encoding.
+
+### Follow into the implementation
+
+Read the [FP rewriter][rewriter] for the expansion of `fp.eq`, then follow
+registration and word blasting in [TheoryFp][theory]. The encoding must retain
+the zero/sign information needed by both relations. Replacing `fp.eq` by SMT
+equality changes this example to `unsat`; using one relation's simplification
+rule for the other can therefore change the answer.
+
+As a second exercise, assert `(not (fp.eq x x))` and ask `(fp.isNaN x)`.
+The answer is `sat` with the predicate true. These tests exercise special-value
+semantics; they do not cover rounding or real-conversion refinement. For those,
+continue with the upstream [floating-point arithmetic example][example],
+keeping symbolic operands if the purpose is to reach the word blaster.
+
+## Representation and invariants
+
 Source baseline: [2026-09-18](../source-baseline.md). Start in
 [TheoryFp][theory], [FpExpandDefs][expand] and the
 [floating-point implementation directory][directory].
-
-## Representation and invariants
 
 ### Concrete evaluation and symbolic word blasting
 
@@ -105,9 +165,8 @@ are not congruence function kinds are consumed without that base assertion.
 At `EFFORT_LAST_CALL`, `postCheck` examines active real-conversion abstractions
 against the candidate model and calls `refineAbstraction`. New lemmas force
 another search. If the procedure cannot establish a valid candidate and cannot
-make the required progress, incompleteness must be reported. A recent change
-in this area makes that explicit; a conversion abstraction is not permission
-to accept an arbitrary real/FP pair.
+make the required progress, incompleteness must be reported. The abstraction
+does not justify accepting an arbitrary real/FP pair.
 
 ## Equality and combination
 
@@ -136,41 +195,6 @@ with these entry points for this theory.
 | Constant evaluation or symbolic encoding | The constant-folding backend or word blaster, according to the triggering input |
 | Underspecified cases and totalization | `FpExpandDefs` and the internal forms that registration expects |
 | Real conversions or candidate models | Abstraction registration, last-call `refineAbstraction` and model collection |
-
-### Worked example: two meanings of equality
-
-Save as `floating-point.smt2`; run `build-dev/bin/cvc5 floating-point.smt2`.
-The expected result is `sat`. The two `fp.isZero` queries are true; SMT
-equality is false, while `fp.eq` is true.
-
-```smt2
-(set-logic QF_FP)
-(set-option :produce-models true)
-(declare-const x (_ FloatingPoint 8 24))
-(declare-const y (_ FloatingPoint 8 24))
-(assert (fp.eq x y))
-(assert (distinct x y))
-(check-sat)
-(get-value ((fp.isZero x) (fp.isZero y) (= x y) (fp.eq x y)))
-```
-
-The format has 8 exponent bits and 24 significand bits, including the implicit
-leading bit. The two values must be opposite signed zeros. SMT equality
-distinguishes positive zero from negative zero, whereas `fp.eq` equates them.
-NaN cannot satisfy the first assertion, because `fp.eq` is false whenever
-either operand is NaN. Conversely, SMT equality is reflexive even for NaN.
-
-Read the [FP rewriter][rewriter] for the expansion of `fp.eq`, then follow
-registration and word blasting in [TheoryFp][theory]. The encoding must retain
-the zero/sign information needed by both relations. Replacing `fp.eq` by SMT
-equality changes this example to `unsat`; using one relation's simplification
-rule for the other can therefore change the answer.
-
-As a second exercise, assert `(not (fp.eq x x))` and ask `(fp.isNaN x)`.
-The answer is `sat` with the predicate true. These tests exercise special-value
-semantics; they do not cover rounding or real-conversion refinement. For those,
-continue with the upstream [floating-point arithmetic example][example],
-keeping symbolic operands if the purpose is to reach the word blaster.
 
 ### Relate the example to the papers
 

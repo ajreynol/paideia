@@ -41,8 +41,8 @@ checkers.
 Two narrower disclaimers ride along. **This is not cvc5's own documentation.**
 cvc5 maintains its own docs, and has not asked for this one; nothing written
 here binds cvc5 or speaks for it, and where this guide and the source disagree,
-the source is right. **And it is not a user manual** — it will not teach you to
-use an SMT solver or to write SMT-LIB.
+the source is right. **And it is not a comprehensive user manual** — it introduces
+the SMT-LIB and diagnostic commands needed to investigate the implementation.
 
 ## The bootcamp artifact
 
@@ -50,10 +50,12 @@ Start with [Walking through cvc5](bootcamp/README.md). Architecture foundations
 cover term ownership, the path of a query and preprocessing.
 [How to develop a theory](bootcamp/theory-development/README.md) is a category
 with a shared workflow, the common theory interface and twelve theory
-sub-guides. Each follows the same six development stages, ending with edit
-locations and validation cases. Each now includes a worked SMT-LIB problem,
-expected results and direct links to the implementation. The architecture
-chapters add query and preprocessing walkthroughs; general development
+sub-guides. Each opens with a worked SMT-LIB problem, expected results and a
+diagnostic exercise, then follows the same six development stages as implementation
+reference. [Following an inference](bootcamp/observing.md) introduces the
+output tags and traces used throughout. [Advanced topics](bootcamp/advanced.md)
+cover cores, models, proofs and investigations of stalled or incomplete runs.
+The architecture chapters add query and preprocessing walkthroughs; general development
 chapters cover building, options, debugging, tests and proof-producing
 interfaces, including a concrete rewrite-to-regression exercise.
 

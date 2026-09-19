@@ -16,8 +16,7 @@ For work inside a theory solver, pair this general workflow with
 [How to develop a theory](theory-development/README.md) and its sub-guide
 for the affected theory.
 
-Source baseline: [2026-09-18](source-baseline.md). This chapter describes the
-engineering interfaces surrounding the bootcamp's architecture. The upstream
+Source baseline: [2026-09-18](source-baseline.md). The upstream
 [contribution instructions][contributing] remain the place to check submission
 requirements.
 
@@ -34,6 +33,82 @@ rewriting, preprocessing, preregistration, fact assertion, theory strategy,
 combination and model construction. Choose the first layer where an invariant
 is lost, rather than adding a compensating check at the last layer where the
 failure is visible.
+
+## Worked change investigation: membership in a singleton
+
+**How do you know a test reaches the rule you intend to change?** First
+predict the simplification, observe it, and only then follow its implementation.
+
+Use an existing rule to practice following an implementation before adding
+one. The equation `member(x, singleton(y)) = (x = y)` is unconditional:
+it depends only on set semantics, so it can be an ordinary rewrite. A claim
+`member(x,A) = true` because the current branch asserts `x in A` has a
+different lifetime and belongs in contextual reasoning.
+
+Save the following as `singleton-member.smt2`:
+
+```smt2
+; EXPECT: unsat
+(set-logic ALL)
+(declare-const x Int)
+(declare-const y Int)
+(assert (set.member x (set.singleton y)))
+(assert (distinct x y))
+(check-sat)
+```
+
+Run it through the ordinary executable and, separately, the upstream runner:
+
+```sh
+build-dev/bin/cvc5 singleton-member.smt2
+python3 test/regress/cli/run_regression.py --tester base build-dev/bin/cvc5 singleton-member.smt2
+build-dev/bin/cvc5 --produce-proofs --check-proofs --proof-check=eager singleton-member.smt2
+```
+
+Before changing the implementation, inspect the prepared input:
+
+```sh
+build-dev/bin/cvc5 -o pre-asserts -o post-asserts -o subs singleton-member.smt2
+build-dev/bin/cvc5 -o lemmas -t im singleton-member.smt2
+```
+
+Membership should reduce to equality; the disequality then contradicts it.
+Preprocessing may already display `false`. In that case, no set search lemma
+is required, and a quiet inference-manager trace is consistent with the
+intended rewrite path. To inspect the exact normalized term, use the rewriter
+unit fixture linked below. Trace presence alone would not test that result.
+
+The expected result is `unsat`; removing the disequality makes it `sat`.
+The ordinary rewrite may settle the whole example, so it exercises
+normalization without necessarily exercising set-theory search. Use the
+[sets chapter's cardinality example](theory-development/sets.md#worked-example-cardinality-counts-values)
+when the changed behavior instead concerns search or model construction.
+
+### Follow the rule into the code
+
+Read these files in order:
+
+| Stage | Concrete source and question |
+| --- | --- |
+| Operator declaration | [Set kinds][set-kinds]: what are `SET_MEMBER`'s argument and result types? |
+| Runtime normalization | [TheorySetsRewriter::postRewrite][set-rewrite]: where is membership over `SET_SINGLETON` replaced by equality? |
+| Further rewriting | The response is `REWRITE_AGAIN_FULL`; what happens if that new equality itself simplifies? |
+| Named proof rule | [Set rewrite rules][set-rules]: locate `sets-member-singleton` and compare both sides with the C++ result |
+| Unit-test fixture | [Set rewriter tests][set-tests]: see how `TestSmt`, the node manager and rewriter are obtained |
+| End-to-end input | Run the small SMT-LIB regression above, then a satisfiable variant |
+
+If changing this rewrite, cover equal and unequal elements, symbolic elements,
+and an element type other than integers. Check the normalized term, not just
+that the rewrite callback was called. Then compare proof reconstruction with
+the named rule. The existence of a similar DSL rule alone does not establish
+that every new C++ result is reconstructible.
+
+To contribute a regression, place it alongside the relevant inputs under
+`test/regress/cli/`, follow their option/feature metadata, and inspect the
+[regression CMake registration][regress-cmake]. `--tester base` above selects
+the output/exit-status check for this one input; it does not run every proof,
+model and alternate-mode tester. The direct proof command illustrates a
+separate check. Record which checks actually ran in the change description.
 
 ## Adding an operator
 
@@ -77,64 +152,6 @@ different places depending on which assumptions and introduced symbols it
 needs. Check termination, type preservation and compatibility with
 node-attribute caches. Check **idempotence** too: rewriting a normalized result
 again should leave it unchanged.
-
-### Worked change investigation: membership in a singleton
-
-Use an existing rule to practice following an implementation before adding
-one. The equation `member(x, singleton(y)) = (x = y)` is unconditional:
-it depends only on set semantics, so it can be an ordinary rewrite. A claim
-`member(x,A) = true` because the current branch asserts `x in A` has a
-different lifetime and belongs in contextual reasoning.
-
-Read these files in order:
-
-| Stage | Concrete source and question |
-| --- | --- |
-| Operator declaration | [Set kinds][set-kinds]: what are `SET_MEMBER`'s argument and result types? |
-| Runtime normalization | [TheorySetsRewriter::postRewrite][set-rewrite]: where is membership over `SET_SINGLETON` replaced by equality? |
-| Further rewriting | The response is `REWRITE_AGAIN_FULL`; what happens if that new equality itself simplifies? |
-| Named proof rule | [Set rewrite rules][set-rules]: locate `sets-member-singleton` and compare both sides with the C++ result |
-| Unit-test fixture | [Set rewriter tests][set-tests]: see how `TestSmt`, the node manager and rewriter are obtained |
-| End-to-end input | Run the small SMT-LIB regression below, then a satisfiable variant |
-
-Save the following as `singleton-member.smt2`:
-
-```smt2
-; EXPECT: unsat
-(set-logic ALL)
-(declare-const x Int)
-(declare-const y Int)
-(assert (set.member x (set.singleton y)))
-(assert (distinct x y))
-(check-sat)
-```
-
-Run it through the ordinary executable and, separately, the upstream runner:
-
-```sh
-build-dev/bin/cvc5 singleton-member.smt2
-python3 test/regress/cli/run_regression.py --tester base build-dev/bin/cvc5 singleton-member.smt2
-build-dev/bin/cvc5 --produce-proofs --check-proofs --proof-check=eager singleton-member.smt2
-```
-
-The expected result is `unsat`; removing the disequality makes it `sat`.
-The ordinary rewrite may settle the whole example, so it exercises
-normalization without necessarily exercising set-theory search. Use the
-[sets chapter's cardinality example](theory-development/sets.md#worked-example-cardinality-counts-values)
-when the changed behavior instead concerns search or model construction.
-
-If changing this rewrite, cover equal and unequal elements, symbolic elements,
-and an element type other than integers. Check the normalized term, not just
-that the rewrite callback was called. Then compare proof reconstruction with
-the named rule. The existence of a similar DSL rule alone does not establish
-that every new C++ result is reconstructible.
-
-To contribute a regression, place it alongside the relevant inputs under
-`test/regress/cli/`, follow their option/feature metadata, and inspect the
-[regression CMake registration][regress-cmake]. `--tester base` above selects
-the output/exit-status check for this one input; it does not run every proof,
-model and alternate-mode tester. The direct proof command illustrates a
-separate check. Record which checks actually ran in the change description.
 
 ## Proof objects are part of the implementation
 
@@ -229,10 +246,11 @@ For diagnostics, these commands illustrate the current entry points:
 
 ```sh
 build-dev/bin/cvc5 --show-trace-tags
-build-dev/bin/cvc5 -t theory-check example.smt2
+build-dev/bin/cvc5 -t theory-check -t im example.smt2
+build-dev/bin/cvc5 -o lemmas example.smt2
 build-dev/bin/cvc5 -o post-asserts -o subs example.smt2
 build-dev/bin/cvc5 -o inst -o inst-strategy example.smt2
-build-dev/bin/cvc5 --stats --stats-all example.smt2
+build-dev/bin/cvc5 --stats --stats-internal example.smt2
 ```
 
 Trace tags need a tracing-enabled build. Search for `Trace("tag")` in the
@@ -247,6 +265,12 @@ specialized traces are useful once that establishes that the term reaches the
 right callback. For performance, use an optimized build and record options,
 input set, time/resource limits and repetitions. Do not rank solver strategies
 by a single debug-build run.
+
+Use [Following an inference](observing.md) for a complete observation session.
+The [advanced topics](advanced.md) explain how to go from an unexpected result
+or stalled run to a core, candidate model, difficulty map or instantiation
+investigation. Keep `--stats-all` for when unchanged counters are useful;
+it is a different filter from `--stats-internal`.
 
 ## Tests that cross the changed boundary
 

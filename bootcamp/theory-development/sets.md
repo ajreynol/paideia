@@ -16,12 +16,77 @@ theories of its elements and to arithmetic for sizes. This chapter follows
 those connections from simple membership consequences to witnesses that
 distinguish sets and values that satisfy their required cardinalities.
 
+**Why must a set solver count distinct values rather than member expressions?**
+
+Work through the example first; the six implementation sections that follow
+are a reference for tracing or changing that behavior.
+See [Following an inference](../observing.md) for how to read the diagnostics.
+
+## Worked example: cardinality counts values
+
+Save as `sets.smt2`; run `build-dev/bin/cvc5 sets.smt2`. The expected result
+is `unsat`. `ALL` enables the combination of sets and arithmetic used here.
+
+```smt2
+(set-logic ALL)
+(declare-const A (Set Int))
+(declare-const x Int)
+(declare-const y Int)
+(assert (set.member x A))
+(assert (set.member y A))
+(assert (distinct x y))
+(assert (= (set.card A) 1))
+(check-sat)
+```
+
+Membership gives two required elements, and the disequality makes their
+values distinct. Hence `card(A) >= 2`, contradicting the asserted size. If
+the disequality is removed, a model may equate `x` and `y`, leaving a
+singleton set. Counting two syntax nodes as two elements would reject that
+satisfiable variant.
+
+### Observe the solver
+
+```sh
+build-dev/bin/cvc5 -o post-asserts -o lemmas sets.smt2
+build-dev/bin/cvc5 -t im sets.smt2
+```
+
+Look for the connection between membership information and an arithmetic
+cardinality bound. The final conflict may be reported by arithmetic even
+though a set inference supplied the decisive constraint. Follow a `SETS_`
+identifier into the cardinality extension and distinguish it from any
+arithmetic split on the element values.
+
+For the size-three variant, enable model production and request
+`(get-value (A x y (set.card A) (set.member x A) (set.member y A)))`.
+Check size 3 and both memberships; the extra element can vary. This tests
+completion of a partially specified set rather than just conflict detection.
+
+### Follow into the implementation
+
+Read the membership collection in [TheorySetsPrivate][private], then the
+[cardinality extension][card] for how membership classes, size constraints
+and model construction interact. Arithmetic owns the size values; the set
+solver supplies the constraints that make those integers actual cardinalities.
+For a model exercise, require `card(A) = 3` while keeping the two distinct
+members. The model must supply a third element even though the input never
+names it. Query membership and cardinality rather than expecting one specific
+choice of that extra integer.
+
+For disequality, the needed witness has a different shape: `A != B` requires
+some `k` with different truth values for `k in A` and `k in B`. It does not
+require `k` to belong specifically to `A`. This symmetric-difference condition
+explains why an inference that always chooses one direction would be too
+strong. Continue with the upstream [set example][example] and
+[relation example][rel-example] to see finite-set and tuple syntax.
+
+## Representation and invariants
+
 Source baseline: [2026-09-18](../source-baseline.md). The public theory wrapper is
 [TheorySets][theory]; most work is in [TheorySetsPrivate][private], with a
 separate [Strategy][strategy], [cardinality extension][card] and
 [relational solver][rels].
-
-## Representation and invariants
 
 ### Membership connects set structure to elements
 
@@ -40,17 +105,14 @@ needed to constrain and construct their sizes.
 
 ## Preprocessing and registration
 
-The current extended-sets option is **`sets-exp`**, replacing the spelling
-`sets-ext` used in the bootcamp. `ppRewrite` checks it for universe,
+The extended-sets option is **`sets-exp`**. `ppRewrite` checks it for universe,
 complement, join-image and comprehension terms. Comprehensions require a
 quantified logic. Aggregate, project, map and fold operations have
 higher-order requirements; fold, aggregate and project use reduction helpers.
 Private preprocessing also expands choose and singleton tests.
 
-The bootcamp mentions a special nested-difference rewrite in `ppRewrite`.
-The current private hook handles choose/singleton expansion; it should not be
-described using that old implementation. Find set algebra normalization in
-the [set rewriter][rewriter] and its rule files.
+Set algebra normalization lives in the [set rewriter][rewriter] and its rule
+files, separately from the private preprocessing hook.
 
 `ppAssert` attempts legal variable elimination, but restricts elimination of
 set variables in extended mode. `preRegisterTerm` checks first-class element
@@ -89,8 +151,7 @@ The current code does **not** simply throw whenever cardinality and relations
 are both present. It records specific incomplete combinations, including
 cardinality directly over relational terms, and related higher-order/cardinality
 cases. If no further inference resolves the issue, `setModelUnsound` carries
-the relevant reason. This is materially different from the bootcamp's
-unconditional rejection description. Support and defaults are in
+the relevant reason. Support and defaults are in
 [sets_options.toml][options] and the corresponding checks.
 
 [SETS-2016](../references.md#sets-2016) and its extended account
@@ -146,45 +207,6 @@ with these entry points for this theory.
 | Membership closure or disequality | `TheorySetsPrivate`, strategy steps and witness inference |
 | Element equality or class merges | Singleton/member metadata and the typed care graph |
 | Cardinality or relational support | The cardinality extension, relational solver and explicit incompleteness cases |
-
-### Worked example: cardinality counts values
-
-Save as `sets.smt2`; run `build-dev/bin/cvc5 sets.smt2`. The expected result
-is `unsat`. `ALL` enables the combination of sets and arithmetic used here.
-
-```smt2
-(set-logic ALL)
-(declare-const A (Set Int))
-(declare-const x Int)
-(declare-const y Int)
-(assert (set.member x A))
-(assert (set.member y A))
-(assert (distinct x y))
-(assert (= (set.card A) 1))
-(check-sat)
-```
-
-Membership gives two required elements, and the disequality makes their
-values distinct. Hence `card(A) >= 2`, contradicting the asserted size. If
-the disequality is removed, a model may equate `x` and `y`, leaving a
-singleton set. Counting two syntax nodes as two elements would reject that
-satisfiable variant.
-
-Read the membership collection in [TheorySetsPrivate][private], then the
-[cardinality extension][card] for how membership classes, size constraints
-and model construction interact. Arithmetic owns the size values; the set
-solver supplies the constraints that make those integers actual cardinalities.
-For a model exercise, require `card(A) = 3` while keeping the two distinct
-members. The model must supply a third element even though the input never
-names it. Query membership and cardinality rather than expecting one specific
-choice of that extra integer.
-
-For disequality, the needed witness has a different shape: `A != B` requires
-some `k` with different truth values for `k in A` and `k in B`. It does not
-require `k` to belong specifically to `A`. This symmetric-difference condition
-explains why an inference that always chooses one direction would be too
-strong. Continue with the upstream [set example][example] and
-[relation example][rel-example] to see finite-set and tuple syntax.
 
 ### Relate the example to the papers
 

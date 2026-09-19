@@ -74,6 +74,45 @@ the slot with “not implemented.”
 | Every FP expansion creates a fresh UF | Some are syntax reductions; totalization is operation-specific: [floating point](theory-development/floating-point.md) |
 | Separation checks at FULL and has no model work | Last-call refinement plus explicit heap-model postprocessing: [separation logic](theory-development/separation-logic.md) |
 | Quantified formula's model Boolean value demonstrates satisfaction | Completeness is separately established by modules: [quantifiers](theory-development/quantifiers.md) |
+| Datatype constructor normalization all belongs in ppRewrite | Constructor equality/clash simplification also belongs in ordinary rewriting: [datatypes](theory-development/datatypes.md) |
+| Nested set difference and old bag unsupported-operator lists describe current preprocessing | Follow the current rewriter, kind declarations and preregistration checks: [sets](theory-development/sets.md), [bags](theory-development/bags.md) |
+
+Historical comparisons are collected here so the teaching chapters can explain
+the implementation directly. The current behavior and its source evidence
+remain in the linked chapters.
+
+## Interfaces blog coverage
+
+The [advanced topics](advanced.md) and the introductory
+[observation exercise](observing.md) cover the diagnostic problems raised by
+[Interfaces for Understanding cvc5](https://cvc5.github.io/blog/2024/04/15/interfaces-for-understanding-cvc5.html).
+Commands follow the pinned source rather than assuming the blog's option
+spellings or defaults still apply.
+
+| Topic | Tutorial destination |
+| --- | --- |
+| Assertion cores; minimization, checking, names and benchmark output | [Unsat cores](advanced.md#unsat-cores) |
+| Cores of theory lemmas and instantiations; inference identifiers and skolems | [Lemma and instantiation cores](advanced.md#lemma-and-instantiation-cores), [reading events](observing.md#read-the-event-before-the-formula) |
+| Proof production, checking, granularity, formats, components and external checking | [Proofs and components](advanced.md#proofs-and-components) |
+| Models, model checking and sufficient model cores | [Models and model cores](advanced.md#models-and-model-cores) |
+| Timeouts, timeout cores, assumptions and per-check budgets | [Timeout cores](advanced.md#timeout-cores) |
+| Difficulty attribution and its modes | [Difficulty](advanced.md#difficulty-is-an-attribution-heuristic) |
+| Unknown explanations and finer incompleteness reasons | [Incompleteness and limits](advanced.md#incompleteness-and-limits) |
+| Statistics, internal counters, timing and inference histograms | [Configuration and statistics](advanced.md#configuration-and-statistics) |
+| Preprocessed assertions and substitutions | [Preprocessing exercise](preprocessing.md#worked-example-a-conditional-inside-a-function-application) |
+| Learned literals, streaming and classification | [Learned literals](advanced.md#preprocessing-and-learned-literals) |
+| Candidate interpretations after unknown | [Candidate models](advanced.md#candidate-models-after-unknown) |
+| Triggers, missing triggers, quantifier names, substitutions and strategy activity | [Quantifier diagnostics](advanced.md#quantifier-triggers-and-instantiations) |
+| Lemma streams and their source identifiers | [Following an inference](observing.md), then each theory's observation exercise |
+| Synthesis candidates, grammars, enumerators and solution annotations | [Synthesis diagnostics](advanced.md#synthesis-diagnostics) |
+| Logic-dependent automatic option configuration | [Configuration](advanced.md#configuration-and-statistics) |
+
+The guide also connects developer traces (`-t im`, `-t theory-check` and
+theory-specific tags) to these output interfaces. It documents their build
+requirements, limited coverage and the conflict-polarity printing detail at
+this source pin. The pinned spellings are `--timeout-core-timeout` and
+`--proof-format-mode`; lemma-core extraction explicitly selects SAT-proof
+core mode.
 
 ## Additions beyond the notes
 
@@ -86,8 +125,9 @@ term equivalence from preservation of satisfiability and explains when each
 transformation is used. The guide index supplies an SMT-LIB reading primer;
 the reference pages explain how to use their records.
 
-The expanded tutorials retain the chapter order and six theory-development
-stages. They add [complete theory examples](theory-development/README.md#choose-a-concrete-starting-problem),
+The refactored reading route begins with a query and observation session.
+Worked examples now precede the six theory-development reference sections.
+These include [complete theory examples](theory-development/README.md#choose-a-concrete-starting-problem),
 an [incremental query](query.md#a-small-query-to-trace), a
 [term traversal comparison](terms.md#walk-one-application-at-both-interfaces),
 an [ITE purification walkthrough](preprocessing.md#worked-example-a-conditional-inside-a-function-application),

@@ -3,9 +3,10 @@
 This is paideia's developer guide, an artifact maintained
 in `bootcamp/`. It follows a term from construction through preprocessing,
 Boolean search, theory reasoning and model construction, then visits each
-theory covered by the original bootcamp. The intended reader knows programming
-and some C++ and wants to change cvc5. The chapters introduce the solver
-concepts before following them into classes and callbacks.
+theory covered by the original bootcamp. The intended reader can read C++ and
+wants to investigate or make a small cvc5 change. You do not need to have
+implemented an SMT solver. The examples introduce the required SMT-LIB syntax
+and solver concepts before following them into classes and callbacks.
 
 cvc5 answers whether a collection of logical constraints can all hold at once.
 For example, over integers, `x > 3` and `x < 5` can both hold: choose `x = 4`.
@@ -31,13 +32,29 @@ the verification limits and how to update the guide.
 
 ## A route through the code
 
-Start with [building and navigating](build.md), then read the architecture
-foundations: [terms and ownership](terms.md), [the path of a query](query.md)
-and [rewriting and preprocessing](preprocessing.md). Continue to
-[How to develop a theory](theory-development/README.md), which supplies a
-shared workflow, the common theory contract and a sub-guide for each theory.
-Use [Making and investigating a change](development.md) for the repository-wide
-work around options, proof plumbing, tests and debugging.
+There are two ways to use this guide. On a first reading, follow the short
+route below and work the opening examples. When changing an implementation,
+return to its detailed sections and source links. You do not need to read all
+twelve theory implementations before making a first change.
+
+| Step | Read and do | Check your understanding |
+| --- | --- | --- |
+| 1 | [Build](build.md#build-a-version-you-can-investigate) and run the [three-check query](query.md#a-small-query-to-trace) | Explain why its answers are `sat`, `unsat`, `sat` |
+| 2 | [Follow an inference](observing.md) on that query | Find a surviving term, an event or simplification, and its source routine |
+| 3 | Read [terms](terms.md) and the [preprocessing example](preprocessing.md#worked-example-a-conditional-inside-a-function-application) | Distinguish expression identity, equivalent rewriting and an auxiliary definition |
+| 4 | Read the [common interface](theory-development/interface.md), then the opening [UF](theory-development/uf.md) and [array](theory-development/arrays.md) exercises | Identify a deduction's premises and why they must remain in its explanation |
+| 5 | Follow the [singleton rewrite investigation](development.md#worked-change-investigation-membership-in-a-singleton) | Connect a semantic rule, its implementation and a regression that would catch a wrong rule |
+
+The query's `x`, `y` and `f` continue through the observation, term and theory
+interface chapters. Specialized theory chapters introduce their own small
+problems when a new mathematical object is needed. Each starts with a question,
+a runnable example, a useful variation and diagnostics to connect it to code.
+The six implementation sections after the example are reference material.
+
+Use [advanced topics](advanced.md) when a result is surprising or a run stalls.
+They cover the diagnostic interfaces in the
+[Interfaces for Understanding cvc5 blog post](https://cvc5.github.io/blog/2024/04/15/interfaces-for-understanding-cvc5.html),
+including cores, proofs, models, incompleteness and quantifier behavior.
 
 The [research bibliography](references.md) connects the tutorials to the
 CVC4/cvc5 literature, with primary paper links and notes about the relevant
@@ -76,14 +93,10 @@ constraint; `check-sat` asks whether the active constraints can all hold.
 *quantifier-free*; `ALL` selects a broad combination. Each worked example
 explains the mathematics separately from this syntax.
 
-For a practical first session, build the pinned checkout, run the
-[three-check query](query.md#a-small-query-to-trace), inspect the
-[conditional-term example](preprocessing.md#worked-example-a-conditional-inside-a-function-application),
-then follow the [singleton rewrite](development.md#worked-change-investigation-membership-in-a-singleton)
-from source to regression. These exercises connect the architecture before
-you choose a specialized theory. Each theory chapter also has a complete
-SMT-LIB input, an explanation of its expected result, source-reading stops,
-and variations that test a different obligation.
+For each example, predict the result before running it. Then inspect one
+relevant transformation or inference and try the suggested variation. A
+refutation paired with a satisfiable case often reveals a missing premise
+more clearly than two similar refutations.
 
 Commands assume a cvc5 source checkout with the executable at
 `build-dev/bin/cvc5`, created by the [build recipe](build.md#build-a-version-you-can-investigate).
@@ -137,6 +150,7 @@ builds on.
 
 | Chapter | What it covers |
 | --- | --- |
+| [Following an inference](observing.md) | A practical first session with output tags, `-t im`, inference identifiers and source searches |
 | [Terms, types and ownership](terms.md) | API/internal representations, term managers, values, attributes and skolems |
 | [The path of a query](query.md) | Solver ownership, contexts and the path from assertions through SAT to candidate models |
 | [Rewriting and preprocessing](preprocessing.md) | Assertion passes, substitutions, term formulas and proof-aware transformations |
@@ -159,7 +173,8 @@ index lives with those sub-guides, alongside their shared contract.
 | Chapter | What it covers |
 | --- | --- |
 | [Building and navigating](build.md) | Build configurations, source layout, generation, theory removal and build-time investigation |
-| [Making and investigating a change](development.md) | Implementing an operator/inference, proof plumbing, options, debugging and tests |
+| [Making and investigating a change](development.md) | A rewrite-to-regression exercise, then operator/inference, proof, option and test interfaces |
+| [Advanced topics: understanding results and stalled runs](advanced.md) | Cores, proof components, models, timeout diagnosis, difficulty, learned literals, instantiations and synthesis diagnostics |
 
 ### Coverage and maintenance
 

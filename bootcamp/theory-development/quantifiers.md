@@ -22,12 +22,79 @@ This chapter follows the instance-generation and model-checking loop, then
 introduces **synthesis**, which searches for an expression or function
 implementation satisfying a specification.
 
+**How does a statement about every value produce a useful ground constraint?**
+
+Work through the example first; the six implementation sections that follow
+are a reference for tracing or changing that behavior.
+See [Following an inference](../observing.md) for how to read the diagnostics.
+
+## Worked example: one useful ground instance
+
+Save as `quantifiers.smt2` and run
+`build-dev/bin/cvc5 -o inst quantifiers.smt2`. The expected satisfiability
+result is `unsat`; diagnostic output can vary with the selected strategy.
+
+```smt2
+(set-logic UFLIA)
+(declare-fun f (Int) Int)
+(declare-const a Int)
+(assert (forall ((x Int)) (! (> (f x) x) :pattern ((f x)))))
+(assert (<= (f a) a))
+(check-sat)
+```
+
+Let `q` name the universal assertion. The ground term `f(a)` matches the
+pattern `f(x)`, proposing `x := a`. An instance has the logical shape
+`q => f(a) > a`. With `q` asserted, arithmetic receives a strict lower
+comparison that conflicts with `f(a) <= a`. The instance is a lemma linking
+the universal obligation to ground reasoning; matching does not itself
+perform the arithmetic refutation.
+
+### Observe the solver
+
+```sh
+build-dev/bin/cvc5 -o trigger -o inst -o lemmas quantifiers.smt2
+build-dev/bin/cvc5 --dump-instantiations-debug -t im quantifiers.smt2
+```
+
+Name the universal formula by adding `:qid grows` alongside its `:pattern`
+attribute. Match the quantifier's name, its trigger, the substitution `x := a`
+and the resulting implication. Search the reported `QUANTIFIERS_INST_`
+identifier to find which strategy submitted it. A trigger describes a possible
+matching route; another enabled strategy may produce the useful instance first.
+
+The dump reports concrete substitutions, while the output tags expose events
+and counts during solving. For an unexpected `unknown`, use `-o incomplete`
+and the [advanced quantifier investigation](../advanced.md#quantifier-triggers-and-instantiations)
+before interpreting the absence of another instance as success.
+
+### Follow into the implementation
+
+Read [TermDb][termdb] for indexed applications, the
+[instantiation engine][ematching] for trigger handling, and
+[Instantiate][instantiate] for the shared submission path. Other enabled
+modules or preprocessing may discover the contradiction first. A user pattern
+makes the intended match explicit, but does not guarantee that E-matching
+will be the module credited for the final answer.
+
+For an equality-aware matching exercise, change the ground comparison to
+`f(b) <= a` and assert `a = b`. The instance at `b`, together with that
+equality, still refutes the input. When studying a failed match, inspect both
+the stored ground term and its equality representative, then check whether
+the proposed instance was discarded as already entailed or duplicated.
+
+Removing the ground comparison leaves a satisfiable formula, for example
+with `f(x) = x + 1`. That mathematical witness does not guarantee a particular
+incomplete strategy returns `sat`. Read the engine's completeness checks when
+the result is `unknown`; producing no new instance is insufficient evidence
+that all integers were covered.
+
+## Representation and invariants
+
 Source baseline: [2026-09-18](../source-baseline.md). Read
 [TheoryQuantifiers][theory], [QuantifiersEngine][engine], the
 [module interface][interface] and [module initialization][modules] in that
 order.
-
-## Representation and invariants
 
 ### Ground search proposes; quantifiers refine
 
@@ -106,7 +173,7 @@ ground terms and equalities.
 
 ### Match an instantiation strategy to its paper
 
-The worked `f(a)` example below illustrates the common instance shape. The
+The worked `f(a)` example above illustrates the common instance shape. The
 following papers explain different ways of finding the substitution; they
 should not be read as interchangeable descriptions of one algorithm.
 
@@ -140,11 +207,11 @@ instantiation rounds and unsupported cases can supply an incompleteness
 reason. `setModelUnsound` then prevents accepting the candidate as a complete
 model; it is not a diagnosis of an already-returned wrong answer.
 
-As a current behavior change, `cegqi-midpoint` is enabled by default. It uses
+`cegqi-midpoint` is enabled by default. It uses
 midpoint-based substitutions for relevant arithmetic cases; the former virtual
 term substitution route is restricted by safe/stable configurations. Defaults
 and restrictions are defined in [quantifiers_options.toml][options] and
-`SetDefaults`, not by which strategies existed when the bootcamp was written.
+`SetDefaults`.
 
 ## Equality and combination
 
@@ -226,47 +293,6 @@ with these entry points for this theory.
 | A new or changed instantiation strategy | The owning `QuantifiersModule`, term utilities and the common `Instantiate` path |
 | Missing work or an unexpected `unknown` | Registration/ownership, nested efforts and per-formula completeness claims |
 | Candidate programs or synthesis interactions | `SynthEngine`, the SyGuS helpers and the datatype extension |
-
-### Worked example: one useful ground instance
-
-Save as `quantifiers.smt2` and run
-`build-dev/bin/cvc5 -o inst quantifiers.smt2`. The expected satisfiability
-result is `unsat`; diagnostic output can vary with the selected strategy.
-
-```smt2
-(set-logic UFLIA)
-(declare-fun f (Int) Int)
-(declare-const a Int)
-(assert (forall ((x Int)) (! (> (f x) x) :pattern ((f x)))))
-(assert (<= (f a) a))
-(check-sat)
-```
-
-Let `q` name the universal assertion. The ground term `f(a)` matches the
-pattern `f(x)`, proposing `x := a`. An instance has the logical shape
-`q => f(a) > a`. With `q` asserted, arithmetic receives a strict lower
-comparison that conflicts with `f(a) <= a`. The instance is a lemma linking
-the universal obligation to ground reasoning; matching does not itself
-perform the arithmetic refutation.
-
-Read [TermDb][termdb] for indexed applications, the
-[instantiation engine][ematching] for trigger handling, and
-[Instantiate][instantiate] for the shared submission path. Other enabled
-modules or preprocessing may discover the contradiction first. A user pattern
-makes the intended match explicit, but does not guarantee that E-matching
-will be the module credited for the final answer.
-
-For an equality-aware matching exercise, change the ground comparison to
-`f(b) <= a` and assert `a = b`. The instance at `b`, together with that
-equality, still refutes the input. When studying a failed match, inspect both
-the stored ground term and its equality representative, then check whether
-the proposed instance was discarded as already entailed or duplicated.
-
-Removing the ground comparison leaves a satisfiable formula, for example
-with `f(x) = x + 1`. That mathematical witness does not guarantee a particular
-incomplete strategy returns `sat`. Read the engine's completeness checks when
-the result is `unknown`; producing no new instance is insufficient evidence
-that all integers were covered.
 
 ### A concrete synthesis entry point
 

@@ -109,8 +109,11 @@ def check(source_root=None):
         ) and page.name != "source-baseline.md":
             errors.append(f"{label}: no source baseline link")
         if page.parent == THEORY_GUIDES and page.name not in {"README.md", "interface.md"}:
-            if re.findall(r"^## (.+)$", body, re.M) != THEORY_SECTIONS:
-                errors.append(f"{label}: expected the six shared theory-development sections")
+            sections = re.findall(r"^## (.+)$", body, re.M)
+            if (not sections or not sections[0].startswith("Worked example: ")
+                    or sections[1:] != THEORY_SECTIONS):
+                errors.append(f"{label}: expected an opening worked example followed by "
+                              "the six shared theory-development sections")
     for page in pages:
         if page == BOOTCAMP / "README.md":
             continue

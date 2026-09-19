@@ -98,6 +98,50 @@ example. Record that build's version, options and outputs separately.
 
 ## Mechanical checks
 
+### Readability and diagnostic pass
+
+On **2026-09-19**, the tutorial was reorganized for a C++ programmer new to
+cvc5 internals. Worked examples moved before implementation reference in the
+architecture and all twelve theory chapters. Each theory gained an observation
+exercise, and the guide gained [Following an inference](observing.md) and
+[advanced diagnostic topics](advanced.md). The
+[blog coverage map](bootcamp-coverage.md#interfaces-blog-coverage) accounts for
+the requested interfaces article. Historical comparisons moved into the
+corrections appendix; the source pin and bibliography were retained.
+
+New diagnostic claims were checked in the pinned option declarations, parser,
+API contracts, inference manager, propositional engine, core/model managers
+and relevant theory trace sites. This includes the `-o lemmas` conflict
+printing detail: `PropEngine::assertTrustedLemmaInternal` prints `getNode()`
+before applying the conflict's negation flag. The guide distinguishes that
+payload from the proven formula printed by the `im` conflict event.
+
+Runtime checks used the same **older 1.3.5.dev build** identified above; the
+pinned revision was not built. A batch of 68 invocations covered concrete
+diagnostic commands, model-valued variations, both bit-vector backends,
+unsat/lemma cores, learned literals, difficulty, proof components, resource
+exhaustion and synthesis with explicit and generated grammars. Sixty-seven
+completed with the expected results; relevant model values and diagnostic
+output were also inspected. The finite-field commands remain source-checked
+only because this executable lacks CoCoA.
+
+The remaining invocation was an extra experimental edge case: replacing the
+core example's query with `(get-timeout-core-assuming (true))` returned `sat`
+despite inconsistent background assertions. This does **not** validate that
+case. Follow-up checks with nontrivial assumptions returned `unsat`; using
+`--print-cores-full` exposed the returned formulas, which were hidden by the
+default name-based printing. The advanced chapter retains the API's intended
+background/assumption distinction and calls out this observed limit. No claim
+is made that the pinned build was tested on the edge case or behaves identically.
+
+These are tutorial smoke checks and selected semantic variations, not the
+cvc5 regression suite or performance measurements. Diagnostic identifiers,
+event order and model choices remain configuration-dependent. The guide
+checker now requires an opening worked example followed by the six shared
+implementation sections in each theory chapter. The final link/structure check
+passed with **33 local targets and 263 pinned cvc5 paths**; `git diff --check`
+also passed.
+
 ### Introductory reading pass
 
 On **2026-09-18**, all 24 tutorial and reference pages were read for accessibility
@@ -151,8 +195,9 @@ reproduce paper experiments or add new runtime claims about cvc5.
 
 The small [guide checker](../scripts/check_guide.py) reads the authored
 Markdown. It checks local links and heading fragments, reference definitions,
-the artifact's hierarchy of chapter indexes, the six shared theory sub-guide
-sections, the repository documentation index and use of this source pin.
+the artifact's hierarchy of chapter indexes, the opening theory example and
+six shared implementation sections, the repository documentation index and use
+of this source pin.
 Each chapter is indexed by its directory's README; a category README is indexed
 by its parent. Given a source tree, the checker also checks that each linked
 cvc5 path exists. Run these commands from the repository root:

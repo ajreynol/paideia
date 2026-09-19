@@ -33,6 +33,82 @@ not a promise that every preprocessing routine runs only once per solver.
 
 Source baseline: [2026-09-18](source-baseline.md).
 
+## Worked example: a conditional inside a function application
+
+**How can search handle a Boolean choice inside a function argument?**
+The example shows the semantic obligation first. Use the later sections as
+reference for the three transformation interfaces and their scope rules.
+
+Save as `preprocessing.smt2` and use the command below. The expected
+satisfiability result is `unsat`.
+
+```smt2
+(set-logic QF_UFLIA)
+(declare-const c Bool)
+(declare-const x Int)
+(declare-const y Int)
+(declare-fun f (Int) Int)
+(assert (distinct (f (ite c x y)) (ite c (f x) (f y))))
+(check-sat)
+```
+
+Whichever branch `c` selects, both sides are the same function application.
+To understand term-formula removal, name the two non-Boolean ITE results
+`k` and `h`. A possible intermediate representation is:
+
+```text
+f(k) != h
+ite(c, k = x, k = y)
+ite(c, h = f(x), h = f(y))
+```
+
+For `c = true`, the definitions give `k = x` and `h = f(x)`; congruence
+contradicts `f(k) != h`. The false branch is analogous. As Boolean clauses,
+the first definition can be written `(not c or k = x)` and
+`(c or k = y)`. Both directions of the branch choice are accounted for.
+Adding only `k = x` would strengthen the input incorrectly.
+
+The original formula and the conjunction with definitions do not have the
+same free-symbol vocabulary. The preservation argument is that a model of
+the original can be extended with appropriate values for `k,h`, and a model
+satisfying the transformed formula and definitions restricts to a model of
+the original. This is the concrete meaning of *equisatisfiability* when
+preprocessing introduces fresh symbols. Dropping the definitions loses
+that argument.
+
+This is a possible intermediate form, not expected literal diagnostic output:
+earlier rewriting or ITE simplification may choose another representation
+or solve the problem. Follow [RemoveTermFormulas][rtf] and the
+[theory preprocessor][theory-preprocessor] when identifying the actual phase.
+The [query chapter](query.md#definitions-must-participate-in-decisions)
+explains why the defining assertions also participate in decision relevance.
+
+```sh
+build-dev/bin/cvc5 -o pre-asserts -o post-asserts -o subs preprocessing.smt2
+build-dev/bin/cvc5 -t im -o lemmas preprocessing.smt2
+```
+
+The [output tags][output] are defined in `base_options.toml`. `post-asserts`
+prints the preprocessed problem and `subs` reports learned top-level
+substitutions. Use a small example where a target operator survives ordinary
+rewriting to investigate theory preprocessing. To study a generated lemma,
+follow the proxy/theory-preprocessor path as well as the initial pass list.
+
+In the output, pair each new name with the definition constraining it. Then
+substitute `c = true` by hand and check that the two applications agree. A
+quiet `im` trace does not mean preprocessing was inactive: it observes the
+inference manager, not every rewrite or assertion-pipeline replacement.
+
+As a variation, change the second branch expression to `(ite c (f y) (f x))`.
+Now the result is `sat`: choose `c = true` and distinct results for `f(x)` and
+`f(y)`. With model production enabled, query those two applications and `c`.
+This checks that purification preserved which value each branch selects.
+
+A useful review sequence is: state the equivalence or equisatisfiability
+argument, identify introduced symbols and their scopes, check how the model
+reconstructs eliminated terms, and check the proof path. Then test the boundary
+cases where the transformation is disabled, repeated, or used after a pop.
+
 ## Three places that can change a term
 
 The [ordinary rewriter][rewriter] recursively normalizes nodes using theory
@@ -63,9 +139,8 @@ Such modes must account for that loss of completeness when reporting results.
 They have additional obligations beyond the ordinary preprocessing contract
 described here.
 
-There is also a `ppStaticRewrite` hook. Several transformations described as
-`ppRewrite` in the bootcamp now live in this separate hook, including some
-arithmetic and bit-vector equality transformations. Check the current override
+There is also a `ppStaticRewrite` hook, which handles transformations including
+some arithmetic and bit-vector equality transformations. Check the current override
 and its caller rather than treating every preprocessing rewrite as one phase.
 
 A useful literature distinction is between discovering a rewrite and
@@ -130,9 +205,8 @@ when congruence depends on it. For example, if `k1` and `k2` are both true,
 
 The current implementation uses `SkolemId::PURIFY` and
 `Env::registerBooleanTermSkolem`. [Env::theoryOf][env] routes these registered
-Boolean term skolems to UF. The old `BOOLEAN_TERM_VARIABLE` kind from the
-bootcamp is not the current mechanism. Registration is scoped in the
-environment, while the skolem's identity belongs to the node manager.
+Boolean term skolems to UF. Registration is scoped in the environment, while
+the skolem's identity belongs to the node manager.
 
 Term context matters. `RemoveTermFormulas` distinguishes a Boolean formula
 position from a Boolean term used as an argument, and its cache includes that
@@ -168,70 +242,9 @@ part of the change.
 [FLEXIBLE-PROOFS-2022](references.md#flexible-proofs-2022) explains how
 preprocessing transformations retain proof dependencies, while
 [REWRITE-DSL-2022](references.md#rewrite-dsl-2022) details reconstruction of
-individual rewrites. In the conditional-term example below, identify both
+individual rewrites. In the conditional-term example above, identify both
 the auxiliary definition and the rewritten assertion: the final assertion's
 proof must still account for the transformation introducing that definition.
-
-### Worked example: a conditional inside a function application
-
-Save as `preprocessing.smt2` and use the command below. The expected
-satisfiability result is `unsat`.
-
-```smt2
-(set-logic QF_UFLIA)
-(declare-const c Bool)
-(declare-const x Int)
-(declare-const y Int)
-(declare-fun f (Int) Int)
-(assert (distinct (f (ite c x y)) (ite c (f x) (f y))))
-(check-sat)
-```
-
-Whichever branch `c` selects, both sides are the same function application.
-To understand term-formula removal, name the two non-Boolean ITE results
-`k` and `h`. A possible intermediate representation is:
-
-```text
-f(k) != h
-ite(c, k = x, k = y)
-ite(c, h = f(x), h = f(y))
-```
-
-For `c = true`, the definitions give `k = x` and `h = f(x)`; congruence
-contradicts `f(k) != h`. The false branch is analogous. As Boolean clauses,
-the first definition can be written `(not c or k = x)` and
-`(c or k = y)`. Both directions of the branch choice are accounted for.
-Adding only `k = x` would strengthen the input incorrectly.
-
-The original formula and the conjunction with definitions do not have the
-same free-symbol vocabulary. The preservation argument is that a model of
-the original can be extended with appropriate values for `k,h`, and a model
-satisfying the transformed formula and definitions restricts to a model of
-the original. This is the concrete meaning of *equisatisfiability* when
-preprocessing introduces fresh symbols. Dropping the definitions loses
-that argument.
-
-This is a possible intermediate form, not expected literal diagnostic output:
-earlier rewriting or ITE simplification may choose another representation
-or solve the problem. Follow [RemoveTermFormulas][rtf] and the
-[theory preprocessor][theory-preprocessor] when identifying the actual phase.
-The [query chapter](query.md#definitions-must-participate-in-decisions)
-explains why the defining assertions also participate in decision relevance.
-
-```sh
-build-dev/bin/cvc5 -o post-asserts -o subs preprocessing.smt2
-```
-
-The [output tags][output] are defined in `base_options.toml`. `post-asserts`
-prints the preprocessed problem and `subs` reports learned top-level
-substitutions. Use a small example where a target operator survives ordinary
-rewriting to investigate theory preprocessing. To study a generated lemma,
-follow the proxy/theory-preprocessor path as well as the initial pass list.
-
-A useful review sequence is: state the equivalence or equisatisfiability
-argument, identify introduced symbols and their scopes, check how the model
-reconstructs eliminated terms, and check the proof path. Then test the boundary
-cases where the transformation is disabled, repeated, or used after a pop.
 
 Next: [How to develop a theory](theory-development/README.md), starting with
 its [common interface](theory-development/interface.md).

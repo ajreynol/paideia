@@ -22,7 +22,7 @@ to a person and is short on purpose; the depth is in the pages it points at.
    the pinned cvc5 source, then update explanations and citations together.
    Theory sub-guides belong in the
    [How to develop a theory](../bootcamp/theory-development/README.md) category
-   and use its common six-section structure.
+   and open with a worked example followed by its six implementation sections.
 
 ## What this repository is responsible for
 

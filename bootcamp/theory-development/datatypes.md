@@ -18,11 +18,73 @@ datatypes take type parameters, as a list can contain integers or strings.
 The implementation below keeps these structural rules consistent with the
 equalities learned during search.
 
+**How can equalities make an apparently ordinary list impossible?**
+
+Work through the example first; the six implementation sections that follow
+are a reference for tracing or changing that behavior.
+See [Following an inference](../observing.md) for how to read the diagnostics.
+
+## Worked example: a cycle through two classes
+
+Save as `datatypes.smt2`; run `build-dev/bin/cvc5 datatypes.smt2`. The
+expected result is `unsat`.
+
+```smt2
+(set-logic QF_UFDTLIA)
+(declare-datatype List ((nil) (cons (head Int) (tail List))))
+(declare-const x List)
+(declare-const y List)
+(assert (= x (cons 0 y)))
+(assert (= y (cons 1 x)))
+(check-sat)
+```
+
+An inductive list must be finite. Here `x` contains `y` as a tail, and `y`
+contains `x`, so neither can be a finite constructor value. Think of the
+constructor metadata as edges between equality classes: `[x] -> [y]` and
+`[y] -> [x]`. The cycle test follows constructor fields through class
+representatives, rather than looking only for a syntactic term containing
+itself. Preprocessing can shorten this example before that test runs.
+
+### Observe the solver
+
+```sh
+build-dev/bin/cvc5 -o post-asserts -o subs -o lemmas datatypes.smt2
+build-dev/bin/cvc5 -t theory-check -t im datatypes.smt2
+```
+
+Substitution may turn the two equations into one, such as
+`y = cons(1, cons(0, y))`. Find that cycle in the prepared input before
+looking for `DATATYPES_CYCLE` in diagnostic output. The rule concerns an
+inductive constructor cycle; it is different from a clash between two
+constructor names. Follow its producer into `checkCycles`.
+
+A conflict payload can print the inconsistent conjunction rather than its
+negation; see [reading conflict output](../observing.md#read-the-event-before-the-formula).
+For the `y = nil` variant, the value queries below check the constructor and
+selector model path as well as the satisfiability result.
+
+### Follow into the implementation
+
+Read [merge][merge] to see how a class acquires constructor information,
+then [checkCycles][cycles] to see the inductive conflict route and the
+different treatment of codatatypes. Keep two explanations separate:
+constructor injectivity gives equal fields from equal constructors;
+well-foundedness rules out this cycle. Congruence alone gives neither the
+reverse constructor implication nor the well-foundedness argument.
+
+Replace the second assertion with `y = nil`, enable `:produce-models`, and
+request `(get-value (x y (head x) (tail x)))` after the check. The expected
+values are `x = cons(0,nil)`, `y = nil`, head `0`, and tail `nil`, modulo
+printing. Next try `(head nil)`: this is a wrong-constructor selector, so
+the previous head equation no longer determines its value. The upstream
+[datatype example][example] includes constructor, selector and tester syntax.
+
+## Representation and invariants
+
 Source baseline: [2026-09-18](../source-baseline.md). The main implementation is
 [TheoryDatatypes][theory], with [rewriting][rewriter],
 [inference management][im] and a [SyGuS extension][sygus].
-
-## Representation and invariants
 
 ### Constructor structure on equality classes
 
@@ -43,9 +105,8 @@ these distinctions while sharing representations.
 
 `ppRewrite` expands definitions through the datatype rewriter. It also handles
 `DT_SIZE` by purification with a nonnegative-size constraint. Ordinary
-constructor equalities and constructor clashes belong to rewriting; the
-bootcamp's placement of every such simplification in `ppRewrite` does not
-match the current split. `ppAssert` inherits the base substitution behavior.
+constructor equalities and constructor clashes belong to ordinary rewriting.
+`ppAssert` inherits the base substitution behavior.
 
 `preRegisterTerm` checks datatype support, including well-foundedness,
 nested-recursion settings and codatatype restrictions. It registers equality
@@ -146,42 +207,6 @@ with these entry points for this theory.
 | Constructor, tester or selector consequences | Class metadata, `notifyFact` and datatype merge logic |
 | Cycles or constructor splitting | The full-effort `postCheck` loop and pending inference handling |
 | Model structure or synthesis interaction | `computeRelevantTerms`, constructor skeletons and the SyGuS extension |
-
-### Worked example: a cycle through two classes
-
-Save as `datatypes.smt2`; run `build-dev/bin/cvc5 datatypes.smt2`. The
-expected result is `unsat`.
-
-```smt2
-(set-logic QF_UFDTLIA)
-(declare-datatype List ((nil) (cons (head Int) (tail List))))
-(declare-const x List)
-(declare-const y List)
-(assert (= x (cons 0 y)))
-(assert (= y (cons 1 x)))
-(check-sat)
-```
-
-An inductive list must be finite. Here `x` contains `y` as a tail, and `y`
-contains `x`, so neither can be a finite constructor value. Think of the
-constructor metadata as edges between equality classes: `[x] -> [y]` and
-`[y] -> [x]`. The cycle test follows constructor fields through class
-representatives, rather than looking only for a syntactic term containing
-itself. Preprocessing can shorten this example before that test runs.
-
-Read [merge][merge] to see how a class acquires constructor information,
-then [checkCycles][cycles] to see the inductive conflict route and the
-different treatment of codatatypes. Keep two explanations separate:
-constructor injectivity gives equal fields from equal constructors;
-well-foundedness rules out this cycle. Congruence alone gives neither the
-reverse constructor implication nor the well-foundedness argument.
-
-Replace the second assertion with `y = nil`, enable `:produce-models`, and
-request `(get-value (x y (head x) (tail x)))` after the check. The expected
-values are `x = cons(0,nil)`, `y = nil`, head `0`, and tail `nil`, modulo
-printing. Next try `(head nil)`: this is a wrong-constructor selector, so
-the previous head equation no longer determines its value. The upstream
-[datatype example][example] includes constructor, selector and tester syntax.
 
 ### Relate the example to the papers
 

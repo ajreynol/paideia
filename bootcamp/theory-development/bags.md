@@ -17,11 +17,74 @@ equations, arithmetic checks the numbers, and the element theories determine
 which apparent elements are equal. This chapter follows that cooperation and
 the construction of concrete bags from the resulting counts.
 
+**How do operations on bags become equations about numbers of copies?**
+
+Work through the example first; the six implementation sections that follow
+are a reference for tracing or changing that behavior.
+See [Following an inference](../observing.md) for how to read the diagnostics.
+
+## Worked example: disjoint union adds multiplicities
+
+Save as `bags.smt2`; use a build with bags enabled and run
+`build-dev/bin/cvc5 bags.smt2`. The expected result is `unsat`.
+
+```smt2
+(set-logic ALL)
+(declare-const A (Bag Int))
+(declare-const B (Bag Int))
+(declare-const x Int)
+(assert (= (bag.count x A) 2))
+(assert (= (bag.count x B) 3))
+(assert (distinct (bag.count x (bag.union_disjoint A B)) 5))
+(check-sat)
+```
+
+The required equation is `count(x, A union_disjoint B) = count(x,A) +
+count(x,B)`, so the result count must be 5. Here “disjoint union” means
+addition of multiplicities; it does not assert that `A` and `B` have
+disjoint supports. Both bags deliberately contain `x`.
+
+### Observe the solver
+
+```sh
+build-dev/bin/cvc5 -o post-asserts -o lemmas bags.smt2
+build-dev/bin/cvc5 -t im bags.smt2
+```
+
+Look for `BAGS_UNION_DISJOINT` and find the three counts in its equation.
+Purification can make those counts appear under auxiliary names in `im`;
+`-o lemmas` can recover original terms when printing. Follow the defining
+equalities rather than matching symbol names alone. The arithmetic conflict
+should use the resulting sum and the two input counts.
+
+On the maximum-union variant, request the compound bag's count with model
+production enabled. It must be 3. A result of 5 would expose precisely the
+operator confusion this pair of examples is designed to catch.
+
+### Follow into the implementation
+
+Follow `BagSolver::checkUnionDisjoint` in [BagSolver][solver] to
+[InferenceGenerator::unionDisjoint][union-inference]. The latter obtains
+multiplicity terms, purifies the compound bag and emits the count equation.
+This makes the division of work concrete: bags establishes the equation,
+arithmetic reasons about the integers, and subsequent rounds consume the
+result. A generated count term is not necessarily the original surface term
+printed in the input; use the purification equalities when comparing them.
+
+Replace `bag.union_disjoint` with `bag.union_max`. The count becomes 3 and
+the disequality with 5 is satisfiable. This is a small regression pair that
+distinguishes two easily confused operators. For element sharing, introduce
+`y = x` and query counts using `y`; equal elements must have equal counts.
+The upstream [bag example][example] extends these ideas to several concrete
+elements and model queries. For tables, remember that tuple identity and
+multiplicity are separate: a join that finds the correct rows can still
+compute the wrong number of copies.
+
+## Representation and invariants
+
 Source baseline: [2026-09-18](../source-baseline.md). Start with
 [TheoryBags][theory], [BagSolver][solver], [SolverState][state],
 [Strategy][strategy] and [BagReduction][reduction].
-
-## Representation and invariants
 
 ### Multiplicity is the central interface
 
@@ -60,9 +123,7 @@ integer-looking result does not make the reduction pure arithmetic.
 `preRegisterTerm` checks whether bags are enabled, registers equality triggers
 and other terms with the engine, and analyzes injectivity for `BAG_MAP`.
 `BAG_PARTITION` is explicitly rejected if it survives rewriting to reach this
-stage. The bootcamp's old unsupported-operator list includes names no longer
-present in the same kind vocabulary; do not copy it as a current API list.
-Use [kinds.toml][kinds], the API and the actual preregistration checks together.
+stage. Use [kinds.toml][kinds], the API and the actual preregistration checks together.
 `ppAssert` and the ordinary fact callbacks inherit the base behavior.
 
 ## Fact processing and checking
@@ -73,9 +134,8 @@ bags, and collects bags and count terms from the equality engine. Term
 registration and count purification can themselves produce pending lemmas.
 
 The strategy separates `CHECK_BAG_MAKE`, `CHECK_BASIC_OPERATIONS` and
-`CHECK_QUANTIFIED_OPERATIONS`. The last stage is now a real separation in the
-implementation, corresponding to the bootcamp's suggestion to avoid mixing
-all higher-order work into the basic solver loop.
+`CHECK_QUANTIFIED_OPERATIONS`, keeping the quantified operations in a separate
+part of the loop.
 
 Basic reasoning produces constraints for empty and constructed bags, the
 union/intersection/difference family, duplicate removal and relevant count
@@ -126,9 +186,8 @@ elements to representatives and obtains count-skolem values from the model.
 `BagsUtils::constructBagFromElements` builds the bag, which is rewritten and
 asserted as a skeleton equal to the original leaf.
 
-The current method does not contain the bootcamp's general “add fresh filler
-elements here for a larger cardinality” step. Cardinality's reduction and
-constraints must already expose the needed structure. Copying the sets model
+Cardinality's reduction and constraints must already expose the structure
+needed for larger cardinalities. Copying the sets model
 algorithm into bags would miss that distinction.
 
 ## Developing and validating a change
@@ -143,44 +202,6 @@ with these entry points for this theory.
 | Operator reductions | `BagReduction`, preprocessing and any introduced quantified structure |
 | Count equations, maps or table operations | The selected strategy stage and `BagSolver::check*` inference constructors |
 | Sharing or reconstructed multiplicity | Element/count indices, typed care pairs and `collectModelValues` |
-
-### Worked example: disjoint union adds multiplicities
-
-Save as `bags.smt2`; use a build with bags enabled and run
-`build-dev/bin/cvc5 bags.smt2`. The expected result is `unsat`.
-
-```smt2
-(set-logic ALL)
-(declare-const A (Bag Int))
-(declare-const B (Bag Int))
-(declare-const x Int)
-(assert (= (bag.count x A) 2))
-(assert (= (bag.count x B) 3))
-(assert (distinct (bag.count x (bag.union_disjoint A B)) 5))
-(check-sat)
-```
-
-The required equation is `count(x, A union_disjoint B) = count(x,A) +
-count(x,B)`, so the result count must be 5. Here “disjoint union” means
-addition of multiplicities; it does not assert that `A` and `B` have
-disjoint supports. Both bags deliberately contain `x`.
-
-Follow `BagSolver::checkUnionDisjoint` in [BagSolver][solver] to
-[InferenceGenerator::unionDisjoint][union-inference]. The latter obtains
-multiplicity terms, purifies the compound bag and emits the count equation.
-This makes the division of work concrete: bags establishes the equation,
-arithmetic reasons about the integers, and subsequent rounds consume the
-result. A generated count term is not necessarily the original surface term
-printed in the input; use the purification equalities when comparing them.
-
-Replace `bag.union_disjoint` with `bag.union_max`. The count becomes 3 and
-the disequality with 5 is satisfiable. This is a small regression pair that
-distinguishes two easily confused operators. For element sharing, introduce
-`y = x` and query counts using `y`; equal elements must have equal counts.
-The upstream [bag example][example] extends these ideas to several concrete
-elements and model queries. For tables, remember that tuple identity and
-multiplicity are separate: a join that finds the correct rows can still
-compute the wrong number of copies.
 
 ### Relate the example to the papers
 

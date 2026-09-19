@@ -20,6 +20,28 @@ Source baseline: [2026-09-18](../source-baseline.md). Read
 [theory.h][theory-h] together with [theory.cpp][theory-cpp]; the base class
 implements much of the protocol described here.
 
+## Follow one exchange before reading the contract
+
+Use the [three-check query](../query.md#a-small-query-to-trace) from the first
+chapter. Its middle check requires arithmetic and function reasoning to agree
+on the arguments' equality. Run:
+
+```sh
+build-dev/bin/cvc5 -o post-asserts -o lemmas query.smt2
+build-dev/bin/cvc5 -t theory-check -t im query.smt2
+```
+
+Find a literal delivered for checking, then an output event. Decide whether
+the event is an internal fact, a lemma or a conflict before reading its
+formula. The [observation guide](../observing.md#read-the-event-before-the-formula)
+explains the formats, including conflict polarity. The intended checkpoint
+is being able to connect one event to its premises and its receiving component.
+
+For a first reading, continue through the component diagram, output-contract
+table and fact loop. Return to routing policies, equality-engine setup and
+model interfaces as your selected theory needs them. The callback inventory
+is a reference; you do not need to memorize it before trying the UF exercise.
+
 ## Which theory receives a literal?
 
 A **literal** is an atomic Boolean constraint or its negation. A theory's
@@ -72,7 +94,7 @@ flowchart LR
   O --> H[TheoryEngine]
 ```
 
-This redraws the bootcamp's theory-components figure as a flow of information.
+The arrows show information flow.
 Equality notifications can also update theory-specific state; the exact
 callback delegation and any pending queues depend on the theory.
 

@@ -15,10 +15,12 @@ can be integers, and list fields can be strings. Developing a theory therefore
 means preserving both its mathematical rules and the shared protocol for
 state, explanations and model construction.
 
-Each sub-guide first introduces the objects being reasoned about, then follows
-the same six stages through the implementation. Read its opening example and
-worked input before tracing callbacks if the theory is unfamiliar. The shared
-interface below supplies the vocabulary those callback descriptions use.
+Each sub-guide introduces the objects being reasoned about, then opens with
+a worked input and an observation exercise. Predict its result, run it, and
+find the relevant deduction before reading the implementation reference.
+The same six stages follow the exercise in every chapter, so you can return
+directly to the stage involved in a change. The shared interface supplies the
+vocabulary those callback descriptions use.
 
 Source baseline: [2026-09-18](../source-baseline.md).
 
@@ -141,9 +143,11 @@ mean the stage can be ignored when developing a change.
 
 ## The structure of every theory sub-guide
 
-The same six sections make it possible to compare implementations and find
-the next obligation for an edit. Specialized algorithms appear as subsections
-inside the appropriate stage.
+The opening worked example is the first-reading path. Its diagnostics link
+the mathematics to observable events; [Following an inference](../observing.md)
+explains the shared `-o lemmas` and `-t im` interfaces. The six sections that
+follow make it possible to compare implementations and find the next obligation
+for an edit. Specialized algorithms appear inside the appropriate stage.
 
 | Section | What to establish before changing it |
 | --- | --- |
@@ -168,8 +172,10 @@ Begin with the mathematical objects, a small example and the problem the
 solver must solve before presenting the source entry points. Introduce a new
 algorithmic term where it first matters, so readers can follow the chapter
 without already knowing that theory's implementation vocabulary.
-Preserve the six section headings; the guide checker verifies them and the
-parent index. Put the common protocol in [interface.md](interface.md), and put
+Keep one opening `Worked example:` section followed by the six implementation
+headings; the guide checker verifies that order and the parent index. Give
+each observation command an interpretation and a next step, including what
+an absent event could mean. Put the common protocol in [interface.md](interface.md), and put
 the theory's concrete implementation and exceptions in its sub-guide. Describe
 inherited or delegated behavior explicitly instead of leaving a stage blank.
 
