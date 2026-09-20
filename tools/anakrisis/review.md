@@ -72,22 +72,22 @@ that matters: **an empty delta is not a clean bill of health.**
 
 Scoped to what dokimasia has measured, because that is the only thing this can
 say that a cvc5 reviewer could not say faster. **Every document in that scope is
-in another repository** — all four links below leave paideia, and a reviewer who
+in another repository** — every link below leaves paideia, and a reviewer who
 cannot open them cannot write the read half:
 
 - **A new hole.** An inference with no reconstruction, a rule the seam cannot
   print, a trust step with no stated reason, a proofless call on a path that
   had one. The [hygiene
-  rules](https://github.com/ajreynol/dokimasia/blob/main/docs/hygiene.md) are
+  rules](https://github.com/ajreynol/dokimasia/blob/main/docs/README.md#proof-hygiene) are
   the list, each with the measurement behind it, and the count is theirs to
   change.
-- **A promise that stopped holding.** Something
-  [`contract.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/contract.md)
+- **A promise that stopped holding.** Something [the
+  contract](https://github.com/ajreynol/dokimasia/blob/main/docs/README.md#the-contract)
   says cvc5 guarantees, that this change makes untrue — most sharply, an option
   that safe mode does not disable and that declares no proof support.
 - **A coupling.** Something the change breaks that dokimasia parses, which is
-  ours to fix here and is never mentioned to anybody: see
-  [`coupling.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/coupling.md).
+  ours to fix here and is never mentioned to anybody: see [what dokimasia
+  parses](https://github.com/ajreynol/dokimasia/blob/main/docs/README.md#what-we-parse-and-what-would-break-us).
 - **Whatever the delta pointed at**, and nothing else in the diff.
 
 Everything else is out of scope, and the charter says why.

@@ -30,7 +30,7 @@
 # It makes no network calls: it reviews whatever is checked out, and prints the
 # fetch command rather than running it. Nothing is pushed, nothing is posted, no
 # review is submitted and no pull request is approved -- ever. The governing
-# document is the bar in dokimasia's docs/findings.md, kept here by this
+# document is the bar in dokimasia's dokimasia_analyzer/README.md, kept here by this
 # project's own choice now that dokimasia is not its parent, and unchanged.
 
 set -euo pipefail
@@ -64,7 +64,7 @@ require_doki() {
     exit 2
   fi
   missing=""
-  for rel in scripts/dokimasia_analyzer docs/hygiene.md docs/contract.md docs/findings.md; do
+  for rel in scripts/dokimasia_analyzer docs/README.md dokimasia_analyzer/README.md; do
     [ -e "$DOKI/$rel" ] || missing="$missing $rel"
   done
   if [ -n "$missing" ]; then
@@ -468,8 +468,8 @@ Your half, in this order:
 
 $STEP1
 2. **Read the diff for what this repository has evidence about**, and nothing
-   else. The list is the hygiene rules in $DOKI/docs/hygiene.md and the
-   promises in $DOKI/docs/contract.md. Style, naming, performance and
+   else. The list is the proof-hygiene rules and the contract, both sections
+   of $DOKI/docs/README.md. Style, naming, performance and
    architecture are out of scope and stay out even when you can see something.
    cvc5's own reviewers do that better and this project has no standing to.
 3. **Decide the label.** "nothing to say" is the commonest correct answer and a
@@ -478,8 +478,9 @@ $STEP1
    the list. Do not manufacture a point in order to have written a review.
 4. **Hold anything about behaviour to having been run.** The project this
    instrument is borrowed from has been confidently wrong three times in one
-   sitting with static arguments that read correctly -- $DOKI/docs/goals.md
-   records all three, and $DOKI/docs/findings.md is the bar. If you claim
+   sitting with static arguments that read correctly -- $DOKI/docs/README.md
+   records all three, and the bar is in $DOKI/dokimasia_analyzer/README.md.
+   If you claim
    this change makes something happen, say what you ran. If you ran nothing, say
    that instead; it is a weaker claim honestly labelled rather than a stronger
    one you cannot support.

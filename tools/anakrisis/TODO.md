@@ -61,7 +61,7 @@ proceeds on a missing instrument.
 
 - **Teaching the subtraction about renames.** A renamed entity reads as one
   removal and one addition, which is the third limit in the
-  [charter](README.md#the-three-limits-named-before-the-first-use). Pairing them
+  [charter](README.md#what-an-empty-delta-does-not-mean). Pairing them
   automatically means guessing that two ids are one thing, and a wrong guess is
   worse than the shape a reader can see: the review prompt names the reading
   and a person makes it. Revisit if a real pull request shows the shape often
@@ -76,6 +76,6 @@ proceeds on a missing instrument.
   network call, and it would produce a queue of reviews nobody asked for. If
   the wishue ever lands, cvc5's own CI is where a sweep belongs.
 - **Anything that posts.** No comment, no review, no approval — see the charter
-  and [the bar in
-  `findings.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/findings.md#the-bar).
+  and [the
+  bar](https://github.com/ajreynol/dokimasia/blob/main/dokimasia_analyzer/README.md#the-bar).
   The artifact is a file here.

@@ -22,8 +22,8 @@ what the sealed jar in `review.md` is for.
 
 **A review recorded here has been sent to nobody**, and nothing in this
 directory is addressed to a contributor or to a maintainer of cvc5. A person
-decides whether any of it goes anywhere; the rule is [the bar in dokimasia's
-`findings.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/findings.md#the-bar),
+decides whether any of it goes anywhere; the rule is [dokimasia's
+bar](https://github.com/ajreynol/dokimasia/blob/main/dokimasia_analyzer/README.md#the-bar),
 which is in another repository, kept here by this project's own choice, and
 unchanged.
 

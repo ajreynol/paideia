@@ -36,12 +36,13 @@ nothing.
 
 ## Classes
 
-Where a row routes, using the three-way test from [dokimasia's routing case
-study](https://github.com/ajreynol/dokimasia/blob/main/docs/cases/out-of-scope-bug-report.md):
+Where a row routes. The three-way test came from a dokimasia case study that
+has since been retired from that tree; it is kept here because these two
+projects are what still use it:
 
 | class | means | goes to |
 | --- | --- | --- |
-| `proof` | it concerns whether a step can produce a proof | **dokimasia's** register, [`docs/issues.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/issues.md) — another repository, so a person carries it |
+| `proof` | it concerns whether a step can produce a proof | **dokimasia's** register, [its register](https://github.com/ajreynol/dokimasia/blob/main/docs/README.md#the-register) — another repository, so a person carries it |
 | `bug` | an ordinary defect — crash, wrong answer, assertion, regression | empeiria: `run_empeiria --issue N` |
 | `perf` | it is about time or memory, not correctness | empeiria, lower priority |
 | `design` | it asks what cvc5 should do, not whether it did what it meant to | neither of us decides; a person |

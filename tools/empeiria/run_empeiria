@@ -19,8 +19,8 @@
 # a session a person is driving; whatever the assistant then reads is its own
 # business. Nothing is pushed, no tracker is touched, and no pull request is
 # opened -- ever. The governing document is the bar in dokimasia's
-# docs/findings.md, in a separate repository, kept here by this project's own
-# choice now that dokimasia is not its parent, and unchanged.
+# dokimasia_analyzer/README.md, in a separate repository, kept here by this
+# project's own choice now that dokimasia is not its parent, and unchanged.
 
 set -euo pipefail
 
