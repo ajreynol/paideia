@@ -21,6 +21,24 @@ among it. `ajreynol/paideia` is a **public** remote: unadvertised means *not
 pointed at*, not *not visible*. Nothing here makes a claim about cvc5 or should be quoted as
 though it did.
 
+**One of two, and the other one is the pull request queue.** paideia keeps two
+research projects and they are the same loop pointed at different queues.
+empeiria works cvc5's **issues** — reproduce, locate, fix in a tree a person is
+driving, then record what the maintainer actually did.
+[**anakrisis**](../anakrisis/README.md) works cvc5's **pull requests** —
+examine a change before it lands, then record what the maintainers actually did
+with it. Both write a ledger nobody sends, both keep dokimasia's reporting
+policy by choice rather than by inheritance, and in both the asset is the
+difference between what was produced here and what happened upstream. They
+differ in what is in hand: anakrisis carries an instrument — a delta computed
+by running somebody else's analyzer at two commits — and this project carries
+none. That is not a gap to be closed: anakrisis withholds the delta in its
+control arm so that what the instrument adds can be measured against an
+assistant with a checkout and nothing else — which is this project's whole
+arrangement. **Neither imports the other and neither needs the other to have
+run**; what they share is a question — *is what a front end produces worth the
+maintainer's attention* — asked at the two ends of the same tracker.
+
 **An island.** empeiria reads cvc5's tree and its own ledger, and nothing else.
 What the parent publishes is a written guide, so there is no import path for
 this to be off and the rule's interesting half is inapplicable here. The
@@ -32,10 +50,11 @@ from the guide, and there is none.
 
 **It reaches outside this tree for nothing but the cvc5 checkout.**
 `run_empeiria` resolves its ledger and [`triage.md`](triage.md) relative to its
-own location, which is why the sibling project's cross-repository dependency has
-no counterpart here. What it does lack is proximity: everything under *What it
-inherits* below is in another repository, and a practice you have to go and
-fetch is one you can quietly stop reading.
+own location, which is why anakrisis's cross-repository dependency — an
+analyzer in another tree, without which it refuses to run — has no counterpart
+here. What it does lack is proximity: everything under *What it inherits* below
+is in another repository, and a practice you have to go and fetch is one you
+can quietly stop reading.
 
 **Where "read-only" stops, stated rather than assumed.** A project that writes
 fixes cannot be read-only everywhere, so the boundary is drawn precisely:
@@ -126,7 +145,9 @@ pushes, posts or opens anything.
    triage nobody tried to act on is an opinion.
 2. **Record what the response taught.** For each issue worked, capture what the
    project produced, what the maintainer actually did, and the **delta**. The
-   delta is the whole asset; everything else is bookkeeping.
+   delta is the whole asset; everything else is bookkeeping. The sibling
+   project's second goal is the same one, about a pull request and what the
+   maintainers did with it.
 3. **Find the recurring shapes.** Across enough deltas, whether the corrections
    fall into a small number of kinds — wrong subsystem, wrong severity, already
    known, not a bug, a fix that treats the symptom.
@@ -149,6 +170,10 @@ becomes a second tool:
 - **Sending anything upstream.** Producing a fix is in scope; delivering it is
   not, ever. See the next section — dokimasia's policy is kept here by choice,
   and keeping it means keeping it whole.
+- **Reviewing pull requests.** That is [anakrisis](../anakrisis/README.md)'s
+  queue. A change proposed by somebody else is examined there, before it lands,
+  by a project built to compute what it moved; two projects each doing a little
+  of the other's job is how the boundary between them stops meaning anything.
 - **Deciding cvc5's design.** It fixes reported defects. A patch that changes
   what cvc5 chose to do is a proposal, and proposals go through a person.
 - **Speaking for dokimasia, or for paideia.** Nothing here is either one's
@@ -236,7 +261,8 @@ subject is cvc5's code. The routing question it raised is written up in
 [dokimasia's `docs/cases/`](https://github.com/ajreynol/dokimasia/blob/main/docs/cases/out-of-scope-bug-report.md).
 
 **Moved out of dokimasia into paideia on 2026-09-18**, by the same kind of
-instruction.
+instruction, alongside [anakrisis](../anakrisis/README.md), which moved on the
+same day and for the same reason.
 
 **What exists is the interface and nothing it was built to produce.**
 `run_empeiria` works — it guards the tree, makes the branch and hands over the
@@ -259,7 +285,8 @@ decision, and the decision is a person's.
 [kanon's glossary](https://github.com/ajreynol/kanon/blob/main/docs/glossary.md),
 kept by the president of eo, and editing somebody else's register is a person's
 edit. Read on 2026-09-19, its entry for empeiria names paideia as the parent and
-its **Charter** link resolves to this file; *paideia* has an entry of its own.
+its **Charter** link resolves to this file; *paideia* has an entry of its
+own, as does *anakrisis*.
 Both were wrong when this project moved and both were corrected in that tree, so
 nothing is owed here. What the register says about empeiria is the register's, and
 this page is not a second copy of it.

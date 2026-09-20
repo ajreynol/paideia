@@ -7,8 +7,8 @@ cvc5's source that a reader is meant to rely on, and an unrun review of
 somebody's pull request has earned none of that credibility. `tools/` is how
 this is discovered, and that is enough.
 
-*What does this pull request do to cvc5's proof-completeness inventory — and is
-that worth a maintainer's time?*
+*What does this pull request do to a measured inventory of cvc5 — and is that
+worth a maintainer's time?*
 
 **Internal.** A research project held to
 [kanon's research-project rules](https://github.com/ajreynol/kanon/blob/main/docs/policy.md)
@@ -22,15 +22,42 @@ is not among it. `ajreynol/paideia` is a **public** remote: unadvertised means
 anybody's pull request** — not paideia's and not dokimasia's — and no review
 written here has been sent to anyone.
 
-**An island.** anakrisis runs dokimasia's analyzer as a subprocess against two
-trees and subtracts the results; it reads cvc5's tree and its own ledger. What
-the parent publishes is a written guide, so there is no import path for this to
-be off and the rule's interesting half is inapplicable here. The operative half
-holds in full: nothing imports this, no test covers it, no baseline ratchets it,
-no CI job runs it, its one script is invoked by hand from somebody else's
-checkout, and deleting the directory leaves the repository exactly as
-functional. The link that would break the rule is a pointer inward from the
-guide, and there is none.
+**One of two, and the other one is the issue tracker.** paideia keeps two
+research projects and they are the same loop pointed at different queues.
+[**empeiria**](../empeiria/README.md) works cvc5's **issues** — reproduce,
+locate, fix in a tree a person is driving, then record what the maintainer
+actually did. anakrisis works cvc5's **pull requests** — examine a change
+before it lands, then record what the maintainers actually did with it. Both
+write a ledger nobody sends, both keep dokimasia's reporting policy by choice
+rather than by inheritance, and in both the asset is the difference between what
+was produced here and what happened upstream. They differ in what is in hand:
+empeiria has an assistant and a checkout and no instrument, which is the
+arrangement this project's `--baseline` arm stands in for. **Neither imports
+the other and neither needs the other to have run**; what they share is a
+question — *is what a front end produces worth the maintainer's attention* —
+asked at the two ends of the same tracker.
+
+**An island.** anakrisis runs an analyzer as a subprocess against two trees and
+subtracts the results; it reads cvc5's tree and its own ledger. What the parent
+publishes is a written guide, so there is no import path for this to be off and
+the rule's interesting half is inapplicable here. The operative half holds in
+full: nothing imports this, no test covers it, no baseline ratchets it, no CI
+job runs it, its one script is invoked by hand from somebody else's checkout,
+and deleting the directory leaves the repository exactly as functional. The link
+that would break the rule is a pointer inward from the guide, and there is none.
+
+**What the inventory is *of* is the analyzer's business, not this project's.**
+The subtraction asks one thing of an instrument: that it computes an inventory
+from a source checkout and writes down what it found under ids that carry no
+revision, no line number and no wording, so that the same finding at two commits
+compares equal. Today that inventory is of cvc5's proof production, because
+[dokimasia](https://github.com/ajreynol/dokimasia) is the analyzer in hand — and
+it is the only one this script names, by path rather than behind a flag, so a
+second instrument would be an edit here and not a configuration. **The question
+below is the general one because the mechanism is; the evidence below is
+proof-shaped because the instrument is.** Anything in this file that reads as a
+claim about proofs is a claim about dokimasia, and would be replaced rather than
+generalised if the delta were ever taken over something else.
 
 **The analysis it subtracts is in another repository, and it has to be told
 where.** `run_anakrisis --delta` computes the delta by invoking
@@ -78,7 +105,10 @@ scrutiny of the officer **before office** and ἀνάκρισις is the examina
 the case **before trial**: one asks whether the code already in the tree is fit
 to serve, and this asks the same question of the change wanting in. That reads
 well and settles nothing about where either belongs, and nothing is invented
-here in its place. The name fits for the reason the two paragraphs above give,
+here in its place. **Nor does the rhyme make this a project about proofs.** The
+word names an examination before admission and says nothing about what the
+examination is allowed to look at; what it looks at is whatever the instrument
+of the day measured. The name fits for the reason the two paragraphs above give,
 which is the part that depends on nothing outside this directory: an
 examination, before the thing is admitted, that decides nothing.
 
@@ -93,11 +123,16 @@ still and is taken elsewhere in the ecosystem.*
 
 **The question.** cvc5 takes pull requests against `main` continuously, and
 reviewing them is one of the most expensive standing jobs its maintainers have.
-Almost none of those changes are *about* proofs, and yet any of them can add a
-path that produces no proof — a new inference with no reconstruction, a rule the
-Eunoia seam cannot print, an option default that safe mode does not disable.
-**Can a reviewer say what a change does to that inventory before it lands, and
-would a maintainer rather have that than not?**
+Beside that queue sits an inventory somebody keeps: a count of something a
+static analyzer can take from the source, kept because somebody cares whether
+the count moves. **Almost no pull request is *about* that inventory, and any of
+them can move it.** With the instrument in hand the inventory is of the
+ways cvc5 can produce no proof, so moving it looks like this — a new inference
+with no reconstruction, a rule the Eunoia seam cannot print, an option default
+that safe mode does not disable. A different analyzer would furnish a different
+list of examples and nothing around it would change. **Can a reviewer say what a
+change does to that inventory before it lands, and would a maintainer rather
+have that than not?**
 
 **The baseline is prompt-based tooling with no instrument in it, and it is what
 this has to beat.** Hand an assistant a prompt and a cvc5 checkout and useful
@@ -109,7 +144,9 @@ that tree** — read on 2026-09-19, dokimasia no longer ships `check_cvc5_issue`
 or the workflow document defining it, so the arrangement is cited from the case
 study rather than from a command anybody can still run there. The claim it
 backs is unaffected: a review of a pull request can be had that way today, for
-one command, and that command is `run_anakrisis --baseline`.
+one command, and that command is `run_anakrisis --baseline`. The instrument-free
+arrangement also still runs next door, as [empeiria](../empeiria/README.md), on
+the other queue.
 
 So the question is **not** whether an assistant can review a change — that is
 settled, and the answer is yes. It is whether **the computed delta adds
@@ -118,28 +155,31 @@ change and compare. `run_anakrisis --baseline` is the control: the same prompt
 with the delta withheld, differing from the real one by the delta and by
 nothing else.
 
-**What makes it answerable at all.** dokimasia already computes the inventory
-from a checkout, with no build, in about a second. Running it twice — at the
-merge base and at the head — and subtracting is the whole mechanism, and what it
-needs is dokimasia *to hand* rather than dokimasia's repository around it. The
-result is a claim about a change that few are in a position to make, and it is
-**cheap-to-refute** by construction — two commands and a set difference, and
-anybody with both checkouts can run them.
+**What makes it answerable at all.** An analyzer that takes its inventory from a
+checkout, with no build, in about a second is one you can afford to run twice —
+at the merge base and at the head — and subtracting the two runs is the whole
+mechanism. What that needs is the analyzer *to hand* rather than the analyzer's
+repository around it. dokimasia is such an analyzer and is the one this is built
+on. The result is a claim about a change that few are in a position to make, and
+it is **cheap-to-refute** by construction — two commands and a set difference,
+and anybody with both checkouts can run them.
 
 **The goals, in order.**
 
-0. **The delta.** Run dokimasia's analyses at the merge base and at the head,
-   and report what the change did to the inventory. Numbered zero because it is
-   mechanical: it is computed rather than judged, and an assistant reads it
-   rather than producing it. **Most pull requests will have an empty delta**,
+0. **The delta.** Run the instrument's analyses at the merge base and at the
+   head, and report what the change did to its inventory. Numbered zero because
+   it is mechanical: it is computed rather than judged, and an assistant reads
+   it rather than producing it. **Most pull requests will have an empty delta**,
    and that is the expected result rather than a failed run.
 1. **Review one pull request end to end.** The delta, plus a reading of the diff
-   scoped to what dokimasia has evidence about, written into the ledger in
+   scoped to what the instrument has evidence about, written into the ledger in
    a shape a maintainer could act on. A review nobody could act on is an
    opinion.
 2. **Record what the maintainers actually did.** Merged as proposed, merged with
    changes, changed for a reason we did not see, closed. The delta between our
    review and the outcome is the whole asset; everything else is bookkeeping.
+   The sibling project's second goal is the same one, about an issue and the
+   answer it got.
 3. **Beat the baseline, or say that it was not beaten.** For each pull request
    worked, run both arms and compare: which review lines were acted on, which
    were noise, and whether any of the difference came from the delta. The
@@ -152,12 +192,13 @@ anybody with both checkouts can run them.
 
 **The wishue** — the goal if this went unusually well, and not a commitment.
 The delta stops being something a person carries and becomes a check cvc5 runs
-itself, on every pull request, in its own CI. That is **R11** in dokimasia's
-[register of
-asks](https://github.com/ajreynol/dokimasia/blob/main/docs/issues.md#open--asks).
-**The machine format that would make it possible exists**, which is the one
-thing that has changed: dokimasia answered on 2026-09-19 that the dump its
-analyzer already writes on every run is the artifact to subtract, and this
+itself, on every pull request, in its own CI. For the instrument in hand that is
+**R11** in dokimasia's [register of
+asks](https://github.com/ajreynol/dokimasia/blob/main/docs/issues.md#open--asks),
+and an instrument that arrived later would bring its own ask rather than inherit
+that one. **The machine format that would make it possible exists**, which is
+the one thing that has changed: dokimasia answered on 2026-09-19 that the dump
+its analyzer already writes on every run is the artifact to subtract, and this
 project now subtracts it. What remains between here and the wishue is not a
 format; it is whether the delta is worth a maintainer's time, which is what the
 goals above are for.
@@ -169,11 +210,17 @@ becomes a second tool:
   architecture. cvc5's own reviewers and CI do all of that better, and an
   unsolicited opinion on somebody's variable names spends credibility on work
   that has earned none — paideia's, which is a smaller thing to spend only
-  because there is less of it. The
-  read half is scoped to what dokimasia has measured: the [hygiene
-  rules](https://github.com/ajreynol/dokimasia/blob/main/docs/hygiene.md), the
+  because there is less of it. The read half is scoped to what an instrument has
+  measured, which today means dokimasia's [hygiene
+  rules](https://github.com/ajreynol/dokimasia/blob/main/docs/hygiene.md), its
   [contract](https://github.com/ajreynol/dokimasia/blob/main/docs/contract.md),
-  and whatever the delta pointed at.
+  and whatever the delta pointed at. *Scoped to a measurement* is the boundary;
+  *scoped to proofs* is only what that boundary happens to come to today.
+- **Measuring anything itself.** anakrisis keeps no inventory, writes no check
+  and ratchets no number. If a review wants something nobody measures, that is
+  an ask addressed to an analyzer's register — a person carries it — and never a
+  script that grows here. A project that started computing its own inventory
+  would be a second instrument with none of the evidence behind the first.
 - **Reviewing pull requests we have nothing to say about.** The instrument
   speaks when it has something to say. *Nothing to say* is a complete outcome
   and is not written up anywhere but the ledger.
@@ -182,13 +229,18 @@ becomes a second tool:
   what, if anything, becomes of it.
 - **Deciding whether a pull request should be merged.** The examination is not
   the trial. Nothing here carries a verdict on somebody's change.
-- **Proof-completeness *findings*.** If a review turns up a hole rather than a
-  question about a change, it leaves this repository altogether and enters
-  dokimasia's register at
+- **Findings about the inventory itself.** If a review turns up a hole rather
+  than a question about a change, it leaves this repository altogether and
+  enters the instrument's own register — today dokimasia's
   [`docs/issues.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/issues.md),
   where it is held to [that project's
   bar](https://github.com/ajreynol/dokimasia/blob/main/docs/findings.md#the-bar)
   like anything else. That is a carry between repositories, and a person does it.
+- **Working the issue tracker.** That is [empeiria](../empeiria/README.md)'s
+  queue, and a bug report that arrives here goes next door rather than being
+  worked here. Two projects with one boundary between them is the arrangement;
+  two projects each doing a little of the other's job is how the boundary stops
+  meaning anything.
 - **Speaking for dokimasia, or for paideia.** Nothing here is either one's
   position.
 
@@ -204,6 +256,10 @@ itself](https://github.com/ajreynol/dokimasia/blob/main/docs/experience.md#what-
 ## The three limits, named before the first use
 
 Each was found by running the thing, and each bounds what an empty delta means.
+**Two of the three are the instrument's rather than the subtraction's**: point
+this at a different analyzer and the first two would have to be rewritten from
+that analyzer's record instead of inherited from this one. The third belongs to
+the subtraction and travels with it.
 
 *A fourth limit stood first here and is retired: the subtraction read
 dokimasia's prose, so an empty delta could only mean* two runs printed the same
@@ -212,23 +268,26 @@ an empty delta now means* no observation appeared or disappeared at the declared
 scope — *a limit about cvc5 rather than about printing, which is the whole of
 what the dump bought.*
 
-**It is static, and it reads `src/` only.** No build, no run, no benchmark. A
-change whose entire effect is at runtime shows nothing here, and dokimasia's
-own record is that a static argument reading correctly is worth very little
-until something has been run — three of them read correctly and were false, as
+**It is static, and it reads `src/` only.** dokimasia builds nothing, runs
+nothing and benchmarks nothing. A change whose entire effect is at runtime shows
+nothing here, and dokimasia's own record is that a static argument reading
+correctly is worth very little until something has been run — three of them read
+correctly and were false, as
 [`goals.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/goals.md)
 records. A delta is evidence that something moved, never evidence about what it
 does.
 
 **The declared scope is the observations, not the measurements beside them.**
-The dump carries the nine observation-producing analyses. `gates`, `fragment`,
-`tcb` and `latent` are measurements and live in the run record's
-`measurements`, so **a change visible only in a measurement is not in the
-delta**. The two runs are also only subtractable when they selected the same
+The analyzer declares what its dump covers, and the delta cannot reach past that
+declaration. dokimasia's dump carries the nine observation-producing analyses;
+`gates`, `fragment`, `tcb` and `latent` are measurements and live in the run
+record's `measurements`, so **a change visible only in a measurement is not in
+the delta**. The two runs are also only subtractable when they selected the same
 analyses and each covered its whole scope; `run_anakrisis` reads both run
 records and refuses rather than reporting a delta over a partial catalogue.
 
-**It cannot see a rename, and a rename is the commonest way it misleads.** An
+**It cannot see a rename, and a rename is the commonest way it misleads.** This
+is the subtraction's own limit and holds for any inventory keyed by identity. An
 observation's id is computed from `[owner, code, entity]`, so an entity that
 cvc5 renamed reads as one removal and one addition rather than as a move. This
 is not a defect in the id — it is what makes the same finding at two commits
@@ -249,8 +308,10 @@ which does not govern this project by being its parent's — dokimasia is not it
 parent, and paideia has no reporting policy of its own to impose. It governs
 because this project keeps it, and keeping it is worth nothing unless the
 standard stays where it was, so: **no separate channel, and no lighter standard
-than it had in dokimasia.** This section says only how that lands on a project
-whose whole output looks like something you would paste into a review box.
+than it had in dokimasia.** The sibling project borrows the same policy on the
+same terms, which is a coincidence of two decisions rather than a house rule.
+This section says only how that lands on a project whose whole output looks like
+something you would paste into a review box.
 
 - **The act stays with a person**, and the temptation is at its worst here. A
   finished review is one copy-paste from being delivered, and delivering it
@@ -284,7 +345,10 @@ This project has no evidence of its own. dokimasia has it — cases it ran,
 behaviours it verified, places the documentation and the implementation
 disagreed — and the rule is to cite what is taken, so a reader can tell what was
 checked from what was reasoned. None of the following is in this repository, and
-every link in the table leaves it.
+every link in the table leaves it. **The table is dokimasia's because dokimasia
+is the instrument**: the rows about the inventory and what the read half is
+scoped to would be replaced, not extended, if the delta were ever taken over
+another analyzer's dump.
 
 | inherited | where it was established |
 | --- | --- |
@@ -294,24 +358,26 @@ every link in the table leaves it.
 | what a proof-hygiene defect looks like, so the read half has a list rather than a hunch | [`docs/hygiene.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/hygiene.md) |
 | what cvc5 actually promises, so a review can tell a violated promise from a disliked design | [`docs/contract.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/contract.md) |
 | the `TRIAGE:` / `HUMAN RESPONSE:` frame, and that only an artifact settles anything | [`docs/cases/out-of-scope-bug-report.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/cases/out-of-scope-bug-report.md), [`docs/findings.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/findings.md). The document that defined the frame was retired with its workflow; read on 2026-09-19 the case study is what still records it |
-| running an assistant against a cvc5 checkout without touching anything outside it | [`../empeiria/README.md`](../empeiria/README.md), which is the arrangement as this repository now keeps it |
+| running an assistant against a cvc5 checkout without touching anything outside it | [`../empeiria/README.md`](../empeiria/README.md) — the sibling project: the arrangement as this repository now keeps it, and the one `--baseline` stands in for |
 | **the baseline this project has to beat** — that prompt-based tooling with no instrument already produces useful work | [`docs/cases/out-of-scope-bug-report.md`](https://github.com/ajreynol/dokimasia/blob/main/docs/cases/out-of-scope-bug-report.md). The launcher that established it is retired from that tree, so `run_anakrisis --baseline` is now where the arm is run |
 
-**The instrument is borrowed, and that is the standing risk.** Without the
+**The instrument is borrowed, and that is the standing risk.** Without an
 inventory there is no delta, and without the delta this is a general-purpose
 reviewer with no instrument and nothing to distinguish it. The inventory is
 something this project reaches across a repository boundary for rather than
 something it sits inside, so every row above is a citation of an outside source
 rather than an inheritance — and a borrowed instrument is easier to leave broken
-than a local one. What stands against that is the refusal: the command stops and
-says what it could not find, rather than reviewing a change without the one
-thing it was built to bring.
+than a local one. **Being able to borrow a different one is a property of the
+mechanism and not a plan**; what stands against the risk today is the refusal:
+the command stops and says what it could not find, rather than reviewing a
+change without the one thing it was built to bring.
 
 ## Using it
 
 Everything but `--list` and `--record` needs a dokimasia checkout, because
-everything else either computes the delta or names dokimasia's documents in a
-prompt. Set `DOKIMASIA_ROOT` where one is not beside this repository.
+dokimasia is the instrument: everything else either computes the delta or names
+dokimasia's documents in a prompt. Set `DOKIMASIA_ROOT` where one is not beside
+this repository.
 
 ```bash
 cd ~/cvc5
@@ -329,13 +395,16 @@ it does not do is start an assistant.
 
 The protocol the review follows — what a review must carry, the block it is
 written in, and what *nothing to say* means — is [`review.md`](review.md). The
-record is [`ledger/`](ledger/). The plan is [`TODO.md`](TODO.md).
+record is [`ledger/`](ledger/). The plan is [`TODO.md`](TODO.md). The sibling
+project's equivalents are [`../empeiria/triage.md`](../empeiria/triage.md) and
+its own ledger, and neither tree reads the other's.
 
 ## Status
 
 **Started 2026-09-01**, by an explicit human instruction, which is the only way
 one of these may begin. **Moved out of dokimasia into paideia on 2026-09-18**,
-by the same kind of instruction.
+by the same kind of instruction, alongside [empeiria](../empeiria/README.md),
+which moved on the same day and for the same reason.
 
 **`run_anakrisis --delta` and `--baseline` run**, against a dokimasia checkout
 they are pointed at. **Every limit above was found by running it**, including the
@@ -344,6 +413,14 @@ attached. Nothing past the interface exists — no pull request has been reviewe
 in either arm, the ledger is empty, and the review protocol in
 [`review.md`](review.md) is a first guess written before a single review, which
 is exactly the condition under which a format is wrong.
+
+**One instrument is wired and no second one has been tried.** The generality the
+charter claims is a property of the subtraction rather than a feature of the
+script: `run_anakrisis` names dokimasia's analyzer by path, its prompt names
+dokimasia's documents, and neither knows anything about analyzers in general.
+What the charter says is that nothing in the *question* depends on the inventory
+being of proofs — not that pointing this somewhere else has been done, or
+costed.
 
 **What the subtraction has been run against**, and the whole of it: two commits
 of cvc5 two hundred apart, on 2026-09-19, which produced 6 observations gone and
@@ -357,13 +434,14 @@ repository, it is folded into the parent, or it is retired in place with a note
 saying what was learned. Going quiet is not one of them. **What *folded into
 the parent* would mean here is undecided**: the parent publishes a written guide
 to cvc5's source and has no instrument to fold this into, and the instrument
-this project would fold back toward is in dokimasia.
+this project would fold back toward is in dokimasia. The sibling faces the same
+undecided question from the other side, and neither answer is the other's.
 
 **The register has this right.** The ecosystem's authoritative name register is
 [kanon's glossary](https://github.com/ajreynol/kanon/blob/main/docs/glossary.md),
 kept by the president of eo, and editing somebody else's register is a person's
 edit. Read on 2026-09-19, its entry for anakrisis names paideia as the parent and
-its **Charter** link resolves to this file; *paideia* has an entry of its own.
-Both were wrong when this project moved and both were corrected in that tree, so
-nothing is owed here. What the register says about anakrisis is the register's, and
-this page is not a second copy of it.
+its **Charter** link resolves to this file; *paideia* has an entry of its own,
+as does *empeiria*. Both were wrong when this project moved and both were
+corrected in that tree, so nothing is owed here. What the register says about
+anakrisis is the register's, and this page is not a second copy of it.
