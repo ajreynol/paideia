@@ -31,7 +31,7 @@ proceeds on a missing instrument.
   withheld. The baseline for this task is prompt-based tooling with no
   instrument, which already produces useful work, so what has to be shown is
   that the delta adds something rather than that an assistant can review a diff.
-  The [charter](README.md#the-charter) says where that is established now that
+  The [charter](../README.md#the-charter) says where that is established now that
   dokimasia has retired the launcher it was established with.
 - [ ] **Review one real pull request end to end, in both arms.** Nothing about
   the format above has met a change somebody actually proposed, and a protocol
@@ -57,11 +57,44 @@ proceeds on a missing instrument.
       of merged changes that *did* touch proof production and count how many it
       was silent about.
 
+## The stretch: a check cvc5 could run itself
+
+**The [wishue](../README.md#the-charter), broken into work somebody could
+finish.** None of it is proposed to cvc5, and none of it is gated on cvc5
+answering anything — what is gated is the *asking*, which waits on the three
+goals above and travels through [dokimasia's
+`R11`](https://github.com/ajreynol/dokimasia/blob/main/docs/README.md#open--asks)
+rather than a channel of ours. Building the artifact first is the cheap order:
+an ask with a working workflow attached costs a maintainer a read instead of a
+design conversation.
+
+- [ ] **A machine format for the delta.** Today `--delta` prints prose for a
+      person. A check needs SARIF, or GitHub annotations, and the ids are
+      already structured — this is a formatter, not an analysis.
+- [ ] **Attribution to a hunk.** An annotation has to land on a file and a line,
+      and today attributing a delta line to the diff is [the reader's first
+      job](review.md). Any line that cannot be attributed automatically is
+      reported without a location or not at all; guessing a location is worse
+      than having none.
+- [ ] **Decide which codes are worth annotating**, and say why the rest are not.
+      Additions only, to begin with: a `-` line is where [the rename
+      shape](../README.md#what-an-empty-delta-does-not-mean) lives, and the
+      first impression a check makes is the only one it gets.
+- [ ] **A workflow file, kept here as a proposal.** It runs the analyzer at the
+      merge base and at the head and posts nothing — advisory, non-blocking,
+      and never a comment on somebody's pull request. **It is never run from
+      this side against cvc5's queue**; it is written so that cvc5 could adopt
+      it, in the shape cvc5 already uses for its own static analysis.
+- [ ] **Say what it would have said.** Run it over pull requests that already
+      merged and write up the output beside what the reviewers did. That is
+      the evidence the ask needs, and it is the same evidence goal 3 needs, so
+      it costs nothing extra to collect.
+
 ## Not yet
 
 - **Teaching the subtraction about renames.** A renamed entity reads as one
   removal and one addition, which is the third limit in the
-  [charter](README.md#what-an-empty-delta-does-not-mean). Pairing them
+  [charter](../README.md#what-an-empty-delta-does-not-mean). Pairing them
   automatically means guessing that two ids are one thing, and a wrong guess is
   worse than the shape a reader can see: the review prompt names the reading
   and a person makes it. Revisit if a real pull request shows the shape often

@@ -1,0 +1,11 @@
+#!/bin/sh
+# The public command for empeiria, whose implementation is the child project's
+# own: tools/empeiria/empeiria.sh. This launcher exists because commands live
+# at the repository root and a child's implementation stays in its directory --
+# kanon's docs/policy.md, "Tool and feature directories".
+#
+# It resolves the implementation relative to itself, so a symlink to this file
+# from anywhere on PATH works.
+set -eu
+HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+exec "$HERE/../tools/empeiria/empeiria.sh" "$@"

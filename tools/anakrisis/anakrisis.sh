@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-# run_anakrisis -- review a cvc5 pull request, from inside a cvc5 checkout.
+# anakrisis.sh -- review a cvc5 pull request, from inside a cvc5 checkout.
+# Run it as `run_anakrisis`: the public command is scripts/run_anakrisis at the
+# root of this repository, which execs this file. The implementation lives here
+# because a child project keeps its own -- kanon's docs/policy.md.
 #
 #   cd ~/cvc5 && gh pr checkout 12893 && run_anakrisis 12893
 #
@@ -7,7 +10,7 @@
 # cvc5 can produce no proof? That half is computed rather than judged --
 # dokimasia's analyzer is run at the merge base and at the head, and the two
 # dumps are subtracted over observation ids -- and an assistant reads a delta it
-# did not produce. See review.md.
+# did not produce. See docs/review.md.
 #
 # dokimasia is another repository. Set DOKIMASIA_ROOT, or keep a checkout of it
 # beside this one; this refuses to run rather than guessing further.
@@ -413,7 +416,7 @@ print_delta() {
   echo "   appeared or disappeared at the declared scope -- and the scope is the"
   echo "   nine observation-producing analyses, not the measurements beside them."
   echo "   A renamed entity reads as one removal and one addition. It is also"
-  echo "   static -- no build, no run. See $HERE/README.md, 'The three limits'."
+  echo "   static -- no build, no run. See $HERE/README.md, 'What an empty delta does not mean'."
 }
 
 if [ "$MODE" = delta ]; then
@@ -456,7 +459,7 @@ The pull request:
 
   https://github.com/cvc5/cvc5/pull/$PR
 
-**Read $HERE/review.md before you start.** It says what a review may claim, what
+**Read $HERE/docs/review.md before you start.** It says what a review may claim, what
 it may not be about, the shape you write it in, and what the four triage labels
 mean. It governs; this prompt only sets up the work.
 

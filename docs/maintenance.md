@@ -111,9 +111,13 @@ worth having.
   so there is no checker commit pinned here and nothing to bump. Nothing builds,
   nothing is installed, and no child project runs there. Adding any further
   runner to this tree is outward-facing and yours.
-- **No `tests/`, `deps/` or `prompts/`.** The one script,
-  [`check_guide.py`](../scripts/check_guide.py), checks written-guide links,
-  indexing and source paths on request. It generates nothing and does not
-  validate the semantics of the prose. No runner invokes it automatically.
+- **No `tests/`, `deps/` or `prompts/`.** `scripts/` holds
+  [`check_guide.py`](../scripts/check_guide.py), which checks written-guide
+  links, indexing and source paths on request — it generates nothing and does
+  not validate the semantics of the prose — and the two launchers that give the
+  child projects in `tools/` their public commands, each of which execs an
+  implementation that stays with its project. **No runner invokes any of them
+  automatically**, and a child's command is run by hand from somebody else's
+  checkout.
 - **No second overview.** The front page is the only entry point, and
   [`README.md`](README.md) beside this file is the index and nothing else.

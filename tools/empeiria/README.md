@@ -58,7 +58,7 @@ to review.
 
 **The goals, in order.**
 
-0. **Keep an index of every open issue** — [`triage.md`](triage.md), refreshed
+0. **Keep an index of every open issue** — [`triage.md`](docs/triage.md), refreshed
    by `run_empeiria --triage`. Numbered zero because it is a standing obligation
    rather than a result: it aims goal 1 and produces nothing on its own. **It is
    the first place to look and the last place to trust** — written from issue
@@ -120,8 +120,12 @@ it writes only in `tools/empeiria/`; outside it, it may edit a cvc5 working tree
 a person is driving, which is [the licence dokimasia already takes][bar] and not
 a new one.
 
-[`triage.md`](triage.md) is the index, `ledger/` is the record, and
-[`TODO.md`](TODO.md) is the plan.
+**The command is `scripts/run_empeiria`**, at the root of this repository —
+put that directory on your `PATH` or call it by path. It execs
+[`empeiria.sh`](empeiria.sh) here, which is where the implementation stays.
+
+[`docs/`](docs/README.md) is the rest: [the open-issue index](docs/triage.md)
+and [the plan](docs/TODO.md). [`ledger/`](ledger/) is the record.
 
 ## The name
 
@@ -153,7 +157,7 @@ is the only way a [research project][policy] starts or ends.
 and hands over the prompt, and `--show-prompt` prints what it would say.
 
 **What does not exist:** anything it was built to produce. No issue has been
-worked in either half, [`triage.md`](triage.md) has never been refreshed against
+worked in either half, [`triage.md`](docs/triage.md) has never been refreshed against
 the tracker and holds one hand-written row, the ledger is empty, and its format
 is a first guess made before a single case.
 

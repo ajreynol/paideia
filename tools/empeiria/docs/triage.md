@@ -22,7 +22,7 @@ Concretely:
   cvc5.** If a claim from this file matters, someone opens the issue and checks
   it, and *that* is what gets cited.
 - **A row is superseded the moment the issue is worked.** The ledger entry
-  ([`ledger/`](ledger/)) is written after reproducing, and it is the authority.
+  ([`ledger/`](../ledger/)) is written after reproducing, and it is the authority.
   Where the two disagree, the row is wrong.
 - **A row goes stale silently.** Issues get comments, fixes and closures that
   nothing here notices between refreshes. An old snapshot looks exactly like a

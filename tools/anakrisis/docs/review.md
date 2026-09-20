@@ -2,7 +2,7 @@
 
 What a review of a cvc5 pull request has to carry, the shape it is written in,
 and what it may never contain. Read
-[`README.md`](README.md) first — this document assumes the charter, and in
+[`README.md`](../README.md) first — this document assumes the charter, and in
 particular assumes that nothing written here is sent anywhere.
 
 **This is a first guess.** It was written before a single pull request had been

@@ -4,8 +4,8 @@ One file per cvc5 pull request examined, *per arm*: `<number>.md` for the review
 made with the inventory delta, and `<number>-baseline.md` for the control made
 without it. Each carries an `arm:` field, so a pair cannot be mistaken for two
 independent reviews. The shape is the one
-[`../review.md`](../review.md) sets out; the header is written by
-[`run_anakrisis`](../run_anakrisis) and the rest by whoever did the review.
+[`../review.md`](../docs/review.md) sets out; the header is written by
+[`run_anakrisis`](../../../scripts/run_anakrisis) and the rest by whoever did the review.
 
 Each holds the computed `DELTA:` for that change — or `withheld` in the control
 arm — a `TRIAGE:` line carrying one of four labels, and `HUMAN RESPONSE:`,

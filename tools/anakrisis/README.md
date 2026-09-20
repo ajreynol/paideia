@@ -75,11 +75,34 @@ nothing a cvc5 reviewer could not produce faster is noise with a good story.
 4. **Say whether the empty delta can be trusted.** A tool whose commonest output
    is *nothing to say* is useful only if that output can be relied on.
 
-**The wishue** — the goal if this went unusually well, and not a commitment. The
-delta stops being something a person runs and becomes a check cvc5 runs itself,
-on every pull request, in its own CI. That is [**R11**][asks] in dokimasia's
-register of asks, already argued there and already answerable with the machine
-dump this project subtracts.
+**The wishue** — the stretch goal if this went unusually well, and not a
+commitment. **The delta stops being something a person runs and becomes an
+advisory check cvc5 runs itself, on every pull request.** Seconds, no build, no
+stored baseline, and silent on the great majority of changes because their delta
+is empty. It would annotate new observations attributable to the diff, stay
+quiet about disappearances — where [a rename looks exactly like a
+fix](#what-an-empty-delta-does-not-mean) — and **never fail a build**: a check
+that blocks a contributor on a partial static analysis has earned being muted.
+
+**Cost is not what stands in the way.** cvc5 already runs a no-build
+`check-format` job on every pull request, and already keeps custom static
+analysis in its own tree — a clang-tidy plugin in `contrib/tidy-checks/` and a
+CodeQL query in `contrib/codeql/`. But that same workflow is the shape of the
+objection: read on 2026-09-20 at cvc5 `40a4bb7e`,
+[`static_analysis.yml`][cvc5-sa] runs **nightly and on demand, never on a pull
+request**. So the question is not whether a job can be added. It is whether a
+second-long advisory delta earns a place on the path every contributor waits on,
+and nothing but goals 1–3 can answer that.
+
+**And the ask is not this project's to make.** dokimasia already has
+[**R11**][asks] open — *run our checks in cvc5 CI* — and the pull-request delta
+is the cheaper half of it: no baseline to store, nothing to ratchet, and no
+SARIF infrastructure needed to be useful. If it is ever asked for, it goes
+through that register and a person carries it. What can be built here before
+then is the artifact that makes the ask concrete: a workflow file that runs, a
+delta in a machine format, and a case file saying what it would have said on
+pull requests that already landed. [`docs/TODO.md`](docs/TODO.md) has that as
+the stretch work, with the gate on it.
 
 **Out of scope.**
 
@@ -117,8 +140,13 @@ refuses a dirty tree, and reads the merge base through a detached `git worktree`
 it removes again. Inside this repository it writes only in `tools/anakrisis/`,
 and it never writes a baseline anybody ratchets.
 
-[`review.md`](review.md) is what a review must carry and what *nothing to say*
-means; [`ledger/`](ledger/) is the record; [`TODO.md`](TODO.md) is the plan.
+**The command is `scripts/run_anakrisis`**, at the root of this repository —
+put that directory on your `PATH` or call it by path. It execs
+[`anakrisis.sh`](anakrisis.sh) here, which is where the implementation stays.
+
+[`docs/`](docs/README.md) is the rest: [what a review must carry and what
+*nothing to say* means](docs/review.md), and [the plan](docs/TODO.md).
+[`ledger/`](ledger/) is the record.
 
 ## What an empty delta does not mean
 
@@ -172,7 +200,7 @@ subtraction has been exercised once — two cvc5 commits two hundred apart, on
 those pairs renames. That is a test of the instrument, not of the idea.
 
 **What does not exist:** a single reviewed pull request, in either arm. The
-ledger is empty, [`review.md`](review.md) is a first guess written before any
+ledger is empty, [`review.md`](docs/review.md) is a first guess written before any
 case, and one instrument is wired with no second one tried.
 
 **Footing:** `unadvertised-child` — paideia's front page does not name this
@@ -192,5 +220,6 @@ saying what was learned. Going quiet is not one of them.
 [static]: https://github.com/ajreynol/dokimasia/blob/main/docs/README.md#the-general-rule-this-session-suggests
 [bar]: https://github.com/ajreynol/dokimasia/blob/main/dokimasia_analyzer/README.md#the-bar
 [learned]: https://github.com/ajreynol/dokimasia/blob/main/dokimasia_analyzer/README.md#what-a-run-learned-about-itself
+[cvc5-sa]: https://github.com/cvc5/cvc5/blob/main/.github/workflows/static_analysis.yml
 [policy]: https://github.com/ajreynol/kanon/blob/main/docs/policy.md
 [glossary]: https://github.com/ajreynol/kanon/blob/main/docs/glossary.md

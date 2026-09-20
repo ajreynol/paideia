@@ -1,7 +1,7 @@
 # ledger
 
 One file per cvc5 issue worked, `<number>.md`, written by
-[`run_empeiria`](../run_empeiria).
+[`run_empeiria`](../../../scripts/run_empeiria).
 
 Each holds what this project produced (`TRIAGE:`, `WHAT I DID:`,
 `UNSURE ABOUT:`) and, once a maintainer has answered, what they actually did

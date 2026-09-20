@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-# run_empeiria -- work a cvc5 issue, from inside a cvc5 checkout.
+# empeiria.sh -- work a cvc5 issue, from inside a cvc5 checkout.
+# Run it as `run_empeiria`: the public command is scripts/run_empeiria at the
+# root of this repository, which execs this file. The implementation lives here
+# because a child project keeps its own -- kanon's docs/policy.md.
 #
 #   cd ~/cvc5 && run_empeiria 12905
 #
@@ -26,7 +29,7 @@ set -euo pipefail
 
 HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 LEDGER="$HERE/ledger"
-TRIAGE="$HERE/triage.md"
+TRIAGE="$HERE/docs/triage.md"
 
 # A response lives on the lines *after* the HUMAN RESPONSE: marker, not on it.
 # Checking the marker line itself was a bug: it made --list never report a
@@ -54,7 +57,7 @@ usage: run_empeiria [--issue] N [--codex] [--branch NAME] [--print]
        run_empeiria --list
 
   --issue N       the cvc5 issue to work; a bare N is shorthand for it
-  --triage        refresh the open-issue index in triage.md
+  --triage        refresh the open-issue index in docs/triage.md
   --record N      record what the maintainer did, after the fact
   --list          what has been worked, and what came back
   --codex         run codex instead of claude
