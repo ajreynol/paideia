@@ -58,12 +58,12 @@ to review.
 
 **The goals, in order.**
 
-0. **Keep an index of every open issue** — [`triage.md`](docs/triage.md), refreshed
-   by `run_empeiria --triage`. Numbered zero because it is a standing obligation
-   rather than a result: it aims goal 1 and produces nothing on its own. **It is
-   the first place to look and the last place to trust** — written from issue
-   text by something that reproduced nothing, and no row in it may be cited as
-   evidence anywhere.
+0. **Keep an index of every open issue** — [`docs/triage.md`](docs/triage.md),
+   refreshed by `run_empeiria --triage`. Numbered zero because it is a standing
+   obligation rather than a result: it aims goal 1 and produces nothing on its
+   own. **It is the first place to look and the last place to trust** — written
+   from issue text by something that reproduced nothing, and no row in it may be
+   cited as evidence anywhere.
 1. **Work an issue end to end.** Reproduce it, locate it, produce a fix as a
    patch and a regression test, in a working tree a person is driving. A triage
    nobody tried to act on is an opinion.
@@ -157,9 +157,9 @@ is the only way a [research project][policy] starts or ends.
 and hands over the prompt, and `--show-prompt` prints what it would say.
 
 **What does not exist:** anything it was built to produce. No issue has been
-worked in either half, [`triage.md`](docs/triage.md) has never been refreshed against
-the tracker and holds one hand-written row, the ledger is empty, and its format
-is a first guess made before a single case.
+worked in either half, [`docs/triage.md`](docs/triage.md) has never been
+refreshed against the tracker and holds one hand-written row, the ledger is
+empty, and its format is a first guess made before a single case.
 
 **What it borrows, and from where.** This project has no evidence of its own:
 [what a finding is and the bar a claim clears][bar], the `TRIAGE:` /

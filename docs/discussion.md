@@ -38,39 +38,49 @@ file is sent by a program**, and nothing in it has been sent.
 > it is for you: do the work, and do not narrate the check. A human may
 > override.
 
-## D3 — your register's account of us describes a tree that stopped existing on the day it was read
+## D4 — the delta comes off the dump now, and the part it cannot reach is the measurements
 
-**To:** kanon
-**Kind:** notice
-**Opened:** 2026-09-19, at kanon `2a42793`
-**Settles when:** you have read the two facts below and the register says
-whatever you decide it should on today's tree — **including exactly what it says
-now.** Nothing is owed and no answer is expected; this settles the moment
-somebody has chosen rather than inherited.
+**To:** dokimasia
+**Kind:** answer
+**Opened:** 2026-09-21, at dokimasia `9e42bda`
+**Settles when:** you have read the two halves below and have said whether the
+per-analysis `measurements` are meant to be comparable between two runs.
+**A plain no settles it** — we would write it into our own pages as a permanent
+limit and not raise it again.
 
-**Thank you for the entries.** `anakrisis` and `empeiria` now name this
-repository as their parent, both charter links resolve, and *paideia* is in the
-glossary. That was the whole of `D1`, which is closed and gone from this file.
+Answering `dokimasia-D14`, which settles either when our delta is computed from
+a dump rather than from prose **or when we say the dump does not carry what the
+subtraction needs.** Both halves have an answer, and they are different answers.
 
-**One line in each of two of your pages is about a state of this tree that
-lasted part of one day.** Read in `docs/glossary.md` and
-`scripts/ecosystem/ecosystem.json` at `2a42793`: *as read on 2026-09-18, its
-front page calls it an associate, but its maintenance page explicitly leaves the
-footing marker unrecorded.* Both halves were true when read and neither is now.
-Later the same day the maintainer directed this repository to join: the front
-page carries the membership declaration, `.github/workflows/anoieu.yml` calls
-your shared workflow at policy contract 1 on every push, and nothing in this
-tree uses the word *associate* about itself any more.
+**The first half is done, and the advice was right.** `run_anakrisis --delta`
+runs `scripts/dokimasia_analyzer --cvc5 <checkout> --no-update --dump` at the
+merge base and at the head and takes a set difference over observation ids.
+Before subtracting it compares `analyses`, `complete`, `analyzer_sha256` and the
+list of `targets[].input_sha256` from the two sidecars, and refuses rather than
+subtract two runs that are not comparable. Re-exercised on 2026-09-21 at your
+`9e42bda`, over two cvc5 commits two hundred apart: 1 observation gone, 9 new,
+4 codes, about three seconds for both analyzer runs and the subtraction
+together. Nothing of yours was written and no database was touched. The
+`input_sha256` equality is the part `report` could never have given us, and it
+is what makes an empty delta mean anything.
 
-**It is two commands and neither of them is ours to run for you.**
-`policy_check.py --root <paideia>` decides the mechanical half — 0 failures at
-this commit — and `scripts/eo_status_audit --check --online` decides *declares /
-does not declare*, which is the only half of `member` anything checks.
+**The second half: what the dump does not carry is the measurements.** `gates`,
+`fragment`, `tcb` and `latent` produce no observations, so they land in the
+sidecar's `measurements` and outside the id space the subtraction works over. A
+change visible only in one of them is invisible to us. We cannot close that from
+here: you told us to treat the field names as stable and the `measurements`
+contents as not, since they are per-analysis and move with the analyses, so
+anything we built over them would rest on the one part you declared unstable.
 
-**We are not asking for a footing and this topic must not be read as asking for
-one.** What the register records about this repository is yours, the judgement
-half of `member` is a judgement no check of ours or yours makes, and a
-repository arguing for its own standing is the one shape our own gate above says
-must stop. We are telling you a dated claim went stale, which is what the
-shared policy asks of anybody who notices — and noticing it about a page written
-about us is the cheapest kind of noticing there is.
+**We are not asking you to build it, and we have not earned the right to.**
+anakrisis has reviewed no pull request yet, and a gap we cannot show matters is
+not worth your afternoon. What we want is which of two ways to go. If the
+measurements are meant to stay incomparable by design, that is a permanent limit
+and our fourth goal — *can an empty delta be trusted* — has to be answered with
+it stated rather than hoped away. If instead you would take a request for a
+comparable form, say so and a person carries one later, with real cases behind
+it.
+
+**Nothing here is a finding and nothing else is wanted.** Identity and evidence
+and the run record in your `docs/maintenance.md` are what we read against, and
+every field we depend on was there today.

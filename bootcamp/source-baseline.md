@@ -235,6 +235,19 @@ After the discussion and tooling pass on 2026-09-19, the checker passed with
 at the baseline commit, and refused a checkout one commit earlier by naming its
 revision. That refusal is how the revision guard above came to be written.
 
+The **front-page split on 2026-09-21** moved the chapter index, reading route,
+pipeline diagram and vocabulary out of [`README.md`](README.md) into
+[`overall-architecture.md`](overall-architecture.md), leaving the landing page
+an introduction. Rechecked on 2026-09-21 after that split, the guide checker
+passed
+with **34 local targets and 263 distinct pinned cvc5 paths**, and `git diff
+--check` passed. The extra local target is the new index page; the pinned source
+paths are unchanged, because that pass moved prose and changed no source claim,
+citation or example. **Source path existence was not rechecked**: no tree at the
+baseline commit was to hand, and the checker refused the checkout that was,
+naming its revision instead of reporting every path the baseline added as
+missing. That is the guard above doing the thing it was written for.
+
 It does not fetch dependencies, generate prose, authenticate a checkout or
 confirm that a method still behaves as described. Confirming the revision is
 not authenticating the tree: it reads what the checkout says its `HEAD` is, and

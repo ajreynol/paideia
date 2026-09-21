@@ -59,10 +59,13 @@ told where that checkout is: `DOKIMASIA_ROOT=/path/to/dokimasia`, or a
 `dokimasia` checkout beside this one, which is the default it tries. It refuses
 to run rather than guessing, and names what it could not find. **That dependency
 is the standing risk in this arrangement**, and nothing removes it: dokimasia
-owes us no stability and we have asked for none. What it does now rest on is a
-command with a stated interface and a documented record shape rather than on the
-layout of somebody's prose, which is what dokimasia recommended when asked. No
-topic is open about it.
+owes us no stability. What it does now rest on is a command with a stated
+interface and a documented record shape rather than on the layout of somebody's
+prose, which is what dokimasia recommended when asked. Re-exercised against that
+checkout on 2026-09-21: the command, both flags and every run-record field the
+subtraction reads were still there, and the delta ran end to end.
+[`discussion.md`](discussion.md) `D4` reports that back and asks one question
+about the part of a run the dump does not reach.
 
 ## What is reserved to you
 
@@ -77,26 +80,26 @@ Not an agent's, on any prompt:
 
 ## What is owed elsewhere, and what is open
 
-**This repository is a member, and one page of somebody else's says
-otherwise.** The front page carries the membership declaration and
+**Nothing is owed to another repository at present.** The front page carries
+the membership declaration and
 [`.github/workflows/anoieu.yml`](../.github/workflows/anoieu.yml) runs the
 shared policy check on every push, so the mechanical half of the footing is
 decided here on every commit. kanon's
 [`ecosystem.json`](https://github.com/ajreynol/kanon/blob/main/scripts/ecosystem/ecosystem.json)
-records one footing per tool and is kanon's file, not ours; read on 2026-09-19,
-its row for paideia is `candidate` and explains itself by a reading of this tree
-taken before the declaration was written. **Whether that row moves is theirs and
-is not something this repository argues for** — a repository pressing its own
-standing is the one shape the gate in [`discussion.md`](discussion.md) says must
-stop. The notice that the reading is out of date is `D3` there, and it asks for
-nothing.
+records one footing per tool and is kanon's file, not ours; read on 2026-09-21,
+its row for paideia records `member` on a reading taken after the declaration
+was written. **Whether that row moves is theirs and is not something this
+repository argues for** — a repository pressing its own standing is the one
+shape the gate in [`discussion.md`](discussion.md) says must stop. The notice
+that an earlier reading had gone stale was `D3` there; it asked for nothing, the
+pages it named were rewritten, and it is gone from that file.
 
 **The register has the name and both child projects.** kanon's
 [`docs/glossary.md`](https://github.com/ajreynol/kanon/blob/main/docs/glossary.md)
-is the authoritative name register; read on 2026-09-19 it defines *paideia* and
-names anakrisis and empeiria under it, with charter links into this tree.
-Nothing is owed there. Correcting somebody else's register is their edit and
-never ours.
+is the authoritative name register; read on 2026-09-21 it defines *paideia*,
+records this repository as a member, and names anakrisis and empeiria under it,
+with charter links into this tree. Nothing is owed there. Correcting somebody
+else's register is their edit and never ours.
 
 **What no check settles, here or anywhere.** A member is checked for declaring
 and for the form of its tree, and nothing more. The other half — that a member

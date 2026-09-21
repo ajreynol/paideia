@@ -102,13 +102,16 @@ if [ "$MODE" = list ]; then
     n=$(basename "$f" .md)
     case "$n" in ''|*[!0-9]*) continue ;; esac   # ledger/README.md is not an issue
     if [ "$found" = 0 ]; then
-      printf '%-10s %-12s %s\n' "issue" "state" "worked"
+      printf '%-10s %-32s %s\n' "issue" "state" "worked"
       found=1
     fi
-    state=$(sed -n 's/^TRIAGE:[[:space:]]*\([a-z ]*\).*/\1/p' "$f" | head -1)
+    # The comma is in the class because one label has one: without it
+    # `reproduced, not fixed` was listed as `reproduced`, which reads as the
+    # better news of the two and is the one place this table could mislead.
+    state=$(sed -n 's/^TRIAGE:[[:space:]]*\([a-z, ]*\).*/\1/p' "$f" | head -1)
     when=$(sed -n 's/^worked: *//p' "$f" | head -1)
     if has_response "$f"; then state="${state:-?} +response"; fi
-    printf '%-10s %-12s %s\n' "#$n" "${state:-?}" "${when:-?}"
+    printf '%-10s %-32s %s\n' "#$n" "${state:-?}" "${when:-?}"
   done
   [ "$found" = 1 ] || echo "no issues worked yet; the ledger at $LEDGER is empty"
   exit 0
@@ -218,8 +221,13 @@ if [ "$MODE" = record ]; then
   resp=$(cat)
   [ -n "$resp" ] || { echo "run_empeiria: nothing read; leaving $f alone" >&2; exit 2; }
   tmp=$(mktemp)
-  awk -v r="$resp" '
-    /^HUMAN RESPONSE:/ { print; print ""; print r; next } { print }' "$f" > "$tmp"
+  # Through the environment rather than `awk -v`, which expands backslash
+  # escapes in the value it is given: a maintainer who wrote `\theory` was
+  # recorded with a tab, and `\path` lost its backslash. Their words verbatim
+  # is the whole of why this field is kept apart from ours.
+  resp="$resp" awk '
+    /^HUMAN RESPONSE:/ { print; print ""; print ENVIRON["resp"]; next }
+    { print }' "$f" > "$tmp"
   mv "$tmp" "$f"
   echo "   recorded in $f" >&2
   echo "   The delta between TRIAGE and HUMAN RESPONSE is what this project is for." >&2

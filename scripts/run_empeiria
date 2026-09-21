@@ -4,8 +4,18 @@
 # at the repository root and a child's implementation stays in its directory --
 # kanon's docs/policy.md, "Tool and feature directories".
 #
-# It resolves the implementation relative to itself, so a symlink to this file
-# from anywhere on PATH works.
+# It resolves its own symlinks before locating the implementation, so a symlink
+# to this file from anywhere on PATH works. Reading $0 alone did not: a symlink
+# in ~/bin made $HERE that directory and the exec failed on a path that never
+# existed.
 set -eu
-HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+SELF=$0
+while [ -L "$SELF" ]; do
+  link=$(readlink -- "$SELF")
+  case $link in
+    /*) SELF=$link ;;
+    *)  SELF=$(dirname -- "$SELF")/$link ;;
+  esac
+done
+HERE=$(CDPATH= cd -- "$(dirname -- "$SELF")" && pwd)
 exec "$HERE/../tools/empeiria/empeiria.sh" "$@"

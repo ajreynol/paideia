@@ -75,7 +75,11 @@ design conversation.
       and today attributing a delta line to the diff is [the reader's first
       job](review.md). Any line that cannot be attributed automatically is
       reported without a location or not at all; guessing a location is worse
-      than having none.
+      than having none. **The file half is already in hand and was not asked
+      for**: read on 2026-09-21, the sidecar every `--dump` writes carries
+      `evidence` keyed by target and finding id, with a `location` or
+      `locations` beside each observation. So this is a read of a file the delta
+      already produces, and the line half is the part that is actually open.
 - [ ] **Decide which codes are worth annotating**, and say why the rest are not.
       Additions only, to begin with: a `-` line is where [the rename
       shape](../README.md#what-an-empty-delta-does-not-mean) lives, and the

@@ -195,13 +195,17 @@ instrument is borrowed, and every claim above that came from dokimasia links to
 where it was established.
 
 **What runs:** `--delta` and `--baseline`, given a dokimasia checkout. The
-subtraction has been exercised once — two cvc5 commits two hundred apart, on
-2026-09-19: 6 observations gone, 17 new, 7 codes, about two seconds, three of
-those pairs renames. That is a test of the instrument, not of the idea.
+subtraction has been exercised twice, and both times on the instrument rather
+than on the idea. Two cvc5 commits two hundred apart, on 2026-09-19: 6
+observations gone, 17 new, 7 codes, about two seconds, three of those pairs
+renames. A different pair the same distance apart, on 2026-09-21 against
+dokimasia `9e42bda`: 1 gone, 9 new, 4 codes, about three seconds for both
+analyzer runs and the subtraction together, no rename shape in it. The second
+run was asking whether the borrowed interface still holds, and it does.
 
 **What does not exist:** a single reviewed pull request, in either arm. The
-ledger is empty, [`review.md`](docs/review.md) is a first guess written before any
-case, and one instrument is wired with no second one tried.
+ledger is empty, [`docs/review.md`](docs/review.md) is a first guess written
+before any case, and one instrument is wired with no second one tried.
 
 **Footing:** `unadvertised-child` — paideia's front page does not name this
 project, because it has not yet produced a result anybody should rely on;

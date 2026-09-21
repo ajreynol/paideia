@@ -109,10 +109,10 @@ repository is trying to write down. The name stands.
 one.** The ecosystem's authoritative name register is kanon's
 [`docs/glossary.md`](https://github.com/ajreynol/kanon/blob/main/docs/glossary.md),
 kept by the president of eo, who is the one who records what a name means and
-where the meaning came from; as read on 2026-09-19 it defines *paideia* and
-names the two child projects under it. The two paragraphs above are this
-repository's own account of why the word fits, written so somebody can disagree
-with it, and they do not speak for the register.
+where the meaning came from; as read on 2026-09-21 it defines *paideia*, records
+this repository as a member, and names the two child projects under it. The two
+paragraphs above are this repository's own account of why the word fits, written
+so somebody can disagree with it, and they do not speak for the register.
 
 ## Where it sits
 
@@ -123,10 +123,10 @@ more — it says nothing about cvc5, which keeps its own documentation, and
 nothing about whether a proof can be trusted. The ecosystem records one footing
 per tool in
 [`ecosystem.json`](https://github.com/ajreynol/kanon/blob/main/scripts/ecosystem/ecosystem.json),
-which is kanon's file to write and not ours; as read on 2026-09-19 its row for
-paideia still describes the tree as it stood before joining, which
-[`docs/discussion.md`](docs/discussion.md) `D3` tells them and asks nothing
-about.
+which is kanon's file to write and not ours; as read on 2026-09-21 its row for
+paideia records `member`, on a reading of this tree taken after the declaration
+was written. Nothing is owed there, and nothing here argued for it: what that
+register says about this repository was theirs to decide.
 
 ## How this repository is maintained
 

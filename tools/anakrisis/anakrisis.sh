@@ -211,8 +211,13 @@ if [ "$MODE" = record ]; then
   resp=$(cat)
   [ -n "$resp" ] || { echo "run_anakrisis: nothing read; leaving $f alone" >&2; exit 2; }
   tmp=$(mktemp)
-  awk -v r="$resp" '
-    /^HUMAN RESPONSE:/ { print; print ""; print r; next } { print }' "$f" > "$tmp"
+  # Through the environment rather than `awk -v`, which expands backslash
+  # escapes in the value it is given: a maintainer who wrote `\theory` was
+  # recorded with a tab, and `\path` lost its backslash. Their words verbatim
+  # is the whole of why this field is kept apart from ours.
+  resp="$resp" awk '
+    /^HUMAN RESPONSE:/ { print; print ""; print ENVIRON["resp"]; next }
+    { print }' "$f" > "$tmp"
   mv "$tmp" "$f"
   echo "   recorded in $f" >&2
   exit 0
@@ -505,9 +510,9 @@ Write the review to:
 
   $LEDGER/$ENTRY.md
 
-Use the shape review.md sets out, starting from the header that is already in
-that file, and leave HUMAN RESPONSE empty -- it is the maintainer's, and keeping
-the two apart is what makes the pair worth anything later.
+Use the shape docs/review.md sets out, starting from the header that is already
+in that file, and leave HUMAN RESPONSE empty -- it is the maintainer's, and
+keeping the two apart is what makes the pair worth anything later.
 
 **Finish by asking what to do next.** Say what you found, what you could not
 attribute, and what you would want to run. The second turn is usually where the
