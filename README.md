@@ -65,8 +65,8 @@ the tutorial algorithms and examples they explain.
 
 The developer guide is this repository's artifact and lives in `bootcamp/`.
 It is Markdown; nothing needs to be installed to read it. The
-[chapter index](bootcamp/README.md#chapters) lists its contents. Its source
-baseline is
+[chapter index](bootcamp/overall-architecture.md#chapters) lists its contents.
+Its source baseline is
 `3dcc1ef5421ab62cc1ee9af52d70042ce6861af0`, observed on upstream `main` on
 2026-09-18. Claims were checked by reading source, not by running every solver
 path. A small read-only checker validates the guide's links and source paths;

@@ -3,7 +3,8 @@
 **One row per repository document, saying what it is for.** This page is the
 index and is in no index itself; the front page, [`../README.md`](../README.md),
 is the entry point and is what every page here assumes has been read. The
-bootcamp artifact has its own [chapter index](../bootcamp/README.md#chapters).
+bootcamp artifact has its own
+[chapter index](../bootcamp/overall-architecture.md#chapters).
 
 | document | what it settles |
 | --- | --- |

@@ -273,7 +273,8 @@ installed.
    observed behavior and record their exact revision, build, options and
    outcome. Keep “read the implementation” separate from “executed the path.”
 7. Update the relevant category index if chapters moved or were added, and
-   the artifact's [chapter index](README.md#chapters) if categories changed.
+   the artifact's [chapter index](overall-architecture.md#chapters) if categories
+   changed.
    For theory work, preserve the common structure in
    [How to develop a theory](theory-development/README.md#the-structure-of-every-theory-sub-guide).
    Keep repository documentation indexed separately in `docs/`. Leave a

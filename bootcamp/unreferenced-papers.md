@@ -13,7 +13,8 @@ theory chapters can be read independently.
 This review list records papers describing CVC4/cvc5 implementation features
 that are **not present in the pinned `main` implementation and therefore are
 not taught as available features in this guide**. It accompanies the footnote
-on the [main tutorial](README.md). The comparison is against
+on the [overall architecture guide](overall-architecture.md). The comparison
+is against
 [`3dcc1ef5421ab62cc1ee9af52d70042ce6861af0`](https://github.com/cvc5/cvc5/tree/3dcc1ef5421ab62cc1ee9af52d70042ce6861af0),
 observed on **2026-09-18**, not every historical release or research fork.
 See the [source baseline and verification limits](source-baseline.md).

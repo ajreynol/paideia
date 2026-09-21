@@ -20,6 +20,8 @@ from urllib.parse import unquote, urlsplit
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
 BOOTCAMP = ROOT / "bootcamp"
+# The landing README links to this full index; theory categories index themselves.
+BOOTCAMP_INDEX = BOOTCAMP / "overall-architecture.md"
 THEORY_GUIDES = BOOTCAMP / "theory-development"
 THEORY_SECTIONS = [
     "Representation and invariants",
@@ -95,7 +97,7 @@ def check(source_root=None):
                     0, 0, None)
     local_targets = set()
     source_paths = set()
-    index_targets = {DOCS / "README.md": set()}
+    index_targets = {DOCS / "README.md": set(), BOOTCAMP_INDEX: set()}
     index_targets.update({p: set() for p in pages
                           if p.is_relative_to(BOOTCAMP) and p.name == "README.md"})
     for page, body in texts.items():
@@ -152,7 +154,10 @@ def check(source_root=None):
             continue
         if page.is_relative_to(BOOTCAMP):
             parent = page.parent.parent if page.name == "README.md" else page.parent
-            index = parent / "README.md"
+            if page == BOOTCAMP_INDEX:
+                index = BOOTCAMP / "README.md"
+            else:
+                index = BOOTCAMP_INDEX if parent == BOOTCAMP else parent / "README.md"
         else:
             index = DOCS / "README.md"
         if page != index and page not in index_targets.get(index, set()):
