@@ -2,7 +2,7 @@
 
 How does a solver turn a collection of logical constraints into an answer?
 This bootcamp introduces that question through cvc5, then follows it into the
-code. It is written for programmers who want to understand or change the
+code.<sup>1</sup> It is written for programmers who want to understand or change the
 solver. Familiarity with C++ helps in the implementation chapters; no previous
 experience building an SMT solver is needed.
 
@@ -87,3 +87,8 @@ collect the pipeline diagram, glossary, reading routes and research references.
 The implementation chapters use a pinned cvc5 revision; the
 [source baseline](source-baseline.md) records that version and how the guide
 was checked.
+
+---
+
+<sup>1</sup> This tutorial was written mostly by AI agents, starting from an
+internal Google document provided locally by the human maintainer.

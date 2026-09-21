@@ -192,13 +192,11 @@ index lives with those sub-guides, alongside their shared contract.
 
 ## Using the bootcamp
 
-The supplied `cvc5-Bootcamp.docx` sets the subject coverage. It is a set of
-working notes, with questions, proposed renamings and incomplete sections.
-This guide expands those notes into explanations and checks claims against
-code; it does not assume a suggestion in the document was implemented.
-The [coverage and corrections table](bootcamp-coverage.md) accounts for
-all its sections, including build-time theory selection and build performance.
-Reading the guide does not require the original document.
+The [coverage and corrections table](bootcamp-coverage.md) maps the original
+bootcamp notes to this guide, including build-time theory selection and build
+performance. The guide expands those notes into explanations and checks claims
+against code; it does not assume a suggestion in the notes was implemented.
+Reading the guide does not require the original notes.
 
 This artifact describes implementation and engineering contracts; it does not
 certify cvc5's answers or the correctness of an emitted proof.

@@ -7,10 +7,9 @@ with [Walking through cvc5](README.md) and use the linked chapters below as
 needed. The tutorial explains its own terminology and examples; the original
 notes are not required reading.
 
-The supplied `cvc5-Bootcamp.docx` is the initial subject map. It contains roughly
-4,590 words of paragraph text, plus embedded figures. It mixes explanations,
-questions, TODOs and suggested changes. The following table accounts for its
-sections without treating an old suggestion as a current implementation.
+The original notes mix explanations, questions, TODOs and suggested changes.
+The following table accounts for their sections without treating an old
+suggestion as a current implementation.
 All current-code statements use the [source baseline](source-baseline.md).
 
 ## Coverage

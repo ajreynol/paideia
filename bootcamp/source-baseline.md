@@ -22,11 +22,10 @@ there or that the guide has received upstream review.
 
 ## Inputs and evidence
 
-The supplied `cvc5-Bootcamp.docx` supplied the topic outline. Its SHA-256 is
-`d265a8040a59b36e6e005b84739ab60013d5fc3e56df287f5a71abbe4c372fab`.
-It remains a local, untracked input; the guide is self-contained and does not
-link readers to a document absent from a clone. The
-[coverage table](bootcamp-coverage.md) preserves its subject map in Markdown.
+The original bootcamp notes supplied the topic outline. The
+[coverage table](bootcamp-coverage.md) preserves their subject map in Markdown.
+The tutorial is self-contained; readers do not need the original notes.
+Its [front page](README.md) includes a short footnote on authorship and origin.
 
 The source inspection used GitHub's archive for the exact commit, extracted
 in ignored working space. The downloaded archive's SHA-256 was
@@ -198,8 +197,9 @@ Markdown. It checks local links and heading fragments, reference definitions,
 the artifact's hierarchy of chapter indexes, the opening theory example and
 six shared implementation sections, the repository documentation index and use
 of this source pin.
-Each chapter is indexed by its directory's README; a category README is indexed
-by its parent. Given a source tree, the checker also checks that each linked
+The [overall architecture guide](overall-architecture.md#chapters) indexes the
+top-level chapters and theory category; the category's README indexes its own
+chapters. Given a source tree, the checker also checks that each linked
 cvc5 path exists — **after confirming that tree is at the baseline commit,
 where it can.** A checkout at another revision is refused with its revision
 named and no path check is run, because a tree one commit off the baseline
